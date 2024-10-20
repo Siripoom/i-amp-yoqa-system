@@ -4,6 +4,7 @@ const Course = require("../models/course");
 exports.createCourse = async (req, res) => {
   try {
     const course = new Course(req.body);
+    console.log(course);
     await course.save();
     res.status(201).json({ status: "success", course });
   } catch (error) {
@@ -66,6 +67,40 @@ exports.deleteCourse = async (req, res) => {
       course,
     });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.restoreCourse = async (req, res) => {
+  try {
+    console.log("ok");
+
+    console.log("Course ID to restore:", req.params.id); // Debug: ตรวจสอบว่า ID ที่ถูกส่งมาตรงหรือไม่
+
+    // ค้นหาคอร์สตาม id และทำการ restore (ตั้งค่า deleted เป็น false)
+    const course = await Course.findById(req.params.id);
+
+    // ตรวจสอบว่าคอร์สมีอยู่หรือไม่
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // ตรวจสอบสถานะ deleted ของคอร์ส
+    if (!course.deleted) {
+      return res.status(400).json({ message: "Course is not deleted" });
+    }
+
+    // ทำการ restore คอร์ส
+    course.deleted = false;
+    await course.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Course restored successfully",
+      course: course,
+    });
+  } catch (error) {
+    console.error("Error in restoreCourse:", error); // Debug: ดู error ที่เกิดขึ้นใน log
     res.status(500).json({ message: error.message });
   }
 };
