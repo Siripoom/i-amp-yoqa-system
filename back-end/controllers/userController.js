@@ -2,6 +2,7 @@
 const User = require("../models/user");
 const Role = require("../models/role");
 const bcrypt = require("bcrypt"); // นำเข้า bcrypt
+const jwt = require("jsonwebtoken");
 // สร้าง User ใหม่
 exports.createUser = async (req, res) => {
   try {
@@ -10,11 +11,12 @@ exports.createUser = async (req, res) => {
     if (!role) {
       return res.status(404).json({ message: "Role not found" });
     }
+    console.log(req.body.password);
 
-    // เข้ารหัส (hash) รหัสผ่าน
-    const hashedPassword = await bcrypt.hash(req.body.password, 10); // ใช้ saltRounds เป็น 10
+    // เข้ารหัสรหัสผ่าน
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-    // สร้าง User ใหม่โดยใช้ role_id ที่ได้จากการค้นหา
+    // สร้าง User ใหม่
     const user = new User({
       email: req.body.email,
       password: hashedPassword,
@@ -25,20 +27,25 @@ exports.createUser = async (req, res) => {
       birth_date: req.body.birth_date,
       address: req.body.address,
       registration_date: req.body.registration_date || Date.now(),
-      role_id: role._id, // บันทึก role_id ที่ค้นหาเจอ
-      referrer_id: req.body.referrer_id || null, // ถ้าไม่มี referrer_id ก็ใส่เป็น null
+      role_id: role._id,
+      referrer_id: req.body.referrer_id || null,
       total_classes: req.body.total_classes,
       remaining_classes: req.body.remaining_classes,
       special_rights: req.body.special_rights,
       deleted: false,
     });
 
-    // บันทึก user ในฐานข้อมูล
     await user.save();
 
-    // ส่ง response กลับไป
+    // สร้าง JWT Token
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // ส่ง response กลับไปพร้อมกับ Token
     res.status(201).json({
       status: "success",
+      token: token,
       user: user,
     });
   } catch (error) {
@@ -64,12 +71,36 @@ exports.getUsers = async (req, res) => {
 // อ่านข้อมูล User ตาม _id
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate("role_id");
-    if (!user || user.deleted === true)
-      return res.status(404).json({ message: "User not found" });
-    res.status(201).json({
+    const userId = req.params.id;
+    const customer = req.query.customer === "true"; // ตรวจสอบค่า customer จาก query params
+
+    // ถ้า customer เป็น false หรือไม่ถูกส่งมา, แสดงข้อมูลของ user ตาม _id
+    if (!customer) {
+      const user = await User.findById(userId).populate("role_id");
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      return res.status(200).json({
+        status: "success",
+        user: user,
+      });
+    }
+
+    // ถ้า customer เป็น true, แสดงข้อมูลของผู้ใช้ที่มี referrer_id ตรงกับ _id ของ user นี้
+    const usersWithSameReferrer = await User.find({
+      referrer_id: userId,
+      deleted: false,
+    }).populate("role_id");
+    if (usersWithSameReferrer.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No users found with this referrer_id" });
+    }
+
+    return res.status(200).json({
       status: "success",
-      user: user,
+      users: usersWithSameReferrer,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
