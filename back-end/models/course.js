@@ -5,11 +5,12 @@ const courseSchema = new mongoose.Schema(
     course_name: { type: String, required: true },
     details: { type: String },
     user_id: {
-      type: mongoose.Schema.Types.ObjectId, // เปลี่ยนจาก UUID เป็น ObjectId
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     deleted: { type: Boolean, default: false },
+    imageUrl: { type: String }, // ฟิลด์ใหม่สำหรับเก็บ path ของรูปภาพ
   },
   { timestamps: true }
 );
