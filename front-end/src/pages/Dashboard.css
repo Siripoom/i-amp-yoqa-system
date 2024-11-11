@@ -1,0 +1,80 @@
+/* Dashboard.css */
+
+.dashboard-content {
+  padding: 20px 24px;
+  background-color: #f4f6f8;
+}
+
+.dashboard-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.export-button {
+  background-color: #fa8c16;
+  border-color: #fa8c16;
+  color: #fff;
+}
+
+.summary-row {
+  display: flex;
+  gap: 16px;
+}
+
+.summary-item {
+  text-align: center;
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.summary-item h4 {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.summary-item p {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.summary-item span {
+  font-size: 12px;
+  color: #999;
+}
+
+.top-sections {
+  margin-top: 16px;
+}
+
+.top-section-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+}

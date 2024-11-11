@@ -1,0 +1,44 @@
+/* Header.css */
+
+.custom-header {
+  background-color: #fff;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  height: 64px;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 10px;
+}
+
+.avatar {
+  border-radius: 50%;
+}
+
+.username-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.username {
+  font-weight: 500;
+  color: #333;
+}
+
+.role {
+  font-size: 12px;
+  color: #888;
+}
