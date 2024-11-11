@@ -5,7 +5,7 @@ const productSchema = new mongoose.Schema(
     name: { type: String, required: true },
     price: { type: Number, required: true },
     description: { type: String },
-    stock: { type: Number, required: false, default: 0 },
+    stock: { type: Number, required: true, default: 0 },
     type: {
       type: String,
       enum: ["general", "course"],
@@ -18,7 +18,7 @@ const productSchema = new mongoose.Schema(
       },
       default: 0,
     },
-    imageUrl: { type: String }, // เพิ่มฟิลด์สำหรับเก็บ path ของรูปภาพ
+    imageUrl: { type: String },
   },
   { timestamps: true }
 );

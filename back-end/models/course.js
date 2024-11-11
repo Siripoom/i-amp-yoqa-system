@@ -7,12 +7,12 @@ const courseSchema = new mongoose.Schema(
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false,
+      required: true,
     },
     deleted: { type: Boolean, default: false },
-    imageUrl: { type: String }, // ฟิลด์ใหม่สำหรับเก็บ path ของรูปภาพ
+    imageUrl: { type: String },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Course", courseSchema);
+module.exports = mongoose.model("Course", courseSchema); // Ensure this name is "Course"
