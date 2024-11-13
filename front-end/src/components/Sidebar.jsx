@@ -10,16 +10,13 @@ import {
   LogoutOutlined,
 } from "@ant-design/icons";
 import "./Sidebar.css";
+import logo from "../assets/logo.webp";
 
 const Sidebar = () => {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
-        <img
-          src="/path/to/logo.png"
-          alt="IAMPYOQA Logo"
-          className="logo-icon"
-        />
+        <img src={logo} alt="IAMPYOQA Logo" className="logo-icon" />
         <h2 className="logo-text">IAMPYOQA</h2>
       </div>
       <nav className="sidebar-nav">
@@ -27,7 +24,7 @@ const Sidebar = () => {
           <DashboardOutlined /> <span>Dashboard</span>
         </NavLink>
         <NavLink to="/orders" activeClassName="active" className="nav-item">
-          <ShoppingCartOutlined /> <span>order</span>
+          <ShoppingCartOutlined /> <span>Order</span>
         </NavLink>
         <NavLink to="/products" activeClassName="active" className="nav-item">
           <AppstoreOutlined /> <span>Products</span>

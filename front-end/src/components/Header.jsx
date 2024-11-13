@@ -1,42 +1,34 @@
-import { Layout, Avatar, Dropdown, Menu } from "antd";
-import { DownOutlined } from "@ant-design/icons";
-import PropTypes from "prop-types";
+import { Avatar, Dropdown, Menu } from "antd";
 import "./Header.css";
+import person from "../assets/person_mockup.jpg";
+import PropTypes from "prop-types";
+const Header = ({ title }) => {
+  const menu = (
+    <Menu>
+      <Menu.Item key="0">Profile</Menu.Item>
+      <Menu.Item key="1">Settings</Menu.Item>
+      <Menu.Item key="2">Logout</Menu.Item>
+    </Menu>
+  );
 
-const { Header } = Layout;
-
-const userMenu = (
-  <Menu>
-    <Menu.Item key="profile">Profile</Menu.Item>
-    <Menu.Item key="settings">Settings</Menu.Item>
-    <Menu.Item key="logout">Logout</Menu.Item>
-  </Menu>
-);
-
-const CustomHeader = ({ title }) => {
   return (
-    <Header className="custom-header">
-      <div className="header-title">{title}</div>
-      <Dropdown overlay={userMenu} trigger={["click"]}>
-        <div className="profile-section">
-          <Avatar
-            src="https://i.pravatar.cc/300"
-            size="large"
-            className="avatar"
-          />
-          <div className="username-info">
-            <span className="username">Musfiq</span>
-            <span className="role">Admin</span>
+    <div className="dashboard-header">
+      <h2 className="title">{title}</h2>
+      <div className="header-user">
+        <Dropdown overlay={menu} trigger={["click"]}>
+          <div className="user-info">
+            <Avatar src={person} alt="User Avatar" />
+            <div className="user-details">
+              <span className="user-name">IAMP</span>
+              <span className="user-role">Admin</span>
+            </div>
           </div>
-          <DownOutlined />
-        </div>
-      </Dropdown>
-    </Header>
+        </Dropdown>
+      </div>
+    </div>
   );
 };
-
-CustomHeader.propTypes = {
+Header.propTypes = {
   title: PropTypes.string.isRequired,
 };
-
-export default CustomHeader;
+export default Header;

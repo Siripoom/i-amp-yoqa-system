@@ -1,76 +1,85 @@
-/* Dashboard.css */
-
-.dashboard-content {
-  padding: 24px;
-  background-color: #f4f6f8;
+.dashboard-container {
+  flex: 1;
+  padding: 20px;
+  background-color: #f4f5f7; /* Background color for content area */
+  overflow-y: auto;
 }
 
-.dashboard-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20px;
+.sales-summary-card {
+  background-color: #f9fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.section-header {
+.sales-summary-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .export-button {
-  background-color: #fa8c16;
-  border-color: #fa8c16;
-  color: #fff;
-}
-
-.summary-card {
-  background-color: #fff;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #111827;
   border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 24px;
+  padding: 4px 12px;
+  font-weight: 500;
 }
 
 .summary-item {
   text-align: center;
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 16px;
+  padding: 1.5rem;
+  border-radius: 12px;
+  transition: box-shadow 0.3s;
+  color: #111827;
 }
-
 .summary-item h4 {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: bold;
-  color: #333;
-  margin: 4px 0;
+  margin: 0.5rem 0;
 }
-
 .summary-item p {
-  font-size: 14px;
-  color: #888;
-  margin: 4px 0;
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
 .summary-change {
-  font-size: 12px;
-  color: #999;
+  font-size: 0.75rem;
+  color: #9ca3af;
 }
 
+/* Background colors for individual items */
+.summary-item:nth-child(1) {
+  background-color: #fee2e2; /* Light Red */
+}
+
+.summary-item:nth-child(2) {
+  background-color: #fef3c7; /* Light Yellow */
+}
+
+.summary-item:nth-child(3) {
+  background-color: #d1fae5; /* Light Green */
+}
+
+.summary-item:nth-child(4) {
+  background-color: #e9d5ff; /* Light Purple */
+}
 .summary-icon {
-  font-size: 24px;
-  color: #fa8c16;
-  margin-bottom: 10px;
+  font-size: 30px;
+  margin-bottom: 0.5rem;
 }
 
 .top-sections {
-  margin-top: 16px;
+  margin-top: 1.5rem;
 }
 
 .top-section-card {
   background: #ffffff;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 0.5rem;
+  padding: 1rem;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -78,10 +87,57 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 0.5rem;
 }
 
-.top-item .top-sales {
+.sales-summary-card,
+.top-products-card,
+.top-courses-card,
+.total-revenue-card {
+  background-color: #f9fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  font-size: 1.125rem;
   font-weight: bold;
-  color: #333;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-cell {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.popularity-bar {
+  height: 8px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 80px;
+  background-color: #e5e7eb;
+  position: relative;
+}
+
+.popularity-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.total-revenue-chart {
+  height: 250px;
 }

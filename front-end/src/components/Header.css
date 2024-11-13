@@ -1,44 +1,56 @@
-/* Header.css */
-
-.custom-header {
-  background-color: #fff;
-  padding: 0 24px;
+.dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
   border-bottom: 1px solid #f0f0f0;
-  height: 64px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.header-title {
-  font-size: 24px;
+.title {
+  font-size: 1.75rem;
   font-weight: bold;
-  color: #333;
+  color: #4f46e5; /* Indigo color for emphasis */
+  letter-spacing: 1px;
+  position: relative;
 }
 
-.profile-section {
+.title::after {
+  content: "";
+  position: absolute;
+  width: 60px;
+  height: 4px;
+  background-color: #f97316; /* Accent underline */
+  bottom: -6px;
+  left: 0;
+  border-radius: 2px;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
   display: flex;
   align-items: center;
   cursor: pointer;
-  gap: 10px;
 }
 
-.avatar {
-  border-radius: 50%;
+.user-details {
+  margin-left: 0.5rem;
 }
 
-.username-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.username {
-  font-weight: 500;
+.user-name {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
   color: #333;
 }
 
-.role {
-  font-size: 12px;
+.user-role {
+  display: block;
+  font-size: 0.875rem;
   color: #888;
 }
