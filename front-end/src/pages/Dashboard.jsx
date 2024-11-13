@@ -1,68 +1,132 @@
-import { Layout, Row, Col, Card, Button } from "antd";
+import { Layout, Row, Col, Card, Button, Progress } from "antd";
+import {
+  DollarOutlined,
+  ShoppingCartOutlined,
+  CheckOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import "./Dashboard.css";
+import Sidebar from "../components/Sidebar";
+import "../components/Sidebar.css";
+import Header from "../components/Header";
+import "../components/Header.css";
 
-const { Content } = Layout;
+const { Sider, Content } = Layout;
 
-const Dashboard = () => {
+const DashboardPage = () => {
   return (
-    <Content className="dashboard-content">
-      <h2 className="dashboard-title">Dashboard</h2>
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Sidebar */}
+      <Sider width={220} className="sidebar">
+        <Sidebar />
+      </Sider>
 
-      {/* Today's Sales Summary */}
-      <Card className="summary-card">
-        <div className="section-header">
-          <h3>Todays Sales</h3>
-          <Button type="primary" className="export-button">
-            Export
-          </Button>
-        </div>
-        <Row gutter={[16, 16]} className="summary-row">
-          <Col span={6}>
-            <Card className="summary-item" hoverable>
-              <h4>Total Sales</h4>
-              <p>$1k</p>
-              <span>+8% from yesterday</span>
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card className="summary-item" hoverable>
-              <h4>Total Order</h4>
-              <p>300</p>
-              <span>+5% from yesterday</span>
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card className="summary-item" hoverable>
-              <h4>Product Sold</h4>
-              <p>5</p>
-              <span>+1.2% from yesterday</span>
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card className="summary-item" hoverable>
-              <h4>New Customers</h4>
-              <p>8</p>
-              <span>+0.5% from yesterday</span>
-            </Card>
-          </Col>
-        </Row>
-      </Card>
+      {/* Main Content Area */}
+      <Layout>
+        {/* Header */}
+        <Header />
 
-      {/* Top Products and Top Courses */}
-      <Row gutter={24} className="top-sections">
-        <Col span={12}>
-          <Card title="Top Products" className="top-section-card">
-            <p>Placeholder for Top Products</p>
+        {/* Dashboard Content */}
+        <Content style={{ padding: "24px", backgroundColor: "#f4f6f8" }}>
+          <h2 className="dashboard-title">Dashboard</h2>
+
+          {/* Today's Sales Summary */}
+          <Card className="summary-card">
+            <div className="section-header">
+              <h3>Today&apos;s Sales</h3>
+              <Button type="primary" className="export-button">
+                Export
+              </Button>
+            </div>
+            <Row gutter={16}>
+              <Col span={6}>
+                <Card className="summary-item" hoverable>
+                  <DollarOutlined className="summary-icon" />
+                  <h4>$1k</h4>
+                  <p>Total Sales</p>
+                  <span className="summary-change">+8% from yesterday</span>
+                </Card>
+              </Col>
+              <Col span={6}>
+                <Card className="summary-item" hoverable>
+                  <ShoppingCartOutlined className="summary-icon" />
+                  <h4>300</h4>
+                  <p>Total Order</p>
+                  <span className="summary-change">+5% from yesterday</span>
+                </Card>
+              </Col>
+              <Col span={6}>
+                <Card className="summary-item" hoverable>
+                  <CheckOutlined className="summary-icon" />
+                  <h4>5</h4>
+                  <p>Product Sold</p>
+                  <span className="summary-change">+1.2% from yesterday</span>
+                </Card>
+              </Col>
+              <Col span={6}>
+                <Card className="summary-item" hoverable>
+                  <UserOutlined className="summary-icon" />
+                  <h4>8</h4>
+                  <p>New Customers</p>
+                  <span className="summary-change">+0.5% from yesterday</span>
+                </Card>
+              </Col>
+            </Row>
           </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="Top Courses" className="top-section-card">
-            <p>Placeholder for Top Courses</p>
-          </Card>
-        </Col>
-      </Row>
-    </Content>
+
+          {/* Top Products and Top Courses */}
+          <Row gutter={24} className="top-sections">
+            <Col span={12}>
+              <Card title="Top Products" className="top-section-card">
+                <Row className="top-item">
+                  <Col span={12}>Home Decor</Col>
+                  <Col span={6}>
+                    <Progress percent={45} size="small" strokeColor="#40A9FF" />
+                  </Col>
+                  <Col span={6} className="top-sales">
+                    45
+                  </Col>
+                </Row>
+                <Row className="top-item">
+                  <Col span={12}>Disney Princess Pink</Col>
+                  <Col span={6}>
+                    <Progress percent={29} size="small" strokeColor="#73D13D" />
+                  </Col>
+                  <Col span={6} className="top-sales">
+                    29
+                  </Col>
+                </Row>
+                {/* Add more products as needed */}
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card title="Top Courses" className="top-section-card">
+                <Row className="top-item">
+                  <Col span={12}>Home Decor</Col>
+                  <Col span={6}>
+                    <Progress percent={45} size="small" strokeColor="#40A9FF" />
+                  </Col>
+                  <Col span={6} className="top-sales">
+                    45
+                  </Col>
+                </Row>
+                <Row className="top-item">
+                  <Col span={12}>Disney Princess Pink</Col>
+                  <Col span={6}>
+                    <Progress percent={29} size="small" strokeColor="#73D13D" />
+                  </Col>
+                  <Col span={6} className="top-sales">
+                    29
+                  </Col>
+                </Row>
+                {/* Add more courses as needed */}
+              </Card>
+            </Col>
+          </Row>
+        </Content>
+      </Layout>
+    </Layout>
   );
 };
 
-export default Dashboard;
+export default DashboardPage;

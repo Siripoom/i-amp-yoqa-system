@@ -1,7 +1,7 @@
 /* Dashboard.css */
 
 .dashboard-content {
-  padding: 20px 24px;
+  padding: 24px;
   background-color: #f4f6f8;
 }
 
@@ -10,14 +10,6 @@
   font-weight: bold;
   color: #333;
   margin-bottom: 20px;
-}
-
-.summary-card {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
-  margin-bottom: 24px;
 }
 
 .section-header {
@@ -33,9 +25,11 @@
   color: #fff;
 }
 
-.summary-row {
-  display: flex;
-  gap: 16px;
+.summary-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
 }
 
 .summary-item {
@@ -43,29 +37,30 @@
   background: #f9f9f9;
   border-radius: 8px;
   padding: 16px;
-  height: 100px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
 }
 
 .summary-item h4 {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 4px;
-}
-
-.summary-item p {
   font-size: 24px;
   font-weight: bold;
   color: #333;
-  margin: 0;
+  margin: 4px 0;
 }
 
-.summary-item span {
+.summary-item p {
+  font-size: 14px;
+  color: #888;
+  margin: 4px 0;
+}
+
+.summary-change {
   font-size: 12px;
   color: #999;
+}
+
+.summary-icon {
+  font-size: 24px;
+  color: #fa8c16;
+  margin-bottom: 10px;
 }
 
 .top-sections {
@@ -77,4 +72,16 @@
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.top-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.top-item .top-sales {
+  font-weight: bold;
+  color: #333;
 }
