@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Layout,
   Table,
@@ -21,34 +21,38 @@ import {
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import "../styles/Products.css";
+import {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "../services/productService";
 
 const { Sider, Content } = Layout;
 const { Option } = Select;
 
-const initialProductData = [
-  {
-    productId: 59217,
-    productName: "Cody Fisher",
-    category: "Home Decor",
-    quantity: 8,
-    price: 100,
-    status: "Active",
-  },
-  {
-    productId: 59213,
-    productName: "Kristin Watson",
-    category: "Electronics",
-    quantity: 1,
-    price: 150,
-    status: "Invited",
-  },
-];
-
 const ProductPage = () => {
-  const [products, setProducts] = useState(initialProductData);
+  const [products, setProducts] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await getProducts();
+      if (response.status === "success") {
+        setProducts(response.products); // Update state with fetched products
+      } else {
+        message.error("Failed to load products");
+      }
+    } catch (error) {
+      message.error("Failed to load products", error);
+    }
+  };
 
   const showCreateModal = () => {
     setEditingProduct(null);
@@ -66,48 +70,54 @@ const ProductPage = () => {
     setIsModalVisible(false);
   };
 
-  const handleSave = () => {
-    form.validateFields().then((values) => {
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      const productData = {
+        ...values,
+        image: values.image?.[0]?.originFileObj, // Use the uploaded file object
+      };
+
       if (editingProduct) {
-        setProducts((prev) =>
-          prev.map((product) =>
-            product.productId === editingProduct.productId
-              ? { ...product, ...values }
-              : product
-          )
-        );
+        await updateProduct(editingProduct._id, productData); // Use `_id` from API response
         message.success("Product updated successfully");
       } else {
-        const newProduct = { ...values, productId: Date.now() };
-        setProducts((prev) => [...prev, newProduct]);
+        await createProduct(productData);
         message.success("Product created successfully");
       }
+
+      fetchProducts(); // Refresh product list
       setIsModalVisible(false);
-    });
+    } catch (error) {
+      message.error("Failed to save product", error);
+    }
   };
 
-  const handleDelete = () => {
-    setProducts((prev) =>
-      prev.filter((product) => product.productId !== editingProduct.productId)
-    );
-    message.success("Product deleted successfully");
-    setIsModalVisible(false);
+  const handleDelete = async () => {
+    try {
+      await deleteProduct(editingProduct._id); // Use `_id` from API response
+      message.success("Product deleted successfully");
+      fetchProducts(); // Refresh product list
+      setIsModalVisible(false);
+    } catch (error) {
+      message.error("Failed to delete product", error);
+    }
   };
 
   const columns = [
-    { title: "PRODUCT ID", dataIndex: "productId", key: "productId" },
-    { title: "PRODUCT NAME", dataIndex: "productName", key: "productName" },
-    { title: "CATEGORY", dataIndex: "category", key: "category" },
-    { title: "QUANTITY", dataIndex: "quantity", key: "quantity" },
+    { title: "PRODUCT ID", dataIndex: "_id", key: "_id" },
+    { title: "PRODUCT NAME", dataIndex: "name", key: "name" },
+    { title: "CATEGORY", dataIndex: "type", key: "type" },
+    { title: "QUANTITY", dataIndex: "stock", key: "stock" },
     { title: "PRICE", dataIndex: "price", key: "price" },
-    {
-      title: "STATUS",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => (
-        <Tag color={status === "Active" ? "green" : "gray"}>{status}</Tag>
-      ),
-    },
+    // {
+    //   title: "STATUS",
+    //   dataIndex: "status",
+    //   key: "status",
+    //   render: (status) => (
+    //     <Tag color={status === "Active" ? "green" : "gray"}>{status}</Tag>
+    //   ),
+    // },
     {
       title: "ACTION",
       key: "action",
@@ -162,7 +172,7 @@ const ProductPage = () => {
             columns={columns}
             dataSource={products}
             pagination={{ position: ["bottomCenter"], pageSize: 5 }}
-            rowKey="productId"
+            rowKey="_id"
           />
 
           <Modal
@@ -190,7 +200,7 @@ const ProductPage = () => {
           >
             <Form form={form} layout="vertical">
               <Form.Item
-                name="productName"
+                name="name"
                 label="Product Name"
                 rules={[
                   { required: true, message: "Please enter the product name" },
@@ -199,24 +209,25 @@ const ProductPage = () => {
                 <Input />
               </Form.Item>
               <Form.Item
-                name="category"
+                name="type"
                 label="Category"
                 rules={[
                   { required: true, message: "Please select the category" },
                 ]}
               >
                 <Select>
-                  <Option value="Home Decor">Home Decor</Option>
-                  <Option value="Electronics">Electronics</Option>
-                  <Option value="Fashion">Fashion</Option>
-                  <Option value="Health">Health</Option>
+                  <Option value="general">General</Option>
+                  <Option value="course">Course</Option>
                 </Select>
               </Form.Item>
               <Form.Item
-                name="quantity"
-                label="Quantity"
+                name="stock"
+                label="Stock"
                 rules={[
-                  { required: true, message: "Please enter the quantity" },
+                  {
+                    required: true,
+                    message: "Please enter the stock quantity",
+                  },
                 ]}
               >
                 <Input type="number" />
@@ -229,16 +240,16 @@ const ProductPage = () => {
                 <Input type="number" />
               </Form.Item>
               <Form.Item
-                name="status"
-                label="Status"
+                name="sessions"
+                label="Sessions (for course)"
                 rules={[
-                  { required: true, message: "Please select the status" },
+                  {
+                    required: editingProduct?.type === "course",
+                    message: "Please enter the session count",
+                  },
                 ]}
               >
-                <Select>
-                  <Option value="Active">Active</Option>
-                  <Option value="Inactive">Inactive</Option>
-                </Select>
+                <Input type="number" />
               </Form.Item>
               <Form.Item
                 name="description"

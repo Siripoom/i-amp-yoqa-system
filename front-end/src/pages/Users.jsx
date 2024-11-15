@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Layout,
   Table,
@@ -21,30 +21,38 @@ import {
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import "../styles/User.css";
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+} from "../services/userService";
 
 const { Sider, Content } = Layout;
 const { Option } = Select;
 
-const initialUserData = [
-  {
-    userId: 59217,
-    name: "Cody Fisher",
-    refNumber: "12345",
-    status: "Active",
-  },
-  {
-    userId: 59213,
-    name: "Kristin Watson",
-    refNumber: "12346",
-    status: "Invited",
-  },
-];
-
 const UserPage = () => {
-  const [users, setUsers] = useState(initialUserData);
+  const [users, setUsers] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getUsers();
+      if (response.status === "success") {
+        setUsers(response.users); // Extract `users` from the response
+      } else {
+        message.error("Failed to fetch users.");
+      }
+    } catch (error) {
+      message.error(`Failed to fetch users: ${error.message}`);
+    }
+  };
 
   const showCreateModal = () => {
     setEditingUser(null);
@@ -62,46 +70,73 @@ const UserPage = () => {
     setIsModalVisible(false);
   };
 
-  const handleSave = () => {
-    form.validateFields().then((values) => {
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      const userPayload = {
+        email: values.email,
+        password: values.password,
+        first_name: values.first_name,
+        last_name: values.last_name,
+        prefix: values.prefix,
+        phone: values.phone,
+        birth_date: values.birth_date,
+        address: values.address,
+        registration_date: values.registration_date || new Date().toISOString(),
+        role_name: values.role_name,
+        referrer_id: values.referrer_id || null, // Default to null if not provided
+        total_classes: values.total_classes || 0, // Default to 0 if not provided
+        remaining_classes: values.remaining_classes || 0, // Default to 0 if not provided
+        special_rights: values.special_rights,
+      };
+
       if (editingUser) {
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.userId === editingUser.userId ? { ...user, ...values } : user
-          )
-        );
+        await updateUser(editingUser._id, userPayload);
         message.success("User updated successfully");
       } else {
-        const newUser = { ...values, userId: Date.now() };
-        setUsers((prev) => [...prev, newUser]);
+        await createUser(userPayload);
         message.success("User created successfully");
       }
+      fetchUsers(); // Refresh the user list
       setIsModalVisible(false);
-    });
+    } catch (error) {
+      message.error(`Failed to save user: ${error.message}`);
+    }
   };
 
-  const handleDelete = () => {
-    setUsers((prev) =>
-      prev.filter((user) => user.userId !== editingUser.userId)
-    );
-    message.success("User deleted successfully");
-    setIsModalVisible(false);
+  const handleDelete = async () => {
+    try {
+      await deleteUser(editingUser._id);
+      message.success("User deleted successfully");
+      fetchUsers(); // Refresh the user list
+      setIsModalVisible(false);
+    } catch (error) {
+      message.error(`Failed to delete user: ${error.message}`);
+    }
   };
 
   const columns = [
-    { title: "ID", dataIndex: "userId", key: "userId" },
-    { title: "NAME", dataIndex: "name", key: "name" },
-    { title: "REF NUMBER", dataIndex: "refNumber", key: "refNumber" },
+    { title: "ID", dataIndex: "_id", key: "_id" },
+    { title: "First Name", dataIndex: "first_name", key: "first_name" },
+    { title: "Last Name", dataIndex: "last_name", key: "last_name" },
+    { title: "Email", dataIndex: "email", key: "email" },
     {
-      title: "STATUS",
-      dataIndex: "status",
+      title: "Role",
+      dataIndex: ["role_id", "role_name"], // Access nested field
+      key: "role_name",
+      render: (_, record) => record.role_id?.role_name || "N/A",
+    },
+    {
+      title: "Status",
       key: "status",
-      render: (status) => (
-        <Tag color={status === "Active" ? "green" : "gray"}>{status}</Tag>
+      render: (record) => (
+        <Tag color={record.deleted ? "red" : "green"}>
+          {record.deleted ? "Deleted" : "Active"}
+        </Tag>
       ),
     },
     {
-      title: "ACTION",
+      title: "Action",
       key: "action",
       render: (record) => (
         <Button
@@ -154,7 +189,7 @@ const UserPage = () => {
             columns={columns}
             dataSource={users}
             pagination={{ position: ["bottomCenter"], pageSize: 5 }}
-            rowKey="userId"
+            rowKey="_id"
           />
 
           <Modal
@@ -182,61 +217,117 @@ const UserPage = () => {
           >
             <Form form={form} layout="vertical">
               <Form.Item
-                name="name"
-                label="Name"
+                name="email"
+                label="Email"
+                rules={[{ required: true, message: "Please enter the email" }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="password"
+                label="Password"
                 rules={[
-                  { required: true, message: "Please enter the user name" },
+                  { required: true, message: "Please enter the password" },
+                ]}
+              >
+                <Input.Password />
+              </Form.Item>
+              <Form.Item
+                name="first_name"
+                label="First Name"
+                rules={[
+                  { required: true, message: "Please enter the first name" },
                 ]}
               >
                 <Input />
               </Form.Item>
               <Form.Item
-                name="refNumber"
-                label="Reference Number"
+                name="last_name"
+                label="Last Name"
+                rules={[
+                  { required: true, message: "Please enter the last name" },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="prefix"
+                label="Prefix"
+                rules={[{ required: true, message: "Please enter the prefix" }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="phone"
+                label="Phone"
+                rules={[
+                  { required: true, message: "Please enter the phone number" },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="birth_date"
+                label="Birth Date"
+                rules={[
+                  { required: true, message: "Please enter the birth date" },
+                ]}
+              >
+                <Input type="date" />
+              </Form.Item>
+              <Form.Item
+                name="address"
+                label="Address"
+                rules={[
+                  { required: true, message: "Please enter the address" },
+                ]}
+              >
+                <Input.TextArea rows={2} />
+              </Form.Item>
+              <Form.Item
+                name="role_name"
+                label="Role"
+                rules={[{ required: true, message: "Please select the role" }]}
+              >
+                <Select>
+                  <Option value="Member">Member</Option>
+                  <Option value="Instructor">Instructor</Option>
+                  <Option value="Admin">Instructor</Option>
+                  <Option value="Sales">Instructor</Option>
+                </Select>
+              </Form.Item>
+              <Form.Item name="referrer_id" label="Referrer ID">
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="total_classes"
+                label="Total Classes"
+                rules={[
+                  { required: false, message: "Please enter total classes" },
+                ]}
+              >
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item
+                name="remaining_classes"
+                label="Remaining Classes"
                 rules={[
                   {
-                    required: true,
-                    message: "Please enter the reference number",
+                    required: false,
+                    message: "Please enter remaining classes",
                   },
                 ]}
               >
-                <Input />
+                <Input type="number" />
               </Form.Item>
               <Form.Item
-                name="status"
-                label="Status"
+                name="special_rights"
+                label="Special Rights"
                 rules={[
-                  { required: true, message: "Please select the status" },
+                  { required: false, message: "Please enter special rights" },
                 ]}
               >
-                <Select>
-                  <Option value="Active">Active</Option>
-                  <Option value="Inactive">Inactive</Option>
-                  <Option value="Invited">Invited</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item
-                name="description"
-                label="Description"
-                rules={[
-                  { required: true, message: "Please enter a description" },
-                ]}
-              >
-                <Input.TextArea rows={3} />
-              </Form.Item>
-              <Form.Item
-                name="image"
-                label="Upload Image"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-              >
-                <Upload
-                  name="logo"
-                  listType="picture"
-                  beforeUpload={() => false}
-                >
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                </Upload>
+                <Input.TextArea rows={2} />
               </Form.Item>
             </Form>
           </Modal>
