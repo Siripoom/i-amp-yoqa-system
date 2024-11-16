@@ -1,5 +1,6 @@
 // server.js
 const express = require("express");
+const cors = require("cors");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const roleRoutes = require("./routes/roleRoutes");
@@ -10,6 +11,8 @@ const bodyParser = require("body-parser");
 require("dotenv").config();
 
 const app = express();
+
+app.use(cors());
 
 // Bodyparser middleware
 app.use(bodyParser.json());
