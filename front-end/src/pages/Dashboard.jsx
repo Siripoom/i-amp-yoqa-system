@@ -8,7 +8,7 @@ import {
 import { Bar } from "react-chartjs-2";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import "./Dashboard.css";
+import "../styles/Dashboard.css";
 import {
   Chart as ChartJS,
   CategoryScale,

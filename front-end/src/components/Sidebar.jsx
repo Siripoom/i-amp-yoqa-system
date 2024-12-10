@@ -26,7 +26,11 @@ const Sidebar = () => {
         <NavLink to="/orders" activeClassName="active" className="nav-item">
           <ShoppingCartOutlined /> <span>Order</span>
         </NavLink>
-        <NavLink to="/products" activeClassName="active" className="nav-item">
+        <NavLink
+          to="/productManage"
+          activeClassName="active"
+          className="nav-item"
+        >
           <AppstoreOutlined /> <span>Products</span>
         </NavLink>
         <NavLink to="/courses" activeClassName="active" className="nav-item">
