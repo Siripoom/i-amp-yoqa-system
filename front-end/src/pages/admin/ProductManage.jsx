@@ -35,6 +35,7 @@ const ProductPage = () => {
   const [products, setProducts] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -42,16 +43,18 @@ const ProductPage = () => {
   }, []);
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
       const response = await getProducts();
       if (response.status === "success") {
-        setProducts(response.products); // Update state with fetched products
+        setProducts(response.data); // Update state with fetched products
       } else {
         message.error("Failed to load products");
       }
     } catch (error) {
       message.error("Failed to load products", error);
     }
+    setLoading(false);
   };
 
   const showCreateModal = () => {
@@ -73,6 +76,7 @@ const ProductPage = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      setLoading(true);
       const productData = {
         ...values,
         image: values.image?.[0]?.originFileObj, // Use the uploaded file object
@@ -91,6 +95,7 @@ const ProductPage = () => {
     } catch (error) {
       message.error("Failed to save product", error);
     }
+    setLoading(false);
   };
 
   const handleDelete = async () => {
@@ -105,10 +110,7 @@ const ProductPage = () => {
   };
 
   const columns = [
-    { title: "PRODUCT ID", dataIndex: "_id", key: "_id" },
-    { title: "PRODUCT NAME", dataIndex: "name", key: "name" },
-    { title: "CATEGORY", dataIndex: "type", key: "type" },
-    { title: "QUANTITY", dataIndex: "stock", key: "stock" },
+    { title: "SESSIONS", dataIndex: "sessions", key: "sessions" },
     { title: "PRICE", dataIndex: "price", key: "price" },
     // {
     //   title: "STATUS",
@@ -200,79 +202,14 @@ const ProductPage = () => {
           >
             <Form form={form} layout="vertical">
               <Form.Item
-                name="name"
-                label="Product Name"
-                rules={[
-                  { required: true, message: "Please enter the product name" },
-                ]}
-              >
-                <Input />
-              </Form.Item>
-              <Form.Item
-                name="type"
-                label="Category"
-                rules={[
-                  { required: true, message: "Please select the category" },
-                ]}
-              >
-                <Select>
-                  <Option value="general">General</Option>
-                  <Option value="course">Course</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item
-                name="stock"
-                label="Stock"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter the stock quantity",
-                  },
-                ]}
-              >
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item
                 name="price"
                 label="Price"
                 rules={[{ required: true, message: "Please enter the price" }]}
               >
                 <Input type="number" />
               </Form.Item>
-              <Form.Item
-                name="sessions"
-                label="Sessions (for course)"
-                rules={[
-                  {
-                    required: editingProduct?.type === "course",
-                    message: "Please enter the session count",
-                  },
-                ]}
-              >
+              <Form.Item name="sessions" label="Sessions (for course)">
                 <Input type="number" />
-              </Form.Item>
-              <Form.Item
-                name="description"
-                label="Description"
-                rules={[
-                  { required: true, message: "Please enter a description" },
-                ]}
-              >
-                <Input.TextArea rows={3} />
-              </Form.Item>
-              <Form.Item
-                name="image"
-                label="Upload Image"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-              >
-                <Upload
-                  name="logo"
-                  listType="picture"
-                  beforeUpload={() => false}
-                >
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                </Upload>
               </Form.Item>
             </Form>
           </Modal>

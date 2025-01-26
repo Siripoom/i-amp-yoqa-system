@@ -5,8 +5,8 @@ exports.createProduct = [
   async (req, res) => {
     try {
       const productData = {
+        sessions: req.body.sessions,
         price: req.body.price,
-        sessions: req.body.type,
       };
       const product = new Product(productData);
       await product.save();

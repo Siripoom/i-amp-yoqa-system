@@ -1,4 +1,4 @@
-import { Button } from "antd";
+import { Button, message } from "antd";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
@@ -6,8 +6,31 @@ import image1 from "../assets/images/iamge1.png";
 import courseShow from "../assets/images/courseshow.png";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-
+import { getProducts } from "../services/productService";
+import { useEffect, useState } from "react";
 const Home = () => {
+  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await getProducts();
+      if (response.status === "success") {
+        console.log(response.data);
+
+        setProducts(response.data); // อัปเดตข้อมูลคอร์ส
+      } else {
+        message.error("Failed to load products");
+      }
+    } catch (error) {
+      message.error("Failed to load products");
+    }
+    setLoading(false);
+  };
   // Animation Variants
   const fadeInVariant = {
     hidden: { opacity: 0, y: 50 },
@@ -65,7 +88,7 @@ const Home = () => {
           variants={staggerVariant}
           className="flex justify-center gap-6 flex-wrap px-4"
         >
-          {[1, 2, 3, 4].map((item, index) => (
+          {products.slice(0, 3).map((product, index) => (
             <motion.div
               key={index}
               variants={fadeInVariant}
@@ -74,12 +97,11 @@ const Home = () => {
             >
               <img
                 src={image1} // Replace with actual image path
-                alt={`Asana ${item}`}
                 className="w-full h-32 object-cover rounded-t-lg"
                 style={{ borderRadius: "15px" }}
               />
               <p className="mt-2 text-gray-700 font-semibold text-center">
-                Title
+                {product.sessions} sessions
               </p>
             </motion.div>
           ))}

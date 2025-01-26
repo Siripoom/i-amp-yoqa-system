@@ -5,7 +5,6 @@ const productSchema = new mongoose.Schema(
     sessions: {
       type: Number,
       required: true,
-      default: 0,
     },
     price: {
       type: Number,
