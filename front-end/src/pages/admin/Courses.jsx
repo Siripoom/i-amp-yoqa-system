@@ -17,15 +17,15 @@ import {
   DeleteOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-import "../styles/Course.css";
+import Sidebar from "../../components/Sidebar";
+import Header from "../../components/Header";
+import "../../styles/Course.css";
 import {
   getCourses,
   createCourse,
   updateCourse,
   deleteCourse,
-} from "../services/courseService";
+} from "../../services/courseService";
 
 const { Sider, Content } = Layout;
 const { Option } = Select;

@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api"; // Replace with your API URL
-
+// Replace with your API URL
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 export const getProducts = async () => {
-  const response = await axios.get(`${API_BASE_URL}/products`);
+  const response = await axios.get(`${API_BASE_URL}/api/products`);
   return response.data; // Return only the products array
 };
 
@@ -12,7 +12,7 @@ export const createProduct = async (productData) => {
   Object.keys(productData).forEach((key) => {
     formData.append(key, productData[key]);
   });
-  const response = await axios.post(`${API_BASE_URL}/products`, formData, {
+  const response = await axios.post(`${API_BASE_URL}/api/products`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
@@ -24,7 +24,7 @@ export const updateProduct = async (productId, productData) => {
     formData.append(key, productData[key]);
   });
   const response = await axios.put(
-    `${API_BASE_URL}/products/${productId}`,
+    `${API_BASE_URL}/api/products/${productId}`,
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },
@@ -34,6 +34,8 @@ export const updateProduct = async (productId, productData) => {
 };
 
 export const deleteProduct = async (productId) => {
-  const response = await axios.delete(`${API_BASE_URL}/products/${productId}`);
+  const response = await axios.delete(
+    `${API_BASE_URL}/api/products/${productId}`
+  );
   return response.data;
 };

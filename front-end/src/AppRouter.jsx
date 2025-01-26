@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import DashboardPage from "./pages/Dashboard";
-import UserPage from "./pages/Users";
-import ProductPage from "./pages/ProductManage";
-import CoursesPage from "./pages/Courses";
-import OrderPage from "./pages/Order";
+import DashboardPage from "./pages/admin/Dashboard";
+import UserPage from "./pages/admin/Users";
+import ProductPage from "./pages/admin/ProductManage";
+import CoursesPage from "./pages/admin/Courses";
+import OrderPage from "./pages/admin/Order";
 import HomePage from "./pages/Home";
 import Course from "./pages/Course";
 import Product from "./pages/Product";
@@ -18,11 +18,11 @@ const AppRouter = () => (
   <Router>
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/users" element={<UserPage />} />
-      <Route path="/productManage" element={<ProductPage />} />
+      <Route path="/admin/dashboard" element={<DashboardPage />} />
+      <Route path="/admin/users" element={<UserPage />} />
+      <Route path="/admin/productManage" element={<ProductPage />} />
       <Route path="/courses" element={<CoursesPage />} />
-      <Route path="/orders" element={<OrderPage />} />
+      <Route path="/admin/orders" element={<OrderPage />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/cartSuccess" element={<CartSuccess />} />
       <Route path="/checkout" element={<CheckOut />} />

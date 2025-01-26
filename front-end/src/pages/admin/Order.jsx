@@ -16,9 +16,9 @@ import {
   PlusOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-import "../styles/Order.css";
+import Sidebar from "../../components/Sidebar";
+import Header from "../../components/Header";
+import "../../styles/Order.css";
 
 const { Sider, Content } = Layout;
 const { Option } = Select;

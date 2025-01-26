@@ -18,15 +18,15 @@ import {
   DeleteOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-import "../styles/User.css";
+import Sidebar from "../../components/Sidebar";
+import Header from "../../components/Header";
+import "../../styles/User.css";
 import {
   getUsers,
   createUser,
   updateUser,
   deleteUser,
-} from "../services/userService";
+} from "../../services/userService";
 
 const { Sider, Content } = Layout;
 const { Option } = Select;

@@ -1,11 +1,11 @@
 // src/services/userService.js
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/users"; // Replace with your actual back-end URL
+const API_URL = import.meta.env.VITE_API_URL; // Replace with your actual back-end URL
 
 export const getUsers = async () => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await axios.get(API_URL + "/api/users");
     return response.data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -15,7 +15,7 @@ export const getUsers = async () => {
 
 export const createUser = async (userData) => {
   try {
-    const response = await axios.post(API_URL, userData);
+    const response = await axios.post(`${API_URL}/api/users`, userData);
     return response.data;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -25,7 +25,7 @@ export const createUser = async (userData) => {
 
 export const updateUser = async (id, userData) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, userData);
+    const response = await axios.put(`${API_URL}/api/users/${id}`, userData);
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
@@ -35,7 +35,7 @@ export const updateUser = async (id, userData) => {
 
 export const deleteUser = async (id) => {
   try {
-    const response = await axios.delete(`${API_URL}/${id}`);
+    const response = await axios.delete(`${API_URL}/api/users/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting user:", error);
