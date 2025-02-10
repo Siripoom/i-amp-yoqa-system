@@ -63,11 +63,11 @@ const Sidebar = () => {
           <UserOutlined /> <span>Users</span>
         </NavLink>
         <NavLink
-          to="/admin/class-schedule"
+          to="/admin/schedule"
           activeClassName="active"
           className="nav-item"
         >
-          <CalendarOutlined /> <span>Class Schedule</span>
+          <CalendarOutlined /> <span>Schedule</span>
         </NavLink>
         <NavLink to="/sign-out" activeClassName="active" className="nav-item">
           <LogoutOutlined /> <span>Sign Out</span>

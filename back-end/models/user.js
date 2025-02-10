@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
     primaryKey: true,
     autoIncrement: true,
   }, // ObjectId แทน UUID
+  username: {
+    type: String,
+    required: true,
+  },
   email: {
     type: String,
     required: true,

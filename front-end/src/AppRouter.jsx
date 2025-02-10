@@ -3,6 +3,7 @@ import DashboardPage from "./pages/admin/Dashboard";
 import UserPage from "./pages/admin/Users";
 import ProductPage from "./pages/admin/ProductManage";
 import CoursesPage from "./pages/admin/Courses";
+import Schedule from "./pages/admin/ClassSchedule";
 import OrderPage from "./pages/admin/Order";
 import HomePage from "./pages/Home";
 import Course from "./pages/Course";
@@ -14,6 +15,7 @@ import CheckOut from "./pages/CheckOut";
 import CourseDetail from "./pages/CourseDetail";
 import Contact from "./pages/Contact";
 import PageNotFound from "./pages/404page";
+
 const AppRouter = () => (
   <Router>
     <Routes>
@@ -23,6 +25,7 @@ const AppRouter = () => (
       <Route path="/admin/productManage" element={<ProductPage />} />
       <Route path="/admin/courses" element={<CoursesPage />} />
       <Route path="/admin/orders" element={<OrderPage />} />
+      <Route path="/admin/schedule" element={<Schedule />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/cartSuccess" element={<CartSuccess />} />
       <Route path="/checkout" element={<CheckOut />} />

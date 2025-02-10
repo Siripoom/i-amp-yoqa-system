@@ -154,7 +154,7 @@ const CoursesPage = () => {
           </div>
           <div className="course-filters">
             <Select
-              defaultValue="User ID"
+              defaultValue="Course ID"
               style={{ width: 150, marginRight: 10 }}
             >
               <Option value="Course ID">Course ID</Option>

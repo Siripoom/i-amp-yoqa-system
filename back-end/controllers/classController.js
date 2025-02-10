@@ -1,6 +1,6 @@
 const Class = require("../models/class");
 const Course = require("../models/course");
-
+//todo แก้ เพื่อรับการ CRUD จาก Calendar ของ admin
 // สร้างคลาสใหม่
 exports.createClass = async (req, res) => {
   try {

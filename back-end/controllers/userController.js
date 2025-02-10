@@ -19,6 +19,7 @@ exports.createUser = async (req, res) => {
     // สร้าง User ใหม่
     const user = new User({
       email: req.body.email,
+      username: req.body.username,
       password: hashedPassword,
       first_name: req.body.first_name,
       last_name: req.body.last_name,
@@ -38,9 +39,13 @@ exports.createUser = async (req, res) => {
     await user.save();
 
     // สร้าง JWT Token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: role.role_name },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     // ส่ง response กลับไปพร้อมกับ Token
     res.status(201).json({
@@ -201,3 +206,22 @@ exports.restoreUser = async (req, res) => {
   }
 };
 
+// Get user profile
+exports.getMe = async (req, res) => {
+  try {
+    // ดึงข้อมูลผู้ใช้จาก req.user (ที่ได้จาก token)
+    const user = await User.findById(req.user.id).select("-password"); // ไม่ส่งรหัสผ่านกลับ
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User profile fetched successfully",
+      user,
+    });
+  } catch (error) {
+    console.log("Get Me Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
