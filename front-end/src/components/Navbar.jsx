@@ -54,12 +54,14 @@ const Navbar = () => {
 
         {/* Sign-In Button */}
         <div className="hidden md:block">
-          <Button
-            type="primary"
-            className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold px-4 rounded-2xl hover:bg-pink-400"
-          >
-            Sign-In
-          </Button>
+          <Link to="auth/signin">
+            <Button
+              type="primary"
+              className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold px-4 rounded-2xl hover:bg-pink-400"
+            >
+              Sign-In
+            </Button>
+          </Link>
         </div>
       </div>
 

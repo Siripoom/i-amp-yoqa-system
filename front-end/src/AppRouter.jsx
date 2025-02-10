@@ -15,7 +15,8 @@ import CheckOut from "./pages/CheckOut";
 import CourseDetail from "./pages/CourseDetail";
 import Contact from "./pages/Contact";
 import PageNotFound from "./pages/404page";
-
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 const AppRouter = () => (
   <Router>
     <Routes>
@@ -26,6 +27,8 @@ const AppRouter = () => (
       <Route path="/admin/courses" element={<CoursesPage />} />
       <Route path="/admin/orders" element={<OrderPage />} />
       <Route path="/admin/schedule" element={<Schedule />} />
+      <Route path="/auth/signin" element={<SignIn />} />
+      <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/cartSuccess" element={<CartSuccess />} />
       <Route path="/checkout" element={<CheckOut />} />

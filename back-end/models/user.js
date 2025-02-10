@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, // ObjectId สำหรับ role_id
     ref: "Role",
     required: true,
+    default: "670567b8a75e769571f8238a",
   },
   referrer_id: {
     type: mongoose.Schema.Types.ObjectId,
