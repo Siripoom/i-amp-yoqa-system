@@ -17,6 +17,8 @@ import Contact from "./pages/Contact";
 import PageNotFound from "./pages/404page";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import Profile from "./pages/Profile";
+import Myplane from "./pages/Myplane";
 const AppRouter = () => (
   <Router>
     <Routes>
@@ -29,6 +31,8 @@ const AppRouter = () => (
       <Route path="/admin/schedule" element={<Schedule />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/my-plane" element={<Myplane />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/cartSuccess" element={<CartSuccess />} />
       <Route path="/checkout" element={<CheckOut />} />

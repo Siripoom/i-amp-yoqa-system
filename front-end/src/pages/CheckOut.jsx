@@ -3,15 +3,25 @@ import { Button, Input, Upload, Form, Typography, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // ใช้ navigate
 const { Title, Text } = Typography;
 import image from "../assets/images/imageC1.png";
+
 const Checkout = () => {
   const [form] = Form.useForm();
+  const navigate = useNavigate(); // ใช้เพื่อเปลี่ยนหน้า
 
-  const handleFormSubmit = (values) => {
-    console.log("Form Values:", values);
-    message.success("Order placed successfully!");
+  const handleFormSubmit = async () => {
+    try {
+      const values = await form.validateFields(); // ตรวจสอบข้อมูล
+      console.log("Form Values:", values);
+      message.success("Order placed successfully!");
+      navigate("/cartSuccess"); // เปลี่ยนหน้าไป cartSuccess
+    } catch (error) {
+      message.error(
+        "Please complete all required fields, including uploading the payment slip."
+      );
+    }
   };
 
   return (
@@ -30,40 +40,7 @@ const Checkout = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Section: Form */}
           <div className="flex-1 bg-white p-6 rounded-md shadow-md">
-            <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-              {/* Address */}
-              <Form.Item
-                name="address"
-                label="Address"
-                rules={[
-                  { required: true, message: "Please enter your address" },
-                ]}
-              >
-                <Input placeholder="Enter your address" />
-              </Form.Item>
-
-              {/* Postal Code */}
-              <Form.Item
-                name="postalCode"
-                label="Postal Code"
-                rules={[
-                  { required: true, message: "Please enter your postal code" },
-                ]}
-              >
-                <Input placeholder="Enter your postal code" />
-              </Form.Item>
-
-              {/* Phone Number */}
-              <Form.Item
-                name="phoneNumber"
-                label="Phone Number"
-                rules={[
-                  { required: true, message: "Please enter your phone number" },
-                ]}
-              >
-                <Input placeholder="Enter your phone number" />
-              </Form.Item>
-
+            <Form form={form} layout="vertical">
               {/* Payment Section */}
               <div className="bg-gray-100 p-4 rounded-md mb-6">
                 <Title level={4}>Payment Details</Title>
@@ -99,15 +76,13 @@ const Checkout = () => {
 
               {/* Submit Button */}
               <Form.Item>
-                <Link to="/cartSuccess">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    className="bg-pink-400 text-white w-full"
-                  >
-                    Place Order
-                  </Button>
-                </Link>
+                <Button
+                  type="primary"
+                  className="bg-pink-400 text-white w-full"
+                  onClick={handleFormSubmit} // ตรวจสอบก่อนส่ง
+                >
+                  Buy
+                </Button>
               </Form.Item>
             </Form>
           </div>
@@ -125,7 +100,7 @@ const Checkout = () => {
                 className="w-24 h-24 rounded-md"
               />
               <div>
-                <Text className="block font-semibold">Session: 10</Text>
+                <Text className="block font-semibold">Session: 20</Text>
               </div>
             </div>
 
@@ -133,7 +108,7 @@ const Checkout = () => {
             <div className="border-t pt-4">
               <div className="flex justify-between mb-2">
                 <Text>Total</Text>
-                <Text>฿1,590.00</Text>
+                <Text>฿999.00</Text>
               </div>
             </div>
           </div>

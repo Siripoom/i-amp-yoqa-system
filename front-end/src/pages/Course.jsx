@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { getProducts } from "../services/productService";
 import image from "../assets/images/imageC1.png";
+import { Link } from "react-router-dom";
 
 const Course = () => {
   const [loading, setLoading] = useState(false);
@@ -81,12 +82,14 @@ const Course = () => {
                         >
                           Details
                         </Button>
-                        <Button
-                          type="primary"
-                          className="bg-pink-400 text-white px-6 rounded-lg mt-2 hover:bg-yellow-400"
-                        >
-                          Checkout
-                        </Button>
+                        <Link to="/checkout">
+                          <Button
+                            type="primary"
+                            className="bg-pink-400 text-white px-6 rounded-lg mt-2 hover:bg-yellow-400"
+                          >
+                            Checkout
+                          </Button>
+                        </Link>
                       </div>
                     </Card>
                   </Badge.Ribbon>

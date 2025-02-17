@@ -8,29 +8,29 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { getProducts } from "../services/productService";
 import { useEffect, useState } from "react";
+
 const Home = () => {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
+
   useEffect(() => {
-    fetchProducts();
+    setLoading(true);
+    getProducts()
+      .then((response) => {
+        console.log("Fetched Products:", response);
+        if (response.status === "success" && Array.isArray(response.data)) {
+          setProducts(response.data);
+        } else {
+          message.error("Failed to load products");
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        message.error("Failed to load products");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const response = await getProducts();
-      if (response.status === "success") {
-        console.log(response.data);
-
-        setProducts(response.data); // อัปเดตข้อมูลคอร์ส
-      } else {
-        message.error("Failed to load products");
-      }
-    } catch (error) {
-      message.error("Failed to load products");
-    }
-    setLoading(false);
-  };
   // Animation Variants
   const fadeInVariant = {
     hidden: { opacity: 0, y: 50 },
@@ -88,23 +88,30 @@ const Home = () => {
           variants={staggerVariant}
           className="flex justify-center gap-6 flex-wrap px-4"
         >
-          {products.slice(0, 3).map((product, index) => (
-            <motion.div
-              key={index}
-              variants={fadeInVariant}
-              className="w-40 h-52 bg-white rounded-lg shadow-md flex flex-col items-center justify-center p-4"
-              style={{ borderRadius: "25px" }}
-            >
-              <img
-                src={image1} // Replace with actual image path
-                className="w-full h-32 object-cover rounded-t-lg"
-                style={{ borderRadius: "15px" }}
-              />
-              <p className="mt-2 text-gray-700 font-semibold text-center">
-                {product.sessions} sessions
-              </p>
-            </motion.div>
-          ))}
+          {loading ? (
+            <p className="text-center text-gray-500">Loading products...</p>
+          ) : products.length > 0 ? (
+            products.map((product, index) => (
+              <motion.div
+                key={index}
+                variants={fadeInVariant}
+                className="w-40 h-52 bg-white rounded-lg shadow-md flex flex-col items-center justify-center p-4"
+              >
+                <img
+                  src={product.image || image1}
+                  alt="Product"
+                  className="w-full h-32 object-cover rounded-t-lg"
+                />
+                <p className="mt-2 text-gray-700 font-semibold text-center">
+                  {product.sessions
+                    ? `${product.sessions} sessions`
+                    : "No session data"}
+                </p>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500">No products available</p>
+          )}
         </motion.div>
         <motion.div variants={fadeInVariant} className="text-center mt-4">
           <Button
