@@ -19,6 +19,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import Myplane from "./pages/Myplane";
+import MyOrders from "./pages/MyOder";
 const AppRouter = () => (
   <Router>
     <Routes>
@@ -33,6 +34,7 @@ const AppRouter = () => (
       <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/my-plane" element={<Myplane />} />
+      <Route path="/my-orders" element={<MyOrders />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/cartSuccess" element={<CartSuccess />} />
       <Route path="/checkout" element={<CheckOut />} />

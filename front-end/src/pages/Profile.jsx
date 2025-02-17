@@ -46,7 +46,7 @@ const Profile = () => {
               </Link>
               <Link
                 to="/my-orders"
-                className="text-black font-bold cursor-pointer block"
+                className="text-gray-400 cursor-pointer block"
               >
                 My Orders
               </Link>

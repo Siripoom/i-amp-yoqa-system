@@ -1,81 +1,54 @@
-import { Button, Card, Modal, Typography, message } from "antd";
-import { Calendar, momentLocalizer } from "react-big-calendar";
+import { Button, Card, Typography, message } from "antd";
 import { useState, useEffect } from "react";
 import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
 
 const { Title } = Typography;
-const localizer = momentLocalizer(moment);
 
 const Myplane = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // ข้อมูลคอร์สที่ถูกลงทะเบียนไว้
+  // ข้อมูลคอร์สที่ลงทะเบียนไว้
   const [events, setEvents] = useState([
     {
       id: 1,
       title: "MEDITATION YOGA (M)",
-      start: new Date(2025, 1, 12),
-      end: new Date(2025, 1, 12),
+      date: new Date(2025, 1, 12),
       instructor: "John Doe",
       description:
-        "โยคะสายปรับสมุดล สายสมาธิ คลายความเครียด ลดความกังวล กำหนดลมหายใจ ให้เวลาเรียนรู้ร่างกายเหมาะกับผู้ฝึกใหม่ขึ้นไป",
+        "โยคะสายปรับสมดุล สายสมาธิ คลายความเครียด ลดความกังวล กำหนดลมหายใจ",
       reserved: false,
       zoomLink: "https://zoom.us/webinar/web-dev-basics",
+      roomNumber: "101", // เพิ่มหมายเลขห้อง
+      passcode: "YOGA2025", // เพิ่มรหัสผ่าน
+    },
+    {
+      id: 2,
+      title: "HATHA YOGA (H)",
+      date: new Date(2025, 1, 15),
+      instructor: "Jane Smith",
+      description:
+        "โยคะที่เหมาะสำหรับทุกคน เน้นการยืดเหยียดและความสมดุลของร่างกาย",
+      reserved: false,
+      zoomLink: "https://zoom.us/hatha-yoga-class",
+      roomNumber: "203", // หมายเลขห้อง
+      passcode: "HATHA2025", // รหัสผ่าน
     },
   ]);
 
-  // สำหรับ Modal แสดงรายละเอียดคอร์ส
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // ฟังก์ชันเปิด Modal พร้อมแสดงรายละเอียดคอร์ส
-  const handleEventClick = (event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
-
-  // ฟังก์ชันปิด Modal
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedEvent(null);
-  };
-
   // ฟังก์ชันสำหรับจองคอร์ส
-  const handleReserveCourse = () => {
-    if (selectedEvent) {
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === selectedEvent.id ? { ...event, reserved: true } : event
-        )
-      );
-
-      message.success("Reservation successful! ✅");
-
-      // ปิด Modal และบังคับให้อัปเดต UI
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setSelectedEvent(null);
-      }, 300);
-    }
-  };
-
-  // กำหนดสีของอีเวนต์ตามสถานะ (จองแล้วหรือยังไม่จอง)
-  const eventPropGetter = (event) => {
-    const style = {
-      backgroundColor: event.reserved ? "#52c41a" : "#1890ff", // สีเขียวเมื่อจองแล้ว
-      color: "white",
-      borderRadius: "4px",
-      border: "none",
-      padding: "4px",
-    };
-    return { style };
+  const handleReserveCourse = (id) => {
+    setEvents((prevEvents) =>
+      prevEvents.map((event) =>
+        event.id === id ? { ...event, reserved: true } : event
+      )
+    );
+    message.success("จองคอร์สสำเร็จ! ✅");
   };
 
   return (
@@ -86,7 +59,7 @@ const Myplane = () => {
           "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
       }}
     >
-      {/* Navbar อยู่ด้านบน */}
+      {/* Navbar */}
       <Navbar />
 
       {/* Container หลัก */}
@@ -100,7 +73,7 @@ const Myplane = () => {
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
-                className=" text-gray-400  cursor-pointer block"
+                className=" text-gray-400 cursor-pointer block"
               >
                 My Profile
               </Link>
@@ -112,84 +85,87 @@ const Myplane = () => {
               </Link>
               <Link
                 to="/my-orders"
-                className="text-black font-bold cursor-pointer block"
+                className="text-gray-400 cursor-pointer block"
               >
                 My Orders
               </Link>
             </div>
           </Card>
 
-          {/* Calendar ที่แสดงข้อมูลคอร์ส */}
-          <Card className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md">
+          {/* คอร์สที่ลงทะเบียน */}
+          <div className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md bg-white">
             <Title level={3} className="text-purple-700">
               My Course Schedule
             </Title>
-            <Calendar
-              localizer={localizer}
-              events={events}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: 500, padding: "10px", borderRadius: "8px" }}
-              onSelectEvent={handleEventClick} // คลิกที่อีเวนต์เพื่อดูรายละเอียด
-              eventPropGetter={eventPropGetter} // เปลี่ยนสีของอีเวนต์เมื่อจองแล้ว
-            />
-          </Card>
+
+            {/* แสดงคอร์สในรูปแบบ Card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              {events.map((event) => (
+                <Card
+                  key={event.id}
+                  className="p-4 rounded-lg shadow-md"
+                  title={event.title}
+                  extra={
+                    event.reserved ? (
+                      <span className="text-green-500 font-semibold">
+                        จองแล้ว ✅
+                      </span>
+                    ) : (
+                      <Button
+                        type="primary"
+                        className="bg-purple-600 text-white"
+                        onClick={() => handleReserveCourse(event.id)}
+                      >
+                        Reserve Course
+                      </Button>
+                    )
+                  }
+                >
+                  <p>
+                    <strong>Instructor:</strong> {event.instructor}
+                  </p>
+                  <p>
+                    <strong>Date:</strong>{" "}
+                    {moment(event.date).format("MMMM Do YYYY")}
+                  </p>
+                  <p>
+                    <strong>Description:</strong> {event.description}
+                  </p>
+
+                  {/* แสดง Room Number และ Passcode ถ้าจองแล้ว */}
+                  {event.reserved && (
+                    <>
+                      <p>
+                        <strong>📌 Room Number:</strong>{" "}
+                        <span className="text-purple-600">
+                          {event.roomNumber}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>🔑 Passcode:</strong>{" "}
+                        <span className="text-purple-600">
+                          {event.passcode}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>🔗 Zoom Link:</strong>{" "}
+                        <a
+                          href={event.zoomLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          Join Zoom Class
+                        </a>
+                      </p>
+                    </>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Modal แสดงรายละเอียดคอร์ส */}
-      <Modal
-        title="Course Details"
-        visible={isModalOpen}
-        onCancel={handleCloseModal}
-        footer={[
-          <Button key="close" onClick={handleCloseModal}>
-            Close
-          </Button>,
-          !selectedEvent?.reserved && (
-            <Button
-              key="reserve"
-              type="primary"
-              className="bg-purple-600 text-white"
-              onClick={handleReserveCourse}
-            >
-              Reserve Course
-            </Button>
-          ),
-        ]}
-      >
-        {selectedEvent && (
-          <div>
-            <Title level={4}>{selectedEvent.title}</Title>
-            <p>
-              <strong>Instructor:</strong> {selectedEvent.instructor}
-            </p>
-            <p>
-              <strong>Time:</strong>{" "}
-              {moment(selectedEvent.start).format("MMMM Do YYYY, h:mm A")} -{" "}
-              {moment(selectedEvent.end).format("h:mm A")}
-            </p>
-            <p>
-              <strong>Description:</strong> {selectedEvent.description}
-            </p>
-
-            {/* แสดงลิงก์เข้า Zoom ถ้าจองแล้ว */}
-            {selectedEvent.reserved && (
-              <p>
-                <strong>Zoom Link:</strong>{" "}
-                <a
-                  href={selectedEvent.zoomLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  Join Zoom Class
-                </a>
-              </p>
-            )}
-          </div>
-        )}
-      </Modal>
 
       {/* Footer */}
       <Footer />

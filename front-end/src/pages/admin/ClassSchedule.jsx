@@ -10,6 +10,7 @@ import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import "../../styles/Course.css";
 import "../../styles/Calendar.css";
+
 const { Sider, Content } = Layout;
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 const localizer = momentLocalizer(moment);
@@ -18,66 +19,37 @@ const Schedule = () => {
   const [events, setEvents] = useState([
     {
       id: 1,
-      title: "Meeting with Team",
-      start: new Date(2025, 0, 28, 10, 0),
-      end: new Date(2025, 0, 28, 12, 0),
-    },
-    {
-      id: 2,
-      title: "Project Deadline",
-      start: new Date(2025, 0, 30, 14, 0),
-      end: new Date(2025, 0, 30, 15, 0),
+      title: "MEDITATION YOGA",
+      start: new Date(2025, 1, 12, 10, 0),
+      end: new Date(2025, 1, 12, 12, 0),
+      description: "โยคะสายสมาธิ คลายเครียด",
+      roomNumber: "101",
+      passcode: "YOGA2025",
+      zoomLink: "https://zoom.us/meditation-yoga",
     },
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEvent, setCurrentEvent] = useState(null);
   const [form] = Form.useForm();
-  // const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
-  // const [repeatFrequency, setRepeatFrequency] = useState(1);
-  // const [repeatInterval, setRepeatInterval] = useState("week");
-  // const [repeatOnDays, setRepeatOnDays] = useState([]);
-  // const [repeatEnds, setRepeatEnds] = useState("never");
-  // const [repeatEndDate, setRepeatEndDate] = useState(null);
-  // const [repeatOccurrences, setRepeatOccurrences] = useState(null);
-  // const [recurrenceDetails, setRecurrenceDetails] = useState("");
 
-  // const generateRecurrenceDetails = () => {
-  //   if (repeatInterval === "week") {
-  //     return `Every ${repeatFrequency} week(s) on ${repeatOnDays.join(", ")} ${
-  //       repeatEnds === "never"
-  //         ? "forever"
-  //         : repeatEnds === "onDate"
-  //         ? `until ${repeatEndDate}`
-  //         : `for ${repeatOccurrences} occurrences`
-  //     }`;
-  //   }
-
-  //   return `Every ${repeatFrequency} ${repeatInterval}(s) ${
-  //     repeatEnds === "never"
-  //       ? "forever"
-  //       : repeatEnds === "onDate"
-  //       ? `until ${repeatEndDate}`
-  //       : `for ${repeatOccurrences} occurrences`
-  //   }`;
-  // };
-
-  // เปิด Modal สำหรับเพิ่ม/แก้ไขอีเวนต์
   const handleOpenModal = (event, start = null, end = null) => {
     if (event) {
-      // กรณี Edit Event
       setCurrentEvent(event);
       form.setFieldsValue({
         ...event,
-        start: event.start ? formatDateTimeLocal(event.start) : null,
-        end: event.end ? formatDateTimeLocal(event.end) : null,
+        start: formatDateTimeLocal(event.start),
+        end: formatDateTimeLocal(event.end),
       });
     } else {
-      // กรณี Add Event
       setCurrentEvent(null);
       form.setFieldsValue({
         title: "",
-        Teacher: null,
+        teacher: null,
+        description: "",
+        roomNumber: "",
+        passcode: "",
+        zoomLink: "",
         start: start ? formatDateTimeLocal(start) : null,
         end: end ? formatDateTimeLocal(end) : null,
       });
@@ -100,12 +72,6 @@ const Schedule = () => {
         ...values,
         start: values.start ? dayjs(values.start).toDate() : null,
         end: values.end ? dayjs(values.end).toDate() : null,
-        recurrence: {
-          frequency: values.repeat,
-          ends: values.repeatEnds,
-          endDate: values.endDate ? dayjs(values.endDate).toDate() : null,
-          occurrences: values.occurrences || null,
-        },
       };
 
       if (currentEvent) {
@@ -125,54 +91,11 @@ const Schedule = () => {
     });
   };
 
-  // ลบอีเวนต์
   const handleDeleteEvent = () => {
     setEvents((prev) => prev.filter((event) => event.id !== currentEvent.id));
     handleCloseModal();
   };
-  // const generateRecurringEvents = (event) => {
-  //   const { start, end, recurrence } = event;
 
-  //   if (!recurrence || recurrence.frequency === "none") {
-  //     return [event];
-  //   }
-
-  //   const events = [];
-  //   let currentStart = dayjs(start);
-  //   let currentEnd = dayjs(end);
-
-  //   while (
-  //     (!recurrence.endDate || currentStart.isBefore(recurrence.endDate)) &&
-  //     (!recurrence.occurrences || events.length < recurrence.occurrences)
-  //   ) {
-  //     events.push({
-  //       ...event,
-  //       start: currentStart.toDate(),
-  //       end: currentEnd.toDate(),
-  //     });
-
-  //     switch (recurrence.frequency) {
-  //       case "daily":
-  //         currentStart = currentStart.add(1, "day");
-  //         currentEnd = currentEnd.add(1, "day");
-  //         break;
-  //       case "weekly":
-  //         currentStart = currentStart.add(1, "week");
-  //         currentEnd = currentEnd.add(1, "week");
-  //         break;
-  //       case "monthly":
-  //         currentStart = currentStart.add(1, "month");
-  //         currentEnd = currentEnd.add(1, "month");
-  //         break;
-  //       default:
-  //         break;
-  //     }
-  //   }
-
-  //   return events;
-  // };
-
-  // การลากและย้ายอีเวนต์
   const handleEventDrop = ({ event, start, end }) => {
     setEvents((prev) =>
       prev.map((e) => (e.id === event.id ? { ...e, start, end } : e))
@@ -201,9 +124,9 @@ const Schedule = () => {
               style={{ height: 500, padding: "16px", borderRadius: "8px" }}
               selectable
               resizable
-              onSelectEvent={(event) => handleOpenModal(event)} // สำหรับแก้ไข
-              onSelectSlot={
-                ({ start, end }) => handleOpenModal(null, start, end) // สำหรับเพิ่ม
+              onSelectEvent={(event) => handleOpenModal(event)}
+              onSelectSlot={({ start, end }) =>
+                handleOpenModal(null, start, end)
               }
               onEventDrop={handleEventDrop}
             />
@@ -213,7 +136,7 @@ const Schedule = () => {
 
       {/* Modal สำหรับเพิ่ม/แก้ไขอีเวนต์ */}
       <Modal
-        title={currentEvent ? "Edit Event" : "Add Event"} // ใช้ currentEvent เพื่อตัดสินใจ
+        title={currentEvent ? "Edit Event" : "Add Event"}
         visible={isModalOpen}
         onCancel={handleCloseModal}
         footer={[
@@ -238,9 +161,10 @@ const Schedule = () => {
           >
             <Input />
           </Form.Item>
+
           <Form.Item
             label="Teacher"
-            name="Teacher"
+            name="teacher"
             rules={[{ required: true, message: "Please select a teacher" }]}
           >
             <Select placeholder="Select a teacher">
@@ -250,6 +174,22 @@ const Schedule = () => {
             </Select>
           </Form.Item>
 
+          <Form.Item label="Description" name="description">
+            <Input.TextArea rows={2} placeholder="รายละเอียดของคลาส" />
+          </Form.Item>
+
+          <Form.Item label="📌 Room Number" name="roomNumber">
+            <Input placeholder="Enter Room Number" />
+          </Form.Item>
+
+          <Form.Item label="🔑 Passcode" name="passcode">
+            <Input placeholder="Enter Passcode" />
+          </Form.Item>
+
+          <Form.Item label="🔗 Zoom Link" name="zoomLink">
+            <Input placeholder="Enter Zoom Link" />
+          </Form.Item>
+
           <Form.Item
             label="Start Time"
             name="start"
@@ -257,6 +197,7 @@ const Schedule = () => {
           >
             <Input type="datetime-local" />
           </Form.Item>
+
           <Form.Item
             label="End Time"
             name="end"
@@ -264,100 +205,8 @@ const Schedule = () => {
           >
             <Input type="datetime-local" />
           </Form.Item>
-          {/* <Form.Item label="Repeat" name="repeatType" initialValue="none">
-            <Select
-              onChange={(value) => {
-                if (value === "custom") {
-                  setIsRecurringModalOpen(true); // เปิด Modal การตั้งค่าการทำซ้ำ
-                }
-              }}
-            >
-              <Select.Option value="none">No Repeat</Select.Option>
-              <Select.Option value="custom">Custom Repeat</Select.Option>
-            </Select>
-          </Form.Item> */}
-
-          {/* แสดงรายละเอียดการทำซ้ำ */}
-          {/* {recurrenceDetails && (
-            <div>
-              <p>
-                <strong>Repeat Details:</strong> {recurrenceDetails}
-              </p>
-            </div>
-          )} */}
         </Form>
       </Modal>
-      {/* <Modal
-        title="Set Recurrence"
-        visible={isRecurringModalOpen}
-        onCancel={() => setIsRecurringModalOpen(false)}
-        onOk={() => {
-          setIsRecurringModalOpen(false);
-          setRecurrenceDetails(generateRecurrenceDetails()); // แสดงรายละเอียดที่ตั้งค่า
-        }}
-      >
-        <Form layout="vertical">
-          <Form.Item label="Repeat Every">
-            <Input.Group compact>
-              <Input
-                style={{ width: "30%" }}
-                placeholder="1"
-                value={repeatFrequency}
-                onChange={(e) => setRepeatFrequency(e.target.value)}
-              />
-              <Select
-                style={{ width: "70%" }}
-                value={repeatInterval}
-                onChange={(value) => setRepeatInterval(value)}
-              >
-                <Select.Option value="day">Day(s)</Select.Option>
-                <Select.Option value="week">Week(s)</Select.Option>
-                <Select.Option value="month">Month(s)</Select.Option>
-              </Select>
-            </Input.Group>
-          </Form.Item>
-
-          <Form.Item label="Repeat On (for Weekly)">
-            <Checkbox.Group
-              options={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
-              value={repeatOnDays}
-              onChange={(checkedValues) => setRepeatOnDays(checkedValues)}
-            />
-          </Form.Item>
-
-          <Form.Item label="Ends">
-            <Radio.Group
-              onChange={(e) => setRepeatEnds(e.target.value)}
-              value={repeatEnds}
-            >
-              <Radio value="never">Never</Radio>
-              <Radio value="onDate">
-                On Date
-                {repeatEnds === "onDate" && (
-                  <Input
-                    type="date"
-                    style={{ marginLeft: 10 }}
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
-                )}
-              </Radio>
-              <Radio value="afterOccurrences">
-                After
-                {repeatEnds === "afterOccurrences" && (
-                  <Input
-                    type="number"
-                    style={{ marginLeft: 10, width: "60px" }}
-                    value={repeatOccurrences}
-                    onChange={(e) => setRepeatOccurrences(e.target.value)}
-                  />
-                )}
-                Occurrences
-              </Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Form>
-      </Modal> */}
     </Layout>
   );
 };
