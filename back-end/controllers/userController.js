@@ -6,19 +6,13 @@ const jwt = require("jsonwebtoken");
 // สร้าง User ใหม่
 exports.createUser = async (req, res) => {
   try {
-    // ค้นหา role_id จาก role_name ที่ส่งมาใน body
-    const role = await Role.findOne({ role_name: req.body.role_name });
-    if (!role) {
-      return res.status(404).json({ message: "Role not found" });
-    }
-    console.log(req.body.password);
-
     // เข้ารหัสรหัสผ่าน
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
     // สร้าง User ใหม่
     const user = new User({
       email: req.body.email,
+      username: req.body.username,
       password: hashedPassword,
       first_name: req.body.first_name,
       last_name: req.body.last_name,
@@ -27,10 +21,10 @@ exports.createUser = async (req, res) => {
       birth_date: req.body.birth_date,
       address: req.body.address,
       registration_date: req.body.registration_date || Date.now(),
-      role_id: role._id,
+      role_id: req.body.role_name,
       referrer_id: req.body.referrer_id || null,
       total_classes: req.body.total_classes,
-      remaining_classes: req.body.remaining_classes,
+      remaining_session: req.body.remaining_session,
       special_rights: req.body.special_rights,
       deleted: false,
     });
@@ -38,9 +32,13 @@ exports.createUser = async (req, res) => {
     await user.save();
 
     // สร้าง JWT Token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: req.body.role_name || "default_role" }, // ระบุค่า default role หากไม่มี role_name
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     // ส่ง response กลับไปพร้อมกับ Token
     res.status(201).json({
@@ -110,14 +108,8 @@ exports.getUserById = async (req, res) => {
 // อัปเดต User
 exports.updateUser = async (req, res) => {
   try {
-    // ตรวจสอบว่า role_name ที่ส่งมาใน body นั้นมีอยู่หรือไม่
-    const role = await Role.findOne({ role_name: req.body.role_name });
-    if (!role) {
-      return res.status(404).json({ message: "Role not found" });
-    }
-
     // ตรวจสอบว่ามีการส่ง password มาหรือไม่
-    let updatedData = { ...req.body, role_id: role._id };
+    let updatedData = { ...req.body, role_id: req.body.role_name };
 
     // ถ้ามีการส่ง password ใหม่ ให้ทำการเข้ารหัส
     if (req.body.password) {
@@ -198,5 +190,25 @@ exports.restoreUser = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Get user profile
+exports.getMe = async (req, res) => {
+  try {
+    // ดึงข้อมูลผู้ใช้จาก req.user (ที่ได้จาก token)
+    const user = await User.findById(req.user.id).select("-password"); // ไม่ส่งรหัสผ่านกลับ
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User profile fetched successfully",
+      user,
+    });
+  } catch (error) {
+    console.log("Get Me Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

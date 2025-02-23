@@ -6,6 +6,7 @@ const {
   getCourseById,
   updateCourse,
   deleteCourse,
+  restoreCourse,
 } = require("../controllers/courseController");
 
 // Route สำหรับสร้างคอร์ส
@@ -22,5 +23,8 @@ router.put("/:id", updateCourse);
 
 // Route สำหรับลบคอร์สแบบ Soft Delete
 router.delete("/:id", deleteCourse);
+
+// Route สำหรับ restore คอร์ส
+router.put("/restore/:id", restoreCourse); // เพิ่มเส้นทางนี้เพื่อ restore คอร์ส
 
 module.exports = router;

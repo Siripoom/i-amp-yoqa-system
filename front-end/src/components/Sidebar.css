@@ -1,0 +1,123 @@
+/* Sidebar.css */
+
+.sidebar {
+  position: sticky; /* Sticky position */
+  top: 0; /* Keeps it at the top of the viewport */
+  width: 220px;
+  height: 100vh; /* Full viewport height */
+  background-color: #ffffff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.logo-icon {
+  width: 50px;
+  height: 50px;
+  background-color: #f7b7da;
+  border-radius: 10px;
+}
+
+.logo-text {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #333;
+  font-size: 18px;
+}
+
+.sidebar-nav {
+  width: 100%;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  color: #6b6b6b;
+  font-size: 16px;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-item:hover {
+  background-color: #f0f0f0;
+}
+
+.nav-item span {
+  margin-left: 10px;
+}
+
+.nav-item.active {
+  background-color: #f7b7da;
+  color: #fff;
+}
+
+.nav-item.active span {
+  font-weight: bold;
+}
+
+.nav-item svg {
+  font-size: 18px;
+  color: inherit;
+}
+
+/* Dashboard.css */
+
+.table-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.table-cell {
+  width: 25%;
+  text-align: left;
+  padding: 4px 8px;
+}
+
+.popularity-bar {
+  width: 40%;
+  height: 8px;
+  background-color: #e5e5e5;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.popularity-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.card-header {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1f1f1f;
+  margin-bottom: 20px;
+}
+
+.total-revenue-card {
+  padding: 20px;
+}
+
+.total-revenue-chart {
+  margin-top: 20px;
+}
+
+.top-products-card,
+.top-courses-card {
+  padding: 20px;
+  background-color: #f9fafb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

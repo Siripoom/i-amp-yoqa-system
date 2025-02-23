@@ -1,0 +1,44 @@
+.course-container {
+  padding: 20px;
+  background-color: #f4f5f7;
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.create-course-button {
+  background-color: #fa7e1e;
+  border-color: #fa7e1e;
+}
+
+.course-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.ant-table-thead > tr > th {
+  background-color: #f9f9f9;
+  font-weight: bold;
+}
+
+.ant-table-tbody > tr > td {
+  padding: 16px;
+}
+
+.ant-tag {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.875em;
+}
+
+/* Pagination styling */
+.ant-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}

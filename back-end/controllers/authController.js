@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const Role = require("../models/role");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 
@@ -21,29 +22,36 @@ exports.login = async (req, res) => {
     }
 
     // สร้าง JWT Token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role_name },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
-    res.status(200).json({ token });
+    res.status(200).json({ message: "Login successful", token, data: user });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 // ฟังก์ชันการตรวจสอบ Token
-exports.verifyToken = (req, res, next) => {
-  const token = req.header("Authorization").replace("Bearer ", "");
-
-  if (!token) {
-    return res.status(401).json({ message: "No token, authorization denied" });
-  }
-
+exports.getMe = async (req, res) => {
   try {
+    const token = req.headers.authorization.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    const user = await User.findById(decoded.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user });
   } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
+    res.status(500).json({ message: error.message });
   }
 };
