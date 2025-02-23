@@ -1,4 +1,4 @@
-import { Button, Checkbox, Form, Input, Typography } from "antd";
+import { Button, Checkbox, Form, Input, Typography, message } from "antd";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
@@ -7,22 +7,28 @@ import { login } from "../services/authService";
 const { Title, Text } = Typography;
 
 const SignIn = () => {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+
   const onFinish = async (values) => {
     try {
-      // console.log(values);
       const { username, password } = values;
       const response = await login(username, password);
-      // console.log("Login successful:", response);
-      // Example: Store token or redirect
-      localStorage.setItem("token", response.token);
 
+      // เก็บ Token และ User Data
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("user_id", response.data._id);
       localStorage.setItem(
         "username",
-        response.data.first_name + " " + response.data.last_name
+        `${response.data.first_name} ${response.data.last_name}`
       );
-      // window.location.href = "/dashboard";
-      navigator("/");
+      localStorage.setItem("role", response.data.role_id); // เก็บ role ของผู้ใช้
+
+      // ตรวจสอบ role แล้วเปลี่ยนเส้นทาง
+      if (response.data.role_id === "Admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error("Login failed:", error);
     }

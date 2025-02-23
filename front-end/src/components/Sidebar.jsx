@@ -48,13 +48,13 @@ const Sidebar = () => {
         >
           <ReadOutlined /> <span>Courses</span>
         </NavLink>
-        <NavLink
+        {/* <NavLink
           to="/admin/sales-report"
           activeClassName="active"
           className="nav-item"
         >
           <FileTextOutlined /> <span>Sales Report</span>
-        </NavLink>
+        </NavLink> */}
         <NavLink
           to="/admin/users"
           activeClassName="active"
@@ -69,9 +69,9 @@ const Sidebar = () => {
         >
           <CalendarOutlined /> <span>Schedule</span>
         </NavLink>
-        <NavLink to="/" activeClassName="active" className="nav-item">
+        {/* <NavLink to="/" activeClassName="active" className="nav-item">
           <LogoutOutlined /> <span>Sign Out</span>
-        </NavLink>
+        </NavLink> */}
       </nav>
     </div>
   );

@@ -1,10 +1,17 @@
-import { Layout, Modal, Input, Form, Button, Select, message } from "antd";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import { useState, useEffect } from "react";
+import {
+  Layout,
+  Modal,
+  Input,
+  Form,
+  Button,
+  Select,
+  message,
+  Card,
+  Row,
+  Col,
+} from "antd";
 import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -13,9 +20,10 @@ import "../../styles/Calendar.css";
 import { getCourses } from "../../services/courseService";
 import classService from "../../services/classService";
 import { getUsers } from "../../services/userService";
+
+import reservationService from "../../services/reservationService";
+
 const { Sider, Content } = Layout;
-const DragAndDropCalendar = withDragAndDrop(Calendar);
-const localizer = momentLocalizer(moment);
 
 const Schedule = () => {
   const [courses, setCourses] = useState([]);
@@ -25,10 +33,14 @@ const Schedule = () => {
   const [currentEvent, setCurrentEvent] = useState(null);
   const [form] = Form.useForm();
 
-  // 📌 โหลดข้อมูลคอร์สและคลาสทั้งหมด
+  // ดึงชื่อผู้ใช้งานจาก local storage
+  const username = localStorage.getItem("username");
+
+  // โหลดข้อมูลคอร์สและคลาสทั้งหมด
   useEffect(() => {
     fetchData();
   }, []);
+
   const fetchData = async () => {
     try {
       const courseData = await getCourses();
@@ -40,6 +52,7 @@ const Schedule = () => {
       const userData = await getUsers();
       setUsers(userData.users);
       console.log("Raw userData:", userData.users);
+
       const formattedEvents = classData.data.map((cls) => ({
         id: cls._id,
         title: cls.title,
@@ -48,8 +61,8 @@ const Schedule = () => {
         description: cls.description,
         passcode: cls.passcode,
         zoom_link: cls.zoom_link,
-        start: new Date(cls.start_time), // ✅ แปลงเป็น Date
-        end: new Date(cls.end_time), // ✅ แปลงเป็น Date
+        start: new Date(cls.start_time),
+        end: new Date(cls.end_time),
       }));
 
       console.log("Formatted events:", formattedEvents);
@@ -59,12 +72,11 @@ const Schedule = () => {
     }
   };
 
-  fetchData();
   const formatDateTimeLocal = (date) => {
     return date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : null;
   };
 
-  // 📌 เปิด Modal เพื่อเพิ่มหรือแก้ไขคลาส
+  // ฟังก์ชันสำหรับเปิด Modal (ยังคงใช้สำหรับเพิ่ม/แก้ไขคลาส)
   const handleOpenModal = (event = null, start = null, end = null) => {
     if (event) {
       setCurrentEvent(event);
@@ -99,14 +111,14 @@ const Schedule = () => {
     setIsModalOpen(true);
   };
 
-  // 📌 ปิด Modal และโหลดข้อมูลใหม่
+  // ปิด Modal และโหลดข้อมูลใหม่
   const handleCloseModal = async () => {
-    setIsModalOpen(false); // ✅ ปิด Modal หลังจากข้อมูลโหลดใหม่แล้ว
-    await fetchData(); // ✅ โหลดข้อมูลใหม่ก่อนปิด Modal
+    setIsModalOpen(false);
+    await fetchData();
     form.resetFields();
   };
 
-  // 📌 เพิ่มหรือแก้ไขคลาส
+  // เพิ่ม/แก้ไขคลาส
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -140,12 +152,11 @@ const Schedule = () => {
     }
   };
 
-  // 📌 ลบคลาส
+  // ลบคลาส
   const handleDeleteEvent = async () => {
     try {
       await classService.deleteClass(currentEvent.id);
       message.success("Class deleted successfully!");
-
       await handleCloseModal();
     } catch (error) {
       message.error("Error deleting class!");
@@ -153,26 +164,28 @@ const Schedule = () => {
     }
   };
 
-  // 📌 ลากแล้วเปลี่ยนเวลา
-  const handleEventDrop = async ({ event, start, end }) => {
+  // ฟังก์ชันสำหรับลงทะเบียนคลาส (อัพเดต Teacher)
+  const handleRegister = async (event) => {
     try {
-      await classService.updateClass(event.id, { start, end });
-      message.success("Class rescheduled successfully!");
-
-      // รีโหลดข้อมูลคลาส
-      const updatedClasses = await classService.getAllClasses();
-      setEvents(updatedClasses);
+      if (!username) {
+        message.error("ไม่พบชื่อผู้ใช้งานใน local storage");
+        return;
+      }
+      // อัพเดตข้อมูล Teacher ของคลาสด้วย username ที่ดึงมาจาก local storage
+      await classService.updateClass(event.id, { instructor: username });
+      message.success("ลงทะเบียนสำเร็จ!");
+      await fetchData();
     } catch (error) {
-      message.error("Error updating class schedule!");
+      message.error("เกิดข้อผิดพลาดในการลงทะเบียน!");
       console.error(error);
     }
   };
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
-      <Sider width={220} className="lg:block hidden">
+      {/* <Sider width={220} className="lg:block hidden">
         <Sidebar />
-      </Sider>
+      </Sider> */}
 
       <Layout>
         <Header title="Schedule" />
@@ -181,22 +194,57 @@ const Schedule = () => {
           <div className="course-header">
             <h2>Schedule</h2>
           </div>
-          <div style={{ padding: "16px" }}>
-            <DragAndDropCalendar
-              localizer={localizer}
-              events={events}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: 500, padding: "16px", borderRadius: "8px" }}
-              selectable
-              resizable
-              onSelectEvent={(event) => handleOpenModal(event)}
-              onSelectSlot={({ start, end }) =>
-                handleOpenModal(null, start, end)
-              }
-              onEventDrop={handleEventDrop}
-            />
-          </div>
+          {/* แสดงผลเฉพาะ event ที่ยังไม่มี Teacher หรือมี Teacher เป็นตัวเอง */}
+          <Row gutter={[16, 16]} style={{ padding: "16px" }}>
+            {events
+              .filter((event) => {
+                const teacher = event.instructor ? event.instructor.trim() : "";
+                return teacher === "" || teacher === username;
+              })
+              .map((event) => (
+                <Col key={event.id} xs={24} sm={12} md={8} lg={6}>
+                  <Card
+                    title={event.title}
+                    extra={
+                      !event.instructor || event.instructor.trim() === "" ? (
+                        <Button
+                          type="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRegister(event);
+                          }}
+                        >
+                          ลงทะเบียน
+                        </Button>
+                      ) : (
+                        <Button type="default" disabled>
+                          ลงทะเบียนแล้ว
+                        </Button>
+                      )
+                    }
+                    hoverable
+                    onClick={() => handleOpenModal(event)}
+                  >
+                    {event.instructor && (
+                      <p>
+                        <strong>Teacher:</strong> {event.instructor}
+                      </p>
+                    )}
+                    <p>
+                      <strong>Room:</strong> {event.room_number}
+                    </p>
+                    <p>{event.description}</p>
+                    <p>
+                      <strong>Start:</strong>{" "}
+                      {moment(event.start).format("LLL")}
+                    </p>
+                    <p>
+                      <strong>End:</strong> {moment(event.end).format("LLL")}
+                    </p>
+                  </Card>
+                </Col>
+              ))}
+          </Row>
         </Content>
       </Layout>
 
@@ -246,7 +294,7 @@ const Schedule = () => {
           <Form.Item
             label="Teacher"
             name="instructor"
-            rules={[{ required: false, message: "Please select a teacher" }]}
+            rules={[{ required: true, message: "Please select a teacher" }]}
           >
             <Select placeholder="Select a teacher">
               {users.map((user) => (
@@ -265,11 +313,9 @@ const Schedule = () => {
           <Form.Item label="📌 Room Number" name="room_number">
             <Input placeholder="Enter Room Number" />
           </Form.Item>
-
           <Form.Item label="🔑 Passcode" name="passcode">
             <Input placeholder="Enter Passcode" />
           </Form.Item>
-
           <Form.Item label="🔗 Zoom Link" name="zoom_link">
             <Input placeholder="Enter Zoom Link" />
           </Form.Item>
@@ -280,7 +326,6 @@ const Schedule = () => {
           >
             <Input type="datetime-local" />
           </Form.Item>
-
           <Form.Item
             label="End Time"
             name="end_time"

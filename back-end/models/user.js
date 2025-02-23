@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   }, // ObjectId แทน UUID
   username: {
     type: String,
-    required: true,
+    required: false,
   },
   email: {
     type: String,
@@ -46,10 +46,8 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
   },
   role_id: {
-    type: mongoose.Schema.Types.ObjectId, // ObjectId สำหรับ role_id
-    ref: "Role",
+    type: String,
     required: true,
-    default: "670567b8a75e769571f8238a",
   },
   referrer_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -58,7 +56,7 @@ const userSchema = new mongoose.Schema({
   total_classes: {
     type: Number,
   },
-  remaining_classes: {
+  remaining_session: {
     type: Number,
   },
   special_rights: {

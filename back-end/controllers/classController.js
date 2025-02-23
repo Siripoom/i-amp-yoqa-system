@@ -1,15 +1,33 @@
 const Class = require("../models/class");
 const Course = require("../models/course");
-//todo แก้ เพื่อรับการ CRUD จาก Calendar ของ admin
+const User = require("../models/user");
+const Reservation = require("../models/reservation");
+
 // สร้างคลาสใหม่
 exports.createClass = async (req, res) => {
   try {
-    const course = await Course.findById(req.body.course_id);
-    if (!course) {
-      return res.status(404).json({ message: "Course not found" });
-    }
-    req.body.title = course.course_name;
-    const newClass = new Class(req.body);
+    const {
+      title,
+      instructor,
+      description,
+      room_number,
+      passcode,
+      zoom_link,
+      start_time,
+      end_time,
+    } = req.body;
+
+    const newClass = new Class({
+      title,
+      instructor,
+      description,
+      room_number,
+      passcode,
+      zoom_link,
+      start_time,
+      end_time,
+    });
+
     const savedClass = await newClass.save();
     res
       .status(201)
@@ -23,6 +41,8 @@ exports.createClass = async (req, res) => {
 exports.getAllClasses = async (req, res) => {
   try {
     const classes = await Class.find();
+    //show user reservations
+
     res
       .status(200)
       .json({ status: "success", count: classes.length, data: classes });
@@ -47,11 +67,6 @@ exports.getClassById = async (req, res) => {
 // แก้ไขข้อมูลคลาส
 exports.updateClass = async (req, res) => {
   try {
-    const course = await Course.findById(req.body.course_id);
-    if (!course) {
-      return res.status(404).json({ message: "Course not found" });
-    }
-    req.body.title = course.course_name;
     const updatedClass = await Class.findByIdAndUpdate(
       req.params.id,
       req.body,

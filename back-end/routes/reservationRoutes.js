@@ -14,4 +14,6 @@ router.delete(
   reservationController.cancelReservation
 );
 
+//get all
+router.get("/reserve", reservationController.getAllReservations);
 module.exports = router;

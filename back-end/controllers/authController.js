@@ -15,8 +15,6 @@ exports.login = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const role = await Role.findById(user.role_id);
-
     // ตรวจสอบรหัสผ่าน
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -25,7 +23,7 @@ exports.login = async (req, res) => {
 
     // สร้าง JWT Token
     const token = jwt.sign(
-      { userId: user._id, role: role.role_name },
+      { userId: user._id, role: user.role_name },
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",

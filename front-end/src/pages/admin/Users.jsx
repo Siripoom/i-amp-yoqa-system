@@ -122,9 +122,8 @@ const UserPage = () => {
     { title: "Email", dataIndex: "email", key: "email" },
     {
       title: "Role",
-      dataIndex: ["role_id", "role_name"], // Access nested field
-      key: "role_name",
-      render: (_, record) => record.role_id?.role_name || "N/A",
+      dataIndex: ["role_id"], // Access nested field
+      key: "role_id",
     },
     {
       title: "Status",
@@ -175,7 +174,6 @@ const UserPage = () => {
               defaultValue="User ID"
               style={{ width: 150, marginRight: 10 }}
             >
-              <Option value="User ID">User ID</Option>
               <Option value="User Name">User Name</Option>
             </Select>
             <Input
@@ -292,8 +290,7 @@ const UserPage = () => {
                 <Select>
                   <Option value="Member">Member</Option>
                   <Option value="Instructor">Instructor</Option>
-                  <Option value="Admin">Instructor</Option>
-                  <Option value="Sales">Instructor</Option>
+                  <Option value="Admin">Admin</Option>
                 </Select>
               </Form.Item>
               <Form.Item name="referrer_id" label="Referrer ID">

@@ -1,134 +1,145 @@
-import { useState } from "react";
-import {
-  Layout,
-  Table,
-  Input,
-  Button,
-  Tag,
-  Select,
-  Modal,
-  Form,
-  message,
-} from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { Layout, Table, Button, Tag, Modal, Select, message } from "antd";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
+import orderService from "../../services/orderService";
 import "../../styles/Order.css";
 
 const { Sider, Content } = Layout;
 const { Option } = Select;
 
-const initialOrderData = [
-  {
-    orderId: 59217,
-    orderNumber: "59217342",
-    status: "New Order",
-    item: 1,
-    customerName: "Cody Fisher",
-    shippingService: "Standard",
-    trackingCode: "940010010936113003113",
-  },
-  {
-    orderId: 59213,
-    orderNumber: "59217343",
-    status: "Shipped",
-    item: 2,
-    customerName: "Kristin Watson",
-    shippingService: "Priority",
-    trackingCode: "940010010936113003113",
-  },
-];
-
 const OrderPage = () => {
-  const [orders, setOrders] = useState(initialOrderData);
+  const [orders, setOrders] = useState([]); // เก็บข้อมูลคำสั่งซื้อ
+  const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingOrder, setEditingOrder] = useState(null);
-  const [form] = Form.useForm();
+  const [selectedOrder, setSelectedOrder] = useState(null); // คำสั่งซื้อที่เลือก
+  const [newStatus, setNewStatus] = useState(""); // สถานะใหม่ที่เลือก
 
-  const showCreateModal = () => {
-    setEditingOrder(null);
-    form.resetFields();
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await orderService.getAllOrders();
+
+      console.log("API Response:", response); // ✅ ตรวจสอบค่าที่ได้รับ
+
+      if (Array.isArray(response)) {
+        setOrders(response); // ✅ ใช้ response เฉพาะกรณีเป็น Array
+      } else if (response.orders && Array.isArray(response.orders)) {
+        setOrders(response.orders); // ✅ ดึง `orders` จาก Response
+      } else {
+        setOrders([]); // ✅ ป้องกัน `undefined`
+      }
+    } catch (error) {
+      message.error("Failed to load orders.");
+      setOrders([]); // ✅ ป้องกันข้อผิดพลาด
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ แสดง Modal และตั้งค่าข้อมูล Order
+  const showModal = (order) => {
+    setSelectedOrder(order);
+    setNewStatus(order.status); // ตั้งค่าค่าสถานะเดิม
     setIsModalVisible(true);
   };
 
-  const showEditModal = (record) => {
-    setEditingOrder(record);
-    form.setFieldsValue(record);
-    setIsModalVisible(true);
-  };
-
+  // ✅ ปิด Modal
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
-  const handleSave = () => {
-    form.validateFields().then((values) => {
-      if (editingOrder) {
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.orderId === editingOrder.orderId
-              ? { ...order, ...values }
-              : order
-          )
-        );
-        message.success("Order updated successfully");
-      } else {
-        const newOrder = { ...values, orderId: Date.now() };
-        setOrders((prev) => [...prev, newOrder]);
-        message.success("Order created successfully");
-      }
+  // ✅ อัปเดตสถานะ Order
+  const handleUpdateStatus = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      await orderService.updateOrderStatus(selectedOrder._id, newStatus);
+      message.success("Order status updated successfully.");
+      fetchOrders(); // โหลดข้อมูลใหม่
       setIsModalVisible(false);
-    });
+    } catch (error) {
+      message.error("Failed to update order status.");
+    }
   };
 
-  const handleDelete = () => {
-    setOrders((prev) =>
-      prev.filter((order) => order.orderId !== editingOrder.orderId)
+  // ✅ ลบคำสั่งซื้อ
+  const handleDeleteOrder = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      await orderService.deleteOrder(selectedOrder._id);
+      message.success("Order deleted successfully.");
+      fetchOrders(); // โหลดข้อมูลใหม่
+      setIsModalVisible(false);
+    } catch (error) {
+      message.error("Failed to delete order.");
+    }
+  };
+
+  // ✅ แสดงสีของสถานะ Order
+  const renderStatusTag = (status) => {
+    const correctedStatus = status === "รออนุมติ" ? "รออนุมัติ" : status;
+    const statusColors = {
+      รออนุมัติ: "blue",
+      อนุมัติ: "green",
+    };
+    return (
+      <Tag color={statusColors[correctedStatus] || "gray"}>
+        {correctedStatus}
+      </Tag>
     );
-    message.success("Order deleted successfully");
-    setIsModalVisible(false);
   };
 
+  // ✅ คอลัมน์ของตาราง
   const columns = [
-    { title: "ORDER ID", dataIndex: "orderId", key: "orderId" },
-    { title: "ORDER NUMBER", dataIndex: "orderNumber", key: "orderNumber" },
+    { title: "ORDER ID", dataIndex: "_id", key: "_id" },
+    {
+      title: "USER",
+      dataIndex: "user_id",
+      key: "user_id",
+      render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+    },
+    {
+      title: "PRODUCT",
+      dataIndex: "product_id",
+      key: "product_id",
+      render: (product) => (product ? `Session: ${product.sessions}` : "N/A"),
+    },
+    {
+      title: "PRICE (THB)",
+      dataIndex: "product_id",
+      key: "price",
+      render: (product) => (product ? `${product.price} THB` : "N/A"),
+    },
     {
       title: "STATUS",
       dataIndex: "status",
       key: "status",
-      render: (status) => {
-        const statusColors = {
-          "New Order": "blue",
-          Shipped: "green",
-          Cancelled: "red",
-          "In Production": "orange",
-          Draft: "gray",
-        };
-        return <Tag color={statusColors[status]}>{status}</Tag>;
-      },
+      render: (status) => renderStatusTag(status),
     },
-    { title: "ITEM", dataIndex: "item", key: "item" },
-    { title: "CUSTOMER NAME", dataIndex: "customerName", key: "customerName" },
     {
-      title: "SHIPPING SERVICE",
-      dataIndex: "shippingService",
-      key: "shippingService",
+      title: "ORDER DATE",
+      dataIndex: "order_date",
+      key: "order_date",
+      render: (date) => new Date(date).toLocaleDateString(),
     },
-    { title: "TRACKING CODE", dataIndex: "trackingCode", key: "trackingCode" },
     {
       title: "ACTION",
       key: "action",
       render: (record) => (
-        <Button
-          icon={<EditOutlined />}
-          shape="circle"
-          onClick={() => showEditModal(record)}
-        />
+        <>
+          <Button
+            icon={<EditOutlined />}
+            shape="circle"
+            onClick={() => showModal(record)}
+          />
+        </>
       ),
     },
   ];
@@ -140,131 +151,86 @@ const OrderPage = () => {
       </Sider>
 
       <Layout>
-        <Header title="Order" />
+        <Header title="Order Management" />
 
         <Content className="order-container">
           <div className="order-header">
             <h2>Orders</h2>
-            <Button
-              type="primary"
-              className="create-order-button"
-              icon={<PlusOutlined />}
-              onClick={showCreateModal}
-            >
-              Create Order
-            </Button>
           </div>
 
-          <div className="order-filters">
-            <Select
-              defaultValue="Order ID"
-              style={{ width: 150, marginRight: 10 }}
-            >
-              <Option value="Order ID">Order ID</Option>
-              <Option value="Customer Name">Customer Name</Option>
-            </Select>
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              style={{ width: 200, marginRight: 10 }}
-            />
-          </div>
-
+          {/* ตารางแสดงคำสั่งซื้อ */}
           <Table
             columns={columns}
-            dataSource={orders}
+            dataSource={orders || []} // ✅ ป้องกันกรณี `orders` เป็น `undefined`
             pagination={{ position: ["bottomCenter"], pageSize: 5 }}
-            rowKey="orderId"
+            rowKey="_id"
+            loading={loading}
           />
 
+          {/* Modal แก้ไข / ลบคำสั่งซื้อ */}
           <Modal
-            title={editingOrder ? "Edit Order" : "Create Order"}
+            title="Manage Order"
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={[
-              editingOrder && (
-                <Button
-                  key="delete"
-                  type="danger"
-                  icon={<DeleteOutlined />}
-                  onClick={handleDelete}
-                >
-                  Delete
-                </Button>
-              ),
+              <Button
+                key="delete"
+                type="danger"
+                icon={<DeleteOutlined />}
+                onClick={handleDeleteOrder}
+              >
+                Delete Order
+              </Button>,
               <Button key="cancel" onClick={handleCancel}>
                 Cancel
               </Button>,
-              <Button key="save" type="primary" onClick={handleSave}>
-                Save
+              <Button key="update" type="primary" onClick={handleUpdateStatus}>
+                Update Status
               </Button>,
             ]}
           >
-            <Form form={form} layout="vertical">
-              <Form.Item
-                name="orderNumber"
-                label="Order Number"
-                rules={[
-                  { required: true, message: "Please enter the order number" },
-                ]}
-              >
-                <Input />
-              </Form.Item>
-              <Form.Item
-                name="status"
-                label="Status"
-                rules={[
-                  { required: true, message: "Please select the status" },
-                ]}
-              >
-                <Select>
-                  <Option value="New Order">New Order</Option>
-                  <Option value="In Production">In Production</Option>
-                  <Option value="Shipped">Shipped</Option>
-                  <Option value="Cancelled">Cancelled</Option>
-                  <Option value="Draft">Draft</Option>
+            {selectedOrder && (
+              <div>
+                <p>
+                  <strong>Order ID:</strong> {selectedOrder._id}
+                </p>
+                <p>
+                  <strong>Current Status:</strong>{" "}
+                  {renderStatusTag(selectedOrder.status)}
+                </p>
+
+                {/* ✅ แสดงภาพหลักฐานการชำระเงิน */}
+                {selectedOrder.image ? (
+                  <div style={{ textAlign: "center", marginBottom: "10px" }}>
+                    <p>
+                      <strong>Payment Slip:</strong>
+                    </p>
+                    <img
+                      src={`http://localhost:5000${selectedOrder.image}`} // ✅ ดึงภาพจาก API
+                      alt="Payment Slip"
+                      style={{
+                        maxWidth: "100%",
+                        height: "auto",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <p style={{ color: "gray", textAlign: "center" }}>
+                    No payment slip uploaded
+                  </p>
+                )}
+
+                <Select
+                  value={newStatus}
+                  onChange={setNewStatus}
+                  style={{ width: "100%" }}
+                >
+                  <Option value="รออนุมัติ">รออนุมัติ</Option>
+                  <Option value="อนุมัติ">อนุมัติ</Option>
                 </Select>
-              </Form.Item>
-              <Form.Item
-                name="item"
-                label="Item"
-                rules={[
-                  { required: true, message: "Please enter the item count" },
-                ]}
-              >
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item
-                name="customerName"
-                label="Customer Name"
-                rules={[
-                  { required: true, message: "Please enter the customer name" },
-                ]}
-              >
-                <Input />
-              </Form.Item>
-              <Form.Item
-                name="shippingService"
-                label="Shipping Service"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter the shipping service",
-                  },
-                ]}
-              >
-                <Input />
-              </Form.Item>
-              <Form.Item
-                name="trackingCode"
-                label="Tracking Code"
-                rules={[
-                  { required: true, message: "Please enter the tracking code" },
-                ]}
-              >
-                <Input />
-              </Form.Item>
-            </Form>
+              </div>
+            )}
           </Modal>
         </Content>
       </Layout>

@@ -3,14 +3,33 @@ import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getUserById } from "../services/userService";
 
 const { Title } = Typography;
 
 const Profile = () => {
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    // ดึง user_id จาก localStorage
+    const userId = localStorage.getItem("user_id");
+
+    if (userId) {
+      fetchUserProfile(userId);
+    }
   }, []);
+
+  const fetchUserProfile = async (id) => {
+    try {
+      const response = await getUserById(id);
+      setUser(response.user); // ตั้งค่าข้อมูลโปรไฟล์
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
 
   return (
     <div
@@ -20,13 +39,10 @@ const Profile = () => {
           "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
       }}
     >
-      {/* Navbar อยู่ด้านบน */}
       <Navbar />
 
-      {/* Container หลัก ใช้ flex-grow ให้เต็มหน้าจอ */}
       <div className="flex-grow flex items-center justify-center mt-4 mb-4">
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
-          {/* Sidebar */}
           <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
             <Title level={4} className="text-black font-semibold">
               Manage My Account
@@ -34,20 +50,14 @@ const Profile = () => {
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
-                className="text-purple-600 font-semibold cursor-pointer block"
+                className="text-purple-600 font-semibold block"
               >
                 My Profile
               </Link>
-              <Link
-                to="/my-plane"
-                className="text-gray-400 cursor-pointer block"
-              >
+              <Link to="/my-plane" className="text-gray-400 block">
                 My Plane
               </Link>
-              <Link
-                to="/my-orders"
-                className="text-gray-400 cursor-pointer block"
-              >
+              <Link to="/my-orders" className="text-gray-400 block">
                 My Orders
               </Link>
             </div>
@@ -58,16 +68,34 @@ const Profile = () => {
             <Title level={3} className="text-purple-700">
               Edit Your Profile
             </Title>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input placeholder="First Name" value="Md" disabled />
-              <Input placeholder="Last Name" value="Rimel" disabled />
-              <Input placeholder="Email" value="rimel1111@gmail.com" disabled />
-              <Input
-                placeholder="Address"
-                value="Kingston, 5236, United State"
-                disabled
-              />
-            </div>
+            {user ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  placeholder="First Name"
+                  value={user.first_name}
+                  disabled
+                />
+                <Input
+                  placeholder="Last Name"
+                  value={user.last_name}
+                  disabled
+                />
+                <Input placeholder="Email" value={user.email} disabled />
+                <Input placeholder="Phone" value={user.phone} disabled />
+                <Input
+                  placeholder="Class"
+                  value={user.total_classes}
+                  disabled
+                />
+                <Input
+                  placeholder="Session"
+                  value={user.remaining_session}
+                  disabled
+                />
+              </div>
+            ) : (
+              <p>Loading profile...</p>
+            )}
 
             <Title level={5} className="mt-6">
               Password Changes
@@ -88,7 +116,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

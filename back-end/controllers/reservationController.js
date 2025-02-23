@@ -1,5 +1,6 @@
 const Reservation = require("../models/reservation");
 const Class = require("../models/class");
+const User = require("../models/user");
 
 // จองคลาส
 exports.createReservation = async (req, res) => {
@@ -60,6 +61,18 @@ exports.cancelReservation = async (req, res) => {
     await reservation.save();
 
     res.status(200).json({ message: "Reservation cancelled successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+//get all
+exports.getAllReservations = async (req, res) => {
+  try {
+    const reservations = await Reservation.find()
+      .populate("class_id", "title start_date end_date instructor")
+      .populate("user_id", "fist_name last_name");
+    res.status(200).json({ reservations });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

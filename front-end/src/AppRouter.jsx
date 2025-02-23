@@ -5,6 +5,7 @@ import ProductPage from "./pages/admin/ProductManage";
 import CoursesPage from "./pages/admin/Courses";
 import Schedule from "./pages/admin/ClassSchedule";
 import OrderPage from "./pages/admin/Order";
+import ScheduleTeacher from "./pages/Instructor/ClassSchedule";
 import HomePage from "./pages/Home";
 import Course from "./pages/Course";
 import Product from "./pages/Product";
@@ -24,12 +25,64 @@ const AppRouter = () => (
   <Router>
     <Routes>
       <Route path="/" element={<HomePage />} />
+
       <Route path="/admin/dashboard" element={<DashboardPage />} />
-      <Route path="/admin/users" element={<UserPage />} />
-      <Route path="/admin/productManage" element={<ProductPage />} />
-      <Route path="/admin/courses" element={<CoursesPage />} />
-      <Route path="/admin/orders" element={<OrderPage />} />
-      <Route path="/admin/schedule" element={<Schedule />} />
+      <Route
+        path="/admin/users"
+        element={
+          localStorage.getItem("token") &&
+          localStorage.getItem("role") === "Admin" ? (
+            <UserPage />
+          ) : (
+            <PageNotFound />
+          )
+        }
+      />
+      <Route
+        path="/admin/productManage"
+        element={
+          localStorage.getItem("token") &&
+          localStorage.getItem("role") === "Admin" ? (
+            <ProductPage />
+          ) : (
+            <PageNotFound />
+          )
+        }
+      />
+      <Route
+        path="/admin/courses"
+        element={
+          localStorage.getItem("token") &&
+          localStorage.getItem("role") === "Admin" ? (
+            <CoursesPage />
+          ) : (
+            <PageNotFound />
+          )
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          localStorage.getItem("token") &&
+          localStorage.getItem("role") === "Admin" ? (
+            <OrderPage />
+          ) : (
+            <PageNotFound />
+          )
+        }
+      />
+      <Route
+        path="/admin/schedule"
+        element={
+          localStorage.getItem("token") &&
+          localStorage.getItem("role") === "Admin" ? (
+            <Schedule />
+          ) : (
+            <PageNotFound />
+          )
+        }
+      />
+      <Route path="/teacher/schedule" element={<ScheduleTeacher />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/profile" element={<Profile />} />

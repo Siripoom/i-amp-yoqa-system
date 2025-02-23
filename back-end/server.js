@@ -9,16 +9,17 @@ const courseRoutes = require("./routes/courseRoutes");
 const productRoutes = require("./routes/productRoutes");
 const classRoutes = require("./routes/classRoutes");
 const reservationRoutes = require("./routes/reservationRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 const bodyParser = require("body-parser");
 require("dotenv").config();
-
+const path = require("path");
 const app = express();
 
 app.use(cors());
 
 // Bodyparser middleware
 app.use(bodyParser.json());
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // เชื่อมต่อกับ MongoDB
 connectDB();
 
@@ -28,6 +29,7 @@ app.use("/api", roleRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api", classRoutes);
 app.use("/api", reservationRoutes);
 

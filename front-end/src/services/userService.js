@@ -6,6 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL; // Replace with your actual back-e
 export const getUsers = async () => {
   try {
     const response = await axios.get(API_URL + "/api/users");
+
     return response.data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -15,6 +16,7 @@ export const getUsers = async () => {
 
 export const createUser = async (userData) => {
   try {
+    console.log(userData);
     const response = await axios.post(`${API_URL}/api/users`, userData);
     return response.data;
   } catch (error) {
@@ -43,4 +45,13 @@ export const deleteUser = async (id) => {
   }
 };
 
-//getuserbyname
+//getuserbyid
+export const getUserById = async (id) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/users/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user by ID:", error);
+    throw error;
+  }
+};

@@ -6,17 +6,6 @@ const jwt = require("jsonwebtoken");
 // สร้าง User ใหม่
 exports.createUser = async (req, res) => {
   try {
-    let roleId = "670567b8a75e769571f8238a"; // ค่าดีฟอลต์ของ role_id
-
-    if (req.body.role_name) {
-      // ค้นหา role_id จาก role_name ที่ส่งมา
-      const role = await Role.findOne({ role_name: req.body.role_name });
-      if (!role) {
-        return res.status(404).json({ message: "Role not found" });
-      }
-      roleId = role._id; // ใช้ role_id ที่ได้จากฐานข้อมูล
-    }
-
     // เข้ารหัสรหัสผ่าน
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -32,10 +21,10 @@ exports.createUser = async (req, res) => {
       birth_date: req.body.birth_date,
       address: req.body.address,
       registration_date: req.body.registration_date || Date.now(),
-      role_id: roleId, // ใช้ roleId ที่กำหนดไว้
+      role_id: req.body.role_name,
       referrer_id: req.body.referrer_id || null,
       total_classes: req.body.total_classes,
-      remaining_classes: req.body.remaining_classes,
+      remaining_session: req.body.remaining_session,
       special_rights: req.body.special_rights,
       deleted: false,
     });
@@ -119,14 +108,8 @@ exports.getUserById = async (req, res) => {
 // อัปเดต User
 exports.updateUser = async (req, res) => {
   try {
-    // ตรวจสอบว่า role_name ที่ส่งมาใน body นั้นมีอยู่หรือไม่
-    const role = await Role.findOne({ role_name: req.body.role_name });
-    if (!role) {
-      return res.status(404).json({ message: "Role not found" });
-    }
-
     // ตรวจสอบว่ามีการส่ง password มาหรือไม่
-    let updatedData = { ...req.body, role_id: role._id };
+    let updatedData = { ...req.body, role_id: req.body.role_name };
 
     // ถ้ามีการส่ง password ใหม่ ให้ทำการเข้ารหัส
     if (req.body.password) {

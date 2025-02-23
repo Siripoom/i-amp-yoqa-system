@@ -4,47 +4,48 @@ import moment from "moment";
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import orderService from "../services/orderService";
 
 const { Title } = Typography;
 
 const MyOrders = () => {
+  const [orders, setOrders] = useState([]); // เก็บรายการ Order จริง
+  const [loading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetchOrders();
   }, []);
 
-  // ข้อมูลประวัติการซื้อ session
-  const [purchaseHistory, setPurchaseHistory] = useState([
-    {
-      id: 1,
-      purchaseDate: new Date(2025, 1, 5),
-      totalSessions: 10,
-      usedSessions: 4,
-      expirationDate: new Date(2025, 3, 5),
-    },
-    {
-      id: 2,
-      purchaseDate: new Date(2025, 1, 10),
-      totalSessions: 5,
-      usedSessions: 2,
-      expirationDate: new Date(2025, 4, 10),
-    },
-  ]);
+  const fetchOrders = async () => {
+    try {
+      const userId = localStorage.getItem("user_id");
+      if (!userId) {
+        message.error("Please log in to view your orders.");
+        return;
+      }
 
-  // ข้อมูล Mockup ของประวัติการใช้ Session
-  const sessionHistoryMockup = [
-    { date: "2025-02-01", status: "ใช้แล้ว ✅", note: "คลาสปกติ" },
-    { date: "2025-02-05", status: "ใช้แล้ว ✅", note: "โยคะตอนเช้า" },
-    { date: "2025-02-10", status: "ยังไม่ได้ใช้ ❌", note: "-" },
-    { date: "2025-02-15", status: "ยังไม่ได้ใช้ ❌", note: "-" },
-  ];
+      const response = await orderService.getOrdersByUserId(userId);
+      console.log("Orders Response:", response); // ✅ Debug API Response
 
-  // Modal State
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedHistory, setSelectedHistory] = useState([]);
+      if (response.orders && Array.isArray(response.orders)) {
+        setOrders(response.orders);
+      } else {
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error("Fetch orders error:", error);
+      message.error("Failed to load orders.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // เปิด Modal และตั้งค่าข้อมูลที่จะแสดง
-  const showModal = () => {
-    setSelectedHistory(sessionHistoryMockup);
+  const showModal = (order) => {
+    setSelectedOrder(order);
     setIsModalVisible(true);
   };
 
@@ -61,10 +62,8 @@ const MyOrders = () => {
           "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
       }}
     >
-      {/* Navbar */}
       <Navbar />
 
-      {/* Container หลัก */}
       <div className="flex-grow flex items-center justify-center mt-4 mb-4">
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
           {/* Sidebar */}
@@ -97,36 +96,52 @@ const MyOrders = () => {
               My Purchased Sessions
             </Title>
 
-            {/* แสดง session ที่ซื้อเป็น Card */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              {purchaseHistory.map((course) => (
-                <Card key={course.id} className="p-4 rounded-lg shadow-md">
-                  <p>
-                    <strong>จำนวน Session:</strong> {course.totalSessions}
-                  </p>
-                  <p>
-                    <strong>ใช้ไปแล้ว:</strong> {course.usedSessions} /{" "}
-                    {course.totalSessions}
-                  </p>
-                  <p>
-                    <strong>หมดอายุ:</strong>{" "}
-                    {moment(course.expirationDate).format("MMMM Do YYYY")}
-                  </p>
+            {/* แสดง Loading */}
+            {loading ? (
+              <div className="text-center text-blue-500 font-semibold">
+                Loading orders...
+              </div>
+            ) : orders.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                {orders.map((order) => (
+                  <Card key={order._id} className="p-4 rounded-lg shadow-md">
+                    <p>
+                      <strong>Order ID:</strong> {order._id}
+                    </p>
+                    <p>
+                      <strong>Session:</strong>{" "}
+                      {order.product_id?.sessions || "N/A"} ครั้ง
+                    </p>
+                    <p>
+                      <strong>Price:</strong> {order.product_id?.price || "N/A"}{" "}
+                      THB
+                    </p>
+                    <p>
+                      <strong>Order Date:</strong>{" "}
+                      {moment(order.order_date).format("DD MMM YYYY")}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {order.status || "N/A"}
+                    </p>
 
-                  {/* ปุ่มดูรายละเอียด */}
-                  <Button className="mt-2" onClick={showModal}>
-                    ดูรายละเอียด
-                  </Button>
-                </Card>
-              ))}
-            </div>
+                    {/* ปุ่มดูรายละเอียด */}
+                    <Button className="mt-2" onClick={() => showModal(order)}>
+                      ดูรายละเอียด
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">No orders found.</div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Modal สำหรับแสดงประวัติการใช้ Session */}
+      {/* Modal สำหรับแสดงรายละเอียดคำสั่งซื้อ */}
+      {/* Modal สำหรับแสดงรายละเอียดคำสั่งซื้อ */}
       <Modal
-        title="ประวัติการใช้ Session"
+        title="รายละเอียดคำสั่งซื้อ"
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={[
@@ -135,26 +150,56 @@ const MyOrders = () => {
           </Button>,
         ]}
       >
-        <div className="space-y-3">
-          {selectedHistory.map((session, index) => (
-            <div key={index} className="p-2 border rounded-md shadow-sm">
-              <p>
-                <strong>วันที่:</strong>{" "}
-                {moment(session.date).format("DD MMM YYYY")}
+        {selectedOrder && (
+          <div className="space-y-3">
+            <p>
+              <strong>Order ID:</strong> {selectedOrder._id}
+            </p>
+            <p>
+              <strong>Product Name:</strong>{" "}
+              {selectedOrder?.product_id?._id || "N/A"}
+            </p>
+            <p>
+              <strong>Sessions:</strong>{" "}
+              {selectedOrder?.product_id?.sessions || "N/A"} ครั้ง
+            </p>
+            <p>
+              <strong>Price:</strong>{" "}
+              {selectedOrder?.product_id?.price || "N/A"} THB
+            </p>
+            <p>
+              <strong>Order Date:</strong>{" "}
+              {moment(selectedOrder?.order_date).format("DD MMM YYYY")}
+            </p>
+            <p>
+              <strong>Status:</strong> {selectedOrder?.status || "N/A"}
+            </p>
+
+            {/* ✅ แสดงภาพใบเสร็จถ้ามี */}
+            {selectedOrder?.image ? (
+              <div style={{ textAlign: "center", marginBottom: "10px" }}>
+                <p>
+                  <strong>Payment Slip:</strong>
+                </p>
+                <img
+                  src={`http://localhost:5000${selectedOrder.image}`}
+                  alt="Payment Slip"
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                    borderRadius: "8px",
+                  }}
+                />
+              </div>
+            ) : (
+              <p style={{ color: "gray", textAlign: "center" }}>
+                No payment slip uploaded
               </p>
-              <p>
-                <strong>สถานะ:</strong>{" "}
-                <span className="text-green-500">{session.status}</span>
-              </p>
-              <p>
-                <strong>หมายเหตุ:</strong> {session.note}
-              </p>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
       </Modal>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

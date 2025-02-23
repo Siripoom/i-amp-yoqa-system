@@ -12,9 +12,14 @@ const orderSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-    sessions: {
-      type: Number,
-      required: true,
+    image: {
+      type: String, // เก็บ URL ของรูปภาพ
+      required: false,
+    },
+    status: {
+      type: String,
+      enum: ["รออนุมัติ", "อนุมัติ", "ยกเลิก"],
+      default: "รออนุมัติ",
     },
     order_date: {
       type: Date,
