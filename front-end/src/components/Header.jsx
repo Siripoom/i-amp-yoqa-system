@@ -18,6 +18,8 @@ const Header = ({ title }) => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("role");
     setUser(null);
     navigate("/");
   };
