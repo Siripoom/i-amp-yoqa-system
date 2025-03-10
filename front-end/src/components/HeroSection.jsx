@@ -1,6 +1,6 @@
 import React from "react";
 import { Row, Col } from "antd";
-import heroImage from "../assets/images/hero.png";
+import heroImage from "../assets/images/27615.jpg";
 
 const HeroSection = () => {
   return (

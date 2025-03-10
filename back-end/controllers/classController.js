@@ -40,9 +40,7 @@ exports.createClass = async (req, res) => {
 // ดึงข้อมูลคลาสทั้งหมด
 exports.getAllClasses = async (req, res) => {
   try {
-    const classes = await Class.find();
-    //show user reservations
-
+    const classes = await Class.find().sort({ _id: -1 }); // Sort by _id in descending order to show the latest class first
     res
       .status(200)
       .json({ status: "success", count: classes.length, data: classes });

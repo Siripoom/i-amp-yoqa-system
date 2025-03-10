@@ -20,6 +20,8 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("role");
     setUser(null);
     navigate("/");
   };
@@ -49,19 +51,25 @@ const Navbar = () => {
             to="/"
             className="text-gray-700 hover:text-pink-500 font-medium"
           >
-            HOME
+            หน้าหลัก
           </Link>
           <Link
             to="/course"
             className="text-gray-700 hover:text-pink-500 font-medium"
           >
-            COURSE
+            คอร์ส
           </Link>
           <Link
             to="/contact"
             className="text-gray-700 hover:text-pink-500 font-medium"
           >
-            CONTACT
+            ผู้สอน
+          </Link>
+          <Link
+            to="/booking"
+            className="text-gray-700 hover:text-pink-500 font-medium"
+          >
+            การจอง
           </Link>
         </div>
 
