@@ -115,7 +115,7 @@ const Booking = () => {
       <div className="flex-grow flex items-center justify-center mt-4 mb-4">
         <div className="w-full max-w-5xl p-8 rounded-2xl shadow-md bg-white">
           <Title level={3} className="text-purple-700">
-            Course Booking
+            Class Booking&pos;s
           </Title>
 
           {loading ? (
