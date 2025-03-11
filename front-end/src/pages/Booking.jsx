@@ -16,7 +16,8 @@ const Booking = () => {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = localStorage.getItem("user_id"); // ดึง user_id จาก localStorage
+  const [showDetails, setShowDetails] = useState([]); // ✅ เก็บคอร์สที่ถูกกด "Book Now"
+  const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -29,16 +30,12 @@ const Booking = () => {
             : Promise.resolve({ data: [] }),
         ]);
 
-        console.log("✅ Class Response:", classResponse);
-        console.log("✅ Reservation Response:", reservationResponse);
-
-        // ตรวจสอบว่ามี data จริงหรือไม่
         if (
           !classResponse ||
           !classResponse.data ||
           !Array.isArray(classResponse.data)
         ) {
-          console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้องกลับมา:", classResponse);
+          console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้อง:", classResponse);
           message.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส ❌");
           return;
         }
@@ -74,7 +71,7 @@ const Booking = () => {
     fetchClasses();
   }, [userId]);
 
-  // ฟังก์ชันจองคอร์ส
+  // ✅ ฟังก์ชันสำหรับจองคอร์ส
   const handleReserveCourse = async (classId) => {
     if (!userId) {
       message.error("กรุณาเข้าสู่ระบบก่อนทำการจอง ❌");
@@ -103,6 +100,11 @@ const Booking = () => {
     }
   };
 
+  // ✅ ฟังก์ชันแสดงรายละเอียดเมื่อกด "Book now"
+  const handleShowDetails = (classId) => {
+    setShowDetails((prev) => [...prev, classId]); // เพิ่ม ID ลงไปใน state
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col bg-gradient-to-b"
@@ -115,7 +117,7 @@ const Booking = () => {
       <div className="flex-grow flex items-center justify-center mt-4 mb-4">
         <div className="w-full max-w-5xl p-8 rounded-2xl shadow-md bg-white">
           <Title level={3} className="text-purple-700">
-            Class Booking&pos;s
+            Class Booking
           </Title>
 
           {loading ? (
@@ -131,25 +133,6 @@ const Booking = () => {
                   key={event.id}
                   className="p-4 rounded-lg shadow-md"
                   title={event.title}
-                  // extra={
-                  //   event.reserved ? (
-                  //     <span className="text-green-500 font-semibold">
-                  //       จองแล้ว ✅
-                  //     </span>
-                  //   ) : userId ? (
-                  //     <Button
-                  //       type="primary"
-                  //       className="bg-purple-600 text-white"
-                  //       onClick={() => handleReserveCourse(event.id)}
-                  //     >
-                  //       Reserve Course
-                  //     </Button>
-                  //   ) : (
-                  //     <span className="text-gray-500 font-semibold">
-                  //       {/* 🔒 ต้องเข้าสู่ระบบเพื่อจอง */}
-                  //     </span>
-                  //   )
-                  // }
                 >
                   <p>
                     <strong>Instructor:</strong> {event.instructor}
@@ -162,30 +145,40 @@ const Booking = () => {
                     <strong>⏳ End Time:</strong>{" "}
                     {moment(event.endDate).format("MMMM Do YYYY, HH:mm")}
                   </p>
-
                   <p>
                     <strong>Description:</strong> {event.description}
                   </p>
-                  <p>
-                    <strong>📌 Room Number:</strong>
-                    <span className="text-purple-600"> {event.roomNumber}</span>
-                  </p>
-                  <p>
-                    <strong>🔑 Passcode:</strong>
-                    <span className="text-purple-600"> {event.passcode}</span>
-                  </p>
-                  <p>
-                    <strong>🔗 Zoom Link:</strong>
-                    <a
-                      href={event.zoomLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      Join Zoom Class
-                    </a>
-                  </p>
-                  {/* ✅ ขยับปุ่มลงมาไว้ล่างสุด */}
+
+                  {/* ✅ เงื่อนไขแสดงข้อมูลหลังจากกด Book now */}
+                  {event.reserved || showDetails.includes(event.id) ? (
+                    <>
+                      <p>
+                        <strong>📌 Room Number:</strong>{" "}
+                        <span className="text-purple-600">
+                          {event.roomNumber}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>🔑 Passcode:</strong>{" "}
+                        <span className="text-purple-600">
+                          {event.passcode}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>🔗 Zoom Link:</strong>
+                        <a
+                          href={event.zoomLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          Join Zoom Class
+                        </a>
+                      </p>
+                    </>
+                  ) : null}
+
+                  {/* ✅ ขยับปุ่มลงมาล่างสุด และใช้ฟังก์ชันเปิดข้อมูล */}
                   <div className="mt-4 text-center">
                     {event.reserved ? (
                       <span className="text-green-500 font-semibold">
@@ -195,7 +188,7 @@ const Booking = () => {
                       <Button
                         type="primary"
                         className="bg-purple-600 text-white"
-                        onClick={() => handleReserveCourse(event.id)}
+                        onClick={() => handleShowDetails(event.id)}
                       >
                         Book now
                       </Button>
