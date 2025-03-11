@@ -131,25 +131,25 @@ const Booking = () => {
                   key={event.id}
                   className="p-4 rounded-lg shadow-md"
                   title={event.title}
-                  extra={
-                    event.reserved ? (
-                      <span className="text-green-500 font-semibold">
-                        จองแล้ว ✅
-                      </span>
-                    ) : userId ? (
-                      <Button
-                        type="primary"
-                        className="bg-purple-600 text-white"
-                        onClick={() => handleReserveCourse(event.id)}
-                      >
-                        Reserve Course
-                      </Button>
-                    ) : (
-                      <span className="text-gray-500 font-semibold">
-                        {/* 🔒 ต้องเข้าสู่ระบบเพื่อจอง */}
-                      </span>
-                    )
-                  }
+                  // extra={
+                  //   event.reserved ? (
+                  //     <span className="text-green-500 font-semibold">
+                  //       จองแล้ว ✅
+                  //     </span>
+                  //   ) : userId ? (
+                  //     <Button
+                  //       type="primary"
+                  //       className="bg-purple-600 text-white"
+                  //       onClick={() => handleReserveCourse(event.id)}
+                  //     >
+                  //       Reserve Course
+                  //     </Button>
+                  //   ) : (
+                  //     <span className="text-gray-500 font-semibold">
+                  //       {/* 🔒 ต้องเข้าสู่ระบบเพื่อจอง */}
+                  //     </span>
+                  //   )
+                  // }
                 >
                   <p>
                     <strong>Instructor:</strong> {event.instructor}
@@ -185,6 +185,26 @@ const Booking = () => {
                       Join Zoom Class
                     </a>
                   </p>
+                  {/* ✅ ขยับปุ่มลงมาไว้ล่างสุด */}
+                  <div className="mt-4 text-center">
+                    {event.reserved ? (
+                      <span className="text-green-500 font-semibold">
+                        จองแล้ว ✅
+                      </span>
+                    ) : userId ? (
+                      <Button
+                        type="primary"
+                        className="bg-purple-600 text-white"
+                        onClick={() => handleReserveCourse(event.id)}
+                      >
+                        Reserve Course
+                      </Button>
+                    ) : (
+                      <span className="text-gray-500 font-semibold">
+                        🔒 ต้องเข้าสู่ระบบเพื่อจอง
+                      </span>
+                    )}
+                  </div>
                 </Card>
               ))}
             </div>
