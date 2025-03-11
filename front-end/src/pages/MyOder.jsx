@@ -5,7 +5,7 @@ import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import orderService from "../services/orderService";
-
+import { Link } from "react-router-dom";
 const { Title } = Typography;
 
 const MyOrders = () => {
@@ -72,21 +72,24 @@ const MyOrders = () => {
               Manage My Account
             </Title>
             <div className="mt-4 space-y-3 flex flex-col">
-              <a href="/profile" className="text-gray-400 cursor-pointer block">
+              <Link
+                to="/profile"
+                className="text-gray-400 cursor-pointer block"
+              >
                 My Profile
-              </a>
-              <a
+              </Link>
+              {/* <a
                 href="/my-plane"
                 className="text-gray-400 cursor-pointer block"
               >
                 My Plane
-              </a>
-              <a
-                href="/my-orders"
+              </a> */}
+              <Link
+                to="/my-orders"
                 className="text-purple-600 font-semibold cursor-pointer block"
               >
                 My Orders
-              </a>
+              </Link>
             </div>
           </Card>
 
