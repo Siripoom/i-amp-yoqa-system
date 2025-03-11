@@ -143,12 +143,12 @@ const Booking = () => {
                         onClick={() => handleReserveCourse(event.id)}
                       >
                         Reserve Course
-                      </Button>
-                    ) : (
-                      <span className="text-gray-500 font-semibold">
-                        🔒 ต้องเข้าสู่ระบบเพื่อจอง
-                      </span>
-                    )
+                      </Button>)
+                    // ) : (
+                    //   <span className="text-gray-500 font-semibold">
+                    //     🔒 ต้องเข้าสู่ระบบเพื่อจอง
+                    //   </span>
+                    // )
                   }
                 >
                   <p>
