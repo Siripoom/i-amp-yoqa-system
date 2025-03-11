@@ -120,21 +120,28 @@ const Navbar = () => {
               className="text-gray-700 hover:text-pink-500 font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              HOME
+              หน้าหลัก
             </Link>
             <Link
               to="/course"
               className="text-gray-700 hover:text-pink-500 font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              COURSE
+              คอร์ส
             </Link>
             <Link
               to="/contact"
               className="text-gray-700 hover:text-pink-500 font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              CONTACT
+              ผู้สอน
+            </Link>
+            <Link
+              to="/booking"
+              className="text-gray-700 hover:text-pink-500 font-medium"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              การจอง
             </Link>
             {user ? (
               <Dropdown overlay={userMenu} trigger={["click"]}>
