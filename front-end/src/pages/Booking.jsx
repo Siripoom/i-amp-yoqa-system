@@ -197,7 +197,7 @@ const Booking = () => {
                         className="bg-purple-600 text-white"
                         onClick={() => handleReserveCourse(event.id)}
                       >
-                        Reserve Course
+                        Book now
                       </Button>
                     ) : (
                       <span className="text-gray-500 font-semibold">
