@@ -62,6 +62,12 @@ const userSchema = new mongoose.Schema({
   special_rights: {
     type: String,
   },
+  lineId: {
+    type: String,
+    unique: true,
+    required: false, // This will be populated when a user logs in via LINE
+  },
+
   deleted: { type: Boolean, default: false }, // ฟิลด์สำหรับ soft delete
 });
 

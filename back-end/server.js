@@ -1,6 +1,8 @@
 // server.js
 const express = require("express");
 const cors = require("cors");
+const passport = require("passport");
+const session = require("express-session");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const roleRoutes = require("./routes/roleRoutes");
@@ -11,9 +13,14 @@ const classRoutes = require("./routes/classRoutes");
 const reservationRoutes = require("./routes/reservationRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const bodyParser = require("body-parser");
+require("./config/passportConfig");
 require("dotenv").config();
 const path = require("path");
 const app = express();
+
+app.use(
+  session({ secret: "your_secret", resave: false, saveUninitialized: true })
+);
 
 app.use(cors());
 

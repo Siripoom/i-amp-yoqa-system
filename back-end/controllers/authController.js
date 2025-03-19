@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const Role = require("../models/role");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
-
+const passport = require("passport");
 // ฟังก์ชันการเข้าสู่ระบบ (Login)
 exports.login = async (req, res) => {
   try {
@@ -54,4 +54,14 @@ exports.getMe = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+exports.lineLogin = (req, res) => {
+  passport.authenticate("line");
+};
+
+exports.lineCallback = (req, res) => {
+  passport.authenticate("line", { failureRedirect: "/" })(req, res, () => {
+    res.redirect("/profile"); // Redirect to profile page or dashboard after successful login
+  });
 };

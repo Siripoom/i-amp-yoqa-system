@@ -18,6 +18,7 @@ const DragAndDropCalendar = withDragAndDrop(Calendar);
 const localizer = momentLocalizer(moment);
 
 const Schedule = () => {
+  const [instructorType, setInstructorType] = useState(null); // ใช้ในการเก็บประเภทอาจารย์
   const [courses, setCourses] = useState([]);
   const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
@@ -35,11 +36,11 @@ const Schedule = () => {
       setCourses(courseData.courses);
 
       const classData = await classService.getAllClasses();
-      console.log("Raw classData:", classData);
+      // console.log("Raw classData:", classData);
 
       const userData = await getUsers();
       setUsers(userData.users);
-      console.log("Raw userData:", userData.users);
+      // console.log("Raw userData:", userData.users);
       const formattedEvents = classData.data.map((cls) => ({
         id: cls._id,
         title: cls.title,
@@ -52,7 +53,7 @@ const Schedule = () => {
         end: new Date(cls.end_time), // ✅ แปลงเป็น Date
       }));
 
-      console.log("Formatted events:", formattedEvents);
+      // console.log("Formatted events:", formattedEvents);
       setEvents(formattedEvents);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -110,6 +111,7 @@ const Schedule = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      console.log(values.instructor);
       const classData = {
         title: values.title,
         instructor: values.instructor,
@@ -124,7 +126,7 @@ const Schedule = () => {
           ? new Date(values.end_time).toISOString()
           : null,
       };
-
+      console.log(classData);
       if (currentEvent) {
         await classService.updateClass(currentEvent.id, classData);
         message.success("Class updated successfully!");
@@ -220,6 +222,60 @@ const Schedule = () => {
         ]}
       >
         <Form form={form} layout="vertical">
+          {/* ส่วนเลือกประเภทอาจารย์ */}
+          <Form.Item
+            label="Instructor Type"
+            name="instructor_type"
+            rules={[
+              { required: true, message: "Please select instructor type" },
+            ]}
+          >
+            <Select
+              placeholder="Select instructor type"
+              onChange={(value) => {
+                setInstructorType(value); // ตั้งค่าประเภทอาจารย์
+                form.setFieldsValue({ instructor: "" }); // รีเซ็ตค่า instructor เมื่อเปลี่ยนประเภท
+              }}
+            >
+              <Select.Option value="internal">Internal Teacher</Select.Option>
+              <Select.Option value="guest">Guest Teacher</Select.Option>
+            </Select>
+          </Form.Item>
+
+          {/* ส่วนเลือกอาจารย์ภายใน หรือกรอกชื่ออาจารย์สำหรับแขกรับเชิญ */}
+          {instructorType === "internal" ? (
+            <Form.Item
+              label="Teacher"
+              name="instructor"
+              rules={[{ required: true, message: "Please select a teacher" }]}
+            >
+              <Select placeholder="Select a teacher">
+                {users.map((user) => (
+                  <Select.Option
+                    key={user._id}
+                    value={user.first_name + " " + user.last_name}
+                  >
+                    {user.first_name + " " + user.last_name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          ) : instructorType === "guest" ? (
+            <Form.Item
+              label="Teacher"
+              name="instructor"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter a guest teacher name",
+                },
+              ]}
+            >
+              <Input placeholder="Enter guest teacher's name" />
+            </Form.Item>
+          ) : null}
+
+          {/* ส่วนอื่นๆ ของฟอร์ม */}
           <Form.Item
             label="Class Title"
             name="title"
@@ -243,25 +299,11 @@ const Schedule = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item
-            label="Teacher"
-            name="instructor"
-            rules={[{ required: false, message: "Please select a teacher" }]}
-          >
-            <Select placeholder="Select a teacher">
-              {users.map((user) => (
-                <Select.Option
-                  key={user._id}
-                  value={user.first_name + " " + user.last_name}
-                >
-                  {user.first_name + " " + user.last_name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+
           <Form.Item label="Description" name="description">
-            <Input.TextArea rows={2} placeholder="รายละเอียดของคลาส" />
+            <Input.TextArea rows={2} placeholder="Class description" />
           </Form.Item>
+
           <Form.Item label="📌 Room Number" name="room_number">
             <Input placeholder="Enter Room Number" />
           </Form.Item>
@@ -273,6 +315,7 @@ const Schedule = () => {
           <Form.Item label="🔗 Zoom Link" name="zoom_link">
             <Input placeholder="Enter Zoom Link" />
           </Form.Item>
+
           <Form.Item
             label="Start Time"
             name="start_time"

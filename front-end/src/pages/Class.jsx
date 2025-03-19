@@ -23,46 +23,46 @@ const Class = () => {
 
   const yogaClasses = [
     {
-      title: "Relaxing Yoga",
+      title: "RELAXING YOGA (R)",
       image: c01,
       description:
-        "A calming and restorative yoga session to help you relax and relieve stress.",
+        "โยคะสายรีแล็กซ์ ผ่อนคลาย เบาสบาย สายชิวไปเรื่อยๆ เหมาะกับผู้ฝึกใหม่ขึ้นไป ผู้ฝึกเบาๆคุณแม่หลังคลอดและเด็ก",
     },
     {
-      title: "Power Flow Yoga",
+      title: "POWER FLOW YOGA (P)",
       image: c02,
       description:
-        "An energetic flow designed to build strength and endurance through dynamic movements.",
+        "โยคะสายเบิร์น พัฒนาความแข็งแรง สร้างความแข็งแรง กระชับกล้ามเนื้อเหมาะกับผู้ฝึกระดับกลางขึ้นไป ผู้ฝึกที่อยากกระชับสัดส่วน",
     },
     {
-      title: "Hatha Flow Yoga",
+      title: "HATHA FLOW YOGA (H)",
       image: c03,
       description:
-        "A balanced practice that combines breath, movement, and mindfulness for a grounded experience.",
+        "หฐะโยคะ คลาสโยคะทั่วไป ยืดเหยียดร่างกาย เน้นจัดการจัดปรับร่างกาย ไปตามลมหายใจเหมาะกับผู้ฝึกใหม่ขึ้นไป",
     },
     {
-      title: "Office Syndrome Yoga",
+      title: "OFFICE SYNDROME FOR YOGA (O)",
       image: c04,
       description:
-        "A class designed to alleviate common office-related tension and improve posture.",
+        "โยคะสายบำบัด ลดอาการออฟฟิศซินโดรม ปวดคอ บ่า ไหล่เหมาะกับผู้ฝึกใหม่ขึ้นไป ผู้ฝึกสายหน้าคอม",
     },
     {
-      title: "Fit Flow Yoga",
+      title: "FIT FLOW YOGA (F)",
       image: c05,
       description:
-        "A fun and challenging practice combining strength, flexibility, and flow.",
+        "โยคะสร้างความแข็งแรง สร้างกล้ามเนื้อหัวไหล่แข็งแรง เคลื่อนไหวรวดเร็ว Asana ผสม Cardio นิดๆเหมาะกับผู้ฝึกที่ฝึกมาอย่างต่อเนื่องเป็นสม่ำเสมอ ผู้ฝึกที่เข้าท่าได้อย่างคล้องตัว เน้นเข้าท่าไวเปลี่ยนท่าเร็ว ผู้ฝึกไม่เน้นค้างท่านาน เรียกเหงื่อ",
     },
     {
-      title: "Balance Yoga",
+      title: "BALANCE YOGA (B)",
       image: c06,
       description:
-        "Focus on improving balance, coordination, and body alignment in this gentle practice.",
+        "โยคะสายบาลานซ์ ฝึการทรงตัว ฝึกสมาธิ สร้างความแข็งแรงของขาเหมาะกับผู้ฝึกระดับกลางขึ้นไป ผู้ที่อยากพัฒนาการทรงตัวด้วยการยืนขาเดียว",
     },
     {
-      title: "Wheel Yoga",
+      title: "WHEEL YOGA (W)",
       image: c07,
       description:
-        "An advanced practice using the yoga wheel to enhance flexibility and strength.",
+        "โยคะวีล โยคะวงล้อ ยืดหยุ่นกล้ามเนื้อหลังได้ดี หัวไหล่ยืดหยุ่นได้ง่ายขึ้น ช่วยฝึกในการเข้าท่า Inversion ได้ดีขึ้นเหมาะกับผู้ฝึกที่มีอุปกรณ์โยคะวีล",
     },
   ];
 
@@ -75,12 +75,11 @@ const Class = () => {
       }}
     >
       <Navbar />
-      <HeroSection />
 
       {/* Grid Layout สำหรับแสดงครูโยคะ */}
       <div className="container mx-auto px-4 py-10">
         <Title level={2} className="text-center text-purple-700 mb-8">
-          CLASS SCHEDULE
+          CLASS YOQA
         </Title>
 
         <Row gutter={[16, 16]} justify="center">

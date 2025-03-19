@@ -1,4 +1,4 @@
-import { Button, Card, Input, Typography } from "antd";
+import { Button, Card, Input, Typography, Form } from "antd";
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
@@ -54,9 +54,6 @@ const Profile = () => {
               >
                 My Profile
               </Link>
-              {/* <Link to="/my-plane" className="text-gray-400 block">
-                My Plane
-              </Link> */}
               <Link to="/my-orders" className="text-gray-400 block">
                 My Orders
               </Link>
@@ -69,30 +66,50 @@ const Profile = () => {
               Edit Your Profile
             </Title>
             {user ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  placeholder="First Name"
-                  value={user.first_name}
-                  disabled
-                />
-                <Input
-                  placeholder="Last Name"
-                  value={user.last_name}
-                  disabled
-                />
-                <Input placeholder="Email" value={user.email} disabled />
-                <Input placeholder="Phone" value={user.phone} disabled />
-                <Input
-                  placeholder="Class"
-                  value={user.total_classes}
-                  disabled
-                />
-                <Input
-                  placeholder="Session"
-                  value={user.remaining_session}
-                  disabled
-                />
-              </div>
+              <Form
+                layout="vertical"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                <Form.Item label="ชื่อจริง">
+                  <Input
+                    placeholder="First Name"
+                    value={user.first_name}
+                    disabled
+                  />
+                </Form.Item>
+
+                <Form.Item label="นามสกุล">
+                  <Input
+                    placeholder="Last Name"
+                    value={user.last_name}
+                    disabled
+                  />
+                </Form.Item>
+
+                <Form.Item label="อีเมลล์">
+                  <Input placeholder="Email" value={user.email} disabled />
+                </Form.Item>
+
+                <Form.Item label="เบอร์โทร">
+                  <Input placeholder="Phone" value={user.phone} disabled />
+                </Form.Item>
+
+                <Form.Item label="จำนวนคลาสที่เคยลง">
+                  <Input
+                    placeholder="Class"
+                    value={user.total_classes}
+                    disabled
+                  />
+                </Form.Item>
+
+                <Form.Item label="จำนวนคงเหลือโปรโมชั่น">
+                  <Input
+                    placeholder="Session"
+                    value={user.remaining_session}
+                    disabled
+                  />
+                </Form.Item>
+              </Form>
             ) : (
               <p>Loading profile...</p>
             )}
@@ -101,9 +118,17 @@ const Profile = () => {
               Password Changes
             </Title>
             <div className="grid grid-cols-1 gap-4">
-              <Input.Password placeholder="Current Password" />
-              <Input.Password placeholder="New Password" />
-              <Input.Password placeholder="Confirm New Password" />
+              <Form.Item label="Current Password">
+                <Input.Password placeholder="Current Password" />
+              </Form.Item>
+
+              <Form.Item label="New Password">
+                <Input.Password placeholder="New Password" />
+              </Form.Item>
+
+              <Form.Item label="Confirm New Password">
+                <Input.Password placeholder="Confirm New Password" />
+              </Form.Item>
             </div>
 
             <div className="flex justify-between mt-6">

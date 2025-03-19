@@ -1,7 +1,7 @@
 import { Space } from "antd";
 import {
   FacebookOutlined,
-  TwitterOutlined,
+  LineOutlined,
   InstagramOutlined,
   LinkedinOutlined,
 } from "@ant-design/icons";
@@ -17,17 +17,12 @@ const Footer = () => {
           <div className="brand">
             <h2 className="text-2xl font-bold">IAMPYOQA</h2>
             <div className="social-icons mt-4 flex space-x-4">
-              <a href="#" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://www.facebook.com/iampyoqa"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <FacebookOutlined className="text-white text-xl hover:text-gray-400" />
-              </a>
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <TwitterOutlined className="text-white text-xl hover:text-gray-400" />
-              </a>
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <InstagramOutlined className="text-white text-xl hover:text-gray-400" />
-              </a>
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <LinkedinOutlined className="text-white text-xl hover:text-gray-400" />
               </a>
             </div>
             <p className="text-gray-400 text-sm mt-4">
@@ -38,11 +33,15 @@ const Footer = () => {
           {/* Support Section */}
           <div className="support">
             <h3 className="text-lg font-semibold">Support</h3>
-            <p className="text-sm mt-2">
-              111 Bijoy sarani, Dhaka, DH 1515, Bangladesh.
-            </p>
-            <p className="text-sm">exclusive@gmail.com</p>
-            <p className="text-sm">+88015-88888-9999</p>
+            <p className="text-sm">imapyoqa@gmail.com</p>
+            <p className="text-sm">099-16361699</p>
+            <a
+              href="https://line.me/R/ti/p/@iampyoqa"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <p className="text-sm">LINE: @iampyoqa</p>
+            </a>
           </div>
 
           {/* Account Section */}

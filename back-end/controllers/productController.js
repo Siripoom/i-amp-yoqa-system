@@ -1,21 +1,38 @@
 const Product = require("../models/product");
 
 // สร้างสินค้าใหม่
-exports.createProduct = [
-  async (req, res) => {
-    try {
-      const productData = {
-        sessions: req.body.sessions,
-        price: req.body.price,
-      };
-      const product = new Product(productData);
-      await product.save();
-      res.status(201).json({ status: "success", data: product });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  },
-];
+// สร้างสินค้าใหม่ + อัปโหลดรูปภาพ
+exports.createProduct = async (req, res) => {
+  try {
+    console.log("🔹 Received Data:", req.body); // ตรวจสอบค่าที่รับมา
+    console.log("🔹 Uploaded File:", req.file); // ตรวจสอบว่าไฟล์ถูกอัปโหลดสำเร็จ
+    const productData = {
+      sessions: req.body.sessions,
+      price: req.body.price,
+      duration: req.body.duration,
+      image: req.file ? req.file.filename : null, // เก็บชื่อไฟล์
+    };
+    const product = new Product(productData);
+    await product.save();
+    res.status(201).json({ status: "success", data: product });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ดึงรูปภาพจาก GridFS
+exports.getProductImage = async (req, res) => {
+  try {
+    gfs.find({ filename: req.params.filename }).toArray((err, files) => {
+      if (!files || files.length === 0) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      gfs.openDownloadStreamByName(req.params.filename).pipe(res);
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // อัปเดตสินค้า
 exports.updateProduct = async (req, res) => {

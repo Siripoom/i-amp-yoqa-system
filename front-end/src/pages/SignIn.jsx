@@ -1,29 +1,31 @@
 import { Button, Checkbox, Form, Input, Typography, message } from "antd";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { login } from "../services/authService";
+import { LockOutlined, UserOutlined, LineOutlined } from "@ant-design/icons";
+import { login, lineLogin } from "../services/authService";
 
 const { Title, Text } = Typography;
 
 const SignIn = () => {
   const navigate = useNavigate();
-
+  const handleLineLogin = async () => {
+    window.location.href = await lineLogin(); // Redirects to LINE login
+  };
   const onFinish = async (values) => {
     try {
       const { username, password } = values;
       const response = await login(username, password);
 
-      // เก็บ Token และ User Data
+      // Store Token and User Data
       localStorage.setItem("token", response.token);
       localStorage.setItem("user_id", response.data._id);
       localStorage.setItem(
         "username",
         `${response.data.first_name} ${response.data.last_name}`
       );
-      localStorage.setItem("role", response.data.role_id); // เก็บ role ของผู้ใช้
+      localStorage.setItem("role", response.data.role_id); // Store user role
 
-      // ตรวจสอบ role แล้วเปลี่ยนเส้นทาง
+      // Redirect based on role
       if (response.data.role_id === "Admin") {
         navigate("/admin/dashboard");
       } else {
@@ -88,6 +90,31 @@ const SignIn = () => {
           </Button>
         </Form>
 
+        {/* Centered LINE login button */}
+        <div
+          className="flex justify-center mt-4"
+          style={{ alignItems: "center" }}
+        >
+          <Button
+            type="primary"
+            // icon={<LineOutlined />} // Adds the LINE icon
+            onClick={handleLineLogin}
+            style={{
+              backgroundColor: "#00C300", // LINE's signature green color
+              borderColor: "#00C300", // Keep the border the same as the button
+              color: "white", // Text color
+              fontWeight: "bold", // Makes the text bold
+              padding: "12px 24px", // Gives the button some padding
+              fontSize: "16px", // Ensures text size is large enough
+              display: "flex", // For centering the icon and text
+              alignItems: "center", // Centering icon and text vertically
+            }}
+          >
+            Login with LINE
+          </Button>
+        </div>
+
+        {/* Sign up link */}
         <div className="text-center mt-4">
           <Text>Don&apos;t have an account?</Text>{" "}
           <Link to="/auth/signup" className="text-blue-600">
