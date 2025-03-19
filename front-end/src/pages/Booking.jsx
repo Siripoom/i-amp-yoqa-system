@@ -99,7 +99,7 @@ const Booking = () => {
           "reservedClasses",
           JSON.stringify([...reservedClassIds, classId])
         );
-        handleShowDetails(event.id);
+
         message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plane.");
       } else {
         message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
@@ -255,7 +255,10 @@ const Booking = () => {
                       <Button
                         type="primary"
                         className="bg-purple-600 text-white"
-                        onClick={() => handleReserveCourse(event.id)}
+                        onClick={() =>
+                          handleReserveCourse(event.id) &&
+                          handleShowDetails(event.id)
+                        }
                       >
                         Book now
                       </Button>
