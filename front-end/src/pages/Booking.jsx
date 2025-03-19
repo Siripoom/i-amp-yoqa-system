@@ -135,7 +135,7 @@ const Booking = () => {
                   title={event.title}
                 >
                   <p>
-                    <strong>Instructor:</strong> {event.instructor}
+                    <strong>Master:</strong> {event.instructor}
                   </p>
                   <p>
                     <strong>🕒 Start Time:</strong>{" "}

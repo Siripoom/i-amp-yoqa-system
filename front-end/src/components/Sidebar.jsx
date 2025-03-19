@@ -10,7 +10,7 @@ import {
   LogoutOutlined,
 } from "@ant-design/icons";
 import "./Sidebar.css";
-import logo from "../assets/logo.webp";
+import logo from "../assets/images/logo.png";
 
 const Sidebar = () => {
   return (

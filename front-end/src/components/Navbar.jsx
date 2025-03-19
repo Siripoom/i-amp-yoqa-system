@@ -2,7 +2,7 @@ import { Button, Dropdown, Menu } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { MenuOutlined, CloseOutlined, UserOutlined } from "@ant-design/icons";
-
+import logo from "../assets/images/logo.png";
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -40,9 +40,13 @@ const Navbar = () => {
   return (
     <div className="sticky top-0 z-50 shadow-sm font-fredoka">
       <div className="container mx-auto px-4 lg:px-12 py-4 flex justify-between items-center">
-        {/* Logo */}
+        {/* Logo image */}
+
         <div className="text-2xl font-bold text-blue-900">
-          <Link to="/">IAMPYOQA</Link>
+          <Link to="/">
+            <img src={logo} alt="Logo" className="h-12" />
+            {/* Replace the text with logo */}
+          </Link>
         </div>
 
         {/* Menu Items for Large Screens */}
@@ -54,22 +58,28 @@ const Navbar = () => {
             หน้าหลัก
           </Link>
           <Link
+            to="/class"
+            className="text-gray-700 hover:text-pink-500 font-medium"
+          >
+            คลาสโยคะ
+          </Link>
+          <Link
             to="/course"
             className="text-gray-700 hover:text-pink-500 font-medium"
           >
-            คอร์ส
+            โปรโมชั่น
           </Link>
           <Link
             to="/contact"
             className="text-gray-700 hover:text-pink-500 font-medium"
           >
-            ผู้สอน
+            ครูผู้สอน
           </Link>
           <Link
             to="/booking"
             className="text-gray-700 hover:text-pink-500 font-medium"
           >
-            การจอง
+            จองคลาสฝึกโยคะ
           </Link>
         </div>
 
@@ -123,25 +133,32 @@ const Navbar = () => {
               หน้าหลัก
             </Link>
             <Link
+              to="/class"
+              className="text-gray-700 hover:text-pink-500 font-medium"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              คลาสโยคะ
+            </Link>
+            <Link
               to="/course"
               className="text-gray-700 hover:text-pink-500 font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              คอร์ส
+              โปรโมชั่น
             </Link>
             <Link
               to="/contact"
               className="text-gray-700 hover:text-pink-500 font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              ผู้สอน
+              ครูผู้สอน
             </Link>
             <Link
               to="/booking"
               className="text-gray-700 hover:text-pink-500 font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              การจอง
+              จองคลาสฝึกโยคะ
             </Link>
             {user ? (
               <Dropdown overlay={userMenu} trigger={["click"]}>

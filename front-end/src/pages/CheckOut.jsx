@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 const { Title, Text } = Typography;
 import image from "../assets/images/imageC1.png";
-
+import qr from "../assets/15000.jpg";
 const Checkout = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -72,6 +72,14 @@ const Checkout = () => {
                 <br />
                 <Text>Account Name: น.ส. อริจรา แท่นประเสริฐกุล</Text>
                 <br />
+              </div>
+              {/* show qwr code picture */}
+              <div className="bg-gray-100 p-4 rounded-md mb-6 ">
+                <img
+                  src={qr}
+                  alt="QR Code"
+                  className="w-64 h-auto rounded-md"
+                />
               </div>
 
               {/* Upload Payment Slip */}

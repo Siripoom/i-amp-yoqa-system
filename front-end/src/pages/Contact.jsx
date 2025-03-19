@@ -61,7 +61,7 @@ const Contact = () => {
       {/* Grid Layout สำหรับแสดงครูโยคะ */}
       <div className="container mx-auto px-4 py-10">
         <Title level={2} className="text-center text-purple-700">
-          Our Instructors
+          Master
         </Title>
         <Row gutter={[16, 16]} justify="center">
           {instructors.map((instructor, index) => (
@@ -70,6 +70,7 @@ const Contact = () => {
                 hoverable
                 cover={<img alt={instructor.name} src={instructor.image} />}
                 className="rounded-lg shadow-lg"
+                style={{ backgroundColor: "#FFE2E5" }}
               >
                 <Title level={4} className="text-center">
                   {instructor.name}
