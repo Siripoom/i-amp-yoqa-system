@@ -85,11 +85,21 @@ const Booking = () => {
       );
 
       if (response) {
+        // อัพเดตสถานะการจองใน local state
         setEvents((prevEvents) =>
           prevEvents.map((event) =>
             event.id === classId ? { ...event, reserved: true } : event
           )
         );
+
+        // บันทึกสถานะการจองใน LocalStorage (เพื่อให้แสดงเมื่อรีเฟรช)
+        const reservedClassIds =
+          JSON.parse(localStorage.getItem("reservedClasses")) || [];
+        localStorage.setItem(
+          "reservedClasses",
+          JSON.stringify([...reservedClassIds, classId])
+        );
+        handleShowDetails(event.id);
         message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plane.");
       } else {
         message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
@@ -99,6 +109,63 @@ const Booking = () => {
       message.error("❌ จองคอร์สไม่สำเร็จ กรุณาลองใหม่");
     }
   };
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        console.log("📡 Fetching all classes...");
+        const [classResponse, reservationResponse] = await Promise.all([
+          classService.getAllClasses(),
+          userId
+            ? reservationService.getUserReservations(userId)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        if (
+          !classResponse ||
+          !classResponse.data ||
+          !Array.isArray(classResponse.data)
+        ) {
+          console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้อง:", classResponse);
+          message.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส ❌");
+          return;
+        }
+
+        const reservedClassIds = new Set(
+          reservationResponse.data?.map((res) => res.class_id) || []
+        );
+
+        // โหลดข้อมูลจาก LocalStorage เพื่อให้แน่ใจว่าแสดงสถานะการจองที่เก็บไว้
+        const reservedClassesInLocalStorage =
+          JSON.parse(localStorage.getItem("reservedClasses")) || [];
+        setEvents(
+          classResponse.data
+            .map((event) => ({
+              id: event._id,
+              title: event.title,
+              date: new Date(event.start_time),
+              endDate: new Date(event.end_time),
+              instructor: event.instructor,
+              description: event.description,
+              reserved:
+                reservedClassIds.has(event._id) ||
+                reservedClassesInLocalStorage.includes(event._id), // ใช้ข้อมูลจาก LocalStorage ด้วย
+              zoomLink: event.zoom_link,
+              roomNumber: event.room_number,
+              passcode: event.passcode,
+            }))
+            .sort((a, b) => b.date - a.date)
+        );
+      } catch (error) {
+        console.error("❌ Error fetching classes:", error);
+        message.error("ไม่สามารถโหลดข้อมูลคอร์สได้ ❌");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, [userId]);
 
   // ✅ ฟังก์ชันแสดงรายละเอียดเมื่อกด "Book now"
   const handleShowDetails = (classId) => {
@@ -188,7 +255,7 @@ const Booking = () => {
                       <Button
                         type="primary"
                         className="bg-purple-600 text-white"
-                        onClick={() => handleShowDetails(event.id)}
+                        onClick={() => handleReserveCourse(event.id)}
                       >
                         Book now
                       </Button>
