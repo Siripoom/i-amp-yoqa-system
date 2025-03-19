@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import Myplane from "./pages/Myplane";
 import MyOrders from "./pages/MyOder";
 import Booking from "./pages/Booking";
+import Class from "./pages/Class";
 const AppRouter = () => (
   <Router>
     <Routes>
@@ -37,6 +38,7 @@ const AppRouter = () => (
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/class" element={<Class />} />
       <Route path="/my-plane" element={<Myplane />} />
       <Route path="/booking" element={<Booking />} />
       <Route path="/my-orders" element={<MyOrders />} />
