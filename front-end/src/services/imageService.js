@@ -1,0 +1,51 @@
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+//* HeroImage Service
+export const HeroImage = {
+  getHeroImage: async () => {
+    const response = await axios.get(`${API_URL}/api/heroImages`);
+    return response.data;
+  },
+  updateHeroImage: async (id, image) => {
+    const response = await axios.put(`${API_URL}/api/heroImages/${id}`, image, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+  deleteHeroImage: async (id) => {
+    const response = await axios.delete(`${API_URL}/api/heroImages/${id}`);
+    return response.data;
+  },
+  createHeroImage: async (image) => {
+    const response = await axios.post(`${API_URL}/api/heroImages`, image, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+};
+
+export const MasterImage = {
+  getMasterImage: async () => {
+    const response = await axios.get(`${API_URL}/api/masters`);
+    return response.data;
+  },
+  updateMasterImage: async (id, image) => {
+    const response = await axios.put(`${API_URL}/api/masters/${id}`, image, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+  deleteMasterImage: async (id) => {
+    const response = await axios.delete(`${API_URL}/api/masters/${id}`);
+    return response.data;
+  },
+  createMasterImage: async (image) => {
+    const response = await axios.post(`${API_URL}/api/masters`, image, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+};
+//* MasterImage Service

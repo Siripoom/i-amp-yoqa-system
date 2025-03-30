@@ -3,14 +3,26 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { LockOutlined, UserOutlined, LineOutlined } from "@ant-design/icons";
 import { login, lineLogin } from "../services/authService";
-
+import { useEffect } from "react";
+import liff from "@line/liff";
 const { Title, Text } = Typography;
 
 const SignIn = () => {
-  const navigate = useNavigate();
-  const handleLineLogin = async () => {
-    window.location.href = await lineLogin(); // Redirects to LINE login
+  useEffect(() => {
+    liff.init({ liffId: "2007091295-9VRjXwVY" });
+  }, []);
+
+  const handleLiffLogin = async () => {
+    try {
+      liff.login();
+    } catch (error) {
+      console.error("LIFF login failed:", error);
+      message.error("LIFF login failed. Please try again.");
+    }
   };
+
+  const navigate = useNavigate();
+
   const onFinish = async (values) => {
     try {
       const { username, password } = values;
@@ -98,7 +110,7 @@ const SignIn = () => {
           <Button
             type="primary"
             // icon={<LineOutlined />} // Adds the LINE icon
-            onClick={handleLineLogin}
+            onClick={handleLiffLogin}
             style={{
               backgroundColor: "#00C300", // LINE's signature green color
               borderColor: "#00C300", // Keep the border the same as the button

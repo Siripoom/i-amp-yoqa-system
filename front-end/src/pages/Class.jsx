@@ -79,7 +79,7 @@ const Class = () => {
       {/* Grid Layout สำหรับแสดงครูโยคะ */}
       <div className="container mx-auto px-4 py-10">
         <Title level={2} className="text-center text-purple-700 mb-8">
-          CLASS YOQA
+          CLASS YOGA
         </Title>
 
         <Row gutter={[16, 16]} justify="center">

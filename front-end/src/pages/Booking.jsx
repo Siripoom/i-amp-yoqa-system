@@ -53,6 +53,7 @@ const Booking = () => {
               endDate: new Date(event.end_time),
               instructor: event.instructor,
               description: event.description,
+              difficulty: event.difficulty,
               reserved: reservedClassIds.has(event._id),
               zoomLink: event.zoom_link,
               roomNumber: event.room_number,
@@ -109,6 +110,16 @@ const Booking = () => {
       message.error("❌ จองคอร์สไม่สำเร็จ กรุณาลองใหม่");
     }
   };
+  const colorMap = {
+    "RELAXING YOGA (R)": "#789DBC",
+    "OFFICE SYNDROME FOR YOGA (O)": "#B99470",
+    "HATHA FLOW YOGA (H)": "#C9E9D2",
+    "BALANCE YOGA (B)": "#FFE3E3",
+    "ASHTANGA YOGA": "#F7DCB9",
+    "POWER FLOW YOGA (P)": "#F9F7C9",
+    "WHEEL YOGA (W) ": "#E4E0E1",
+    "FIT FLOW YOGA (F)": "#FF8787",
+  };
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -147,6 +158,7 @@ const Booking = () => {
               endDate: new Date(event.end_time),
               instructor: event.instructor,
               description: event.description,
+              difficulty: event.difficulty,
               reserved:
                 reservedClassIds.has(event._id) ||
                 reservedClassesInLocalStorage.includes(event._id), // ใช้ข้อมูลจาก LocalStorage ด้วย
@@ -200,6 +212,9 @@ const Booking = () => {
                   key={event.id}
                   className="p-4 rounded-lg shadow-md"
                   title={event.title}
+                  style={{
+                    backgroundColor: colorMap[event.title] || "white", // Default to white if no match
+                  }}
                 >
                   <p>
                     <strong>Master:</strong> {event.instructor}
@@ -214,6 +229,12 @@ const Booking = () => {
                   </p>
                   <p>
                     <strong>Description:</strong> {event.description}
+                  </p>
+                  <p>
+                    <strong>Difficulty:</strong>{" "}
+                    <span className="text-red-500 text-lg">
+                      {"❤️".repeat(event.difficulty)}
+                    </span>
                   </p>
 
                   {/* ✅ เงื่อนไขแสดงข้อมูลหลังจากกด Book now */}

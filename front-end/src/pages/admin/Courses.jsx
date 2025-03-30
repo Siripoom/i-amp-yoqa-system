@@ -31,6 +31,7 @@ const { Sider, Content } = Layout;
 const { Option } = Select;
 
 const CoursesPage = () => {
+  const [searchText, setSearchText] = useState("");
   const [courses, setCourses] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
@@ -61,23 +62,28 @@ const CoursesPage = () => {
     form.setFieldsValue(record);
     setIsModalVisible(true);
   };
+  const handleSearch = (e) => {
+    setSearchText(e.target.value.toLowerCase());
+  };
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+
+  const userId = localStorage.getItem("userId");
 
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
       const formData = new FormData();
 
+      // Set difficulty manually, or calculate it based on another condition
+      const difficulty = parseInt(values.difficulty); // or any logic to determine difficulty, for example:
+      // const difficulty = userId === "someUserId" ? 3 : 1;
+
       formData.append("course_name", values.course_name);
       formData.append("details", values.details);
-      formData.append("user_id", "670801f199db64199ba1c2dc"); // Set user_id here for testing
-
-      if (values.image && values.image.file) {
-        formData.append("image", values.image.file);
-      }
+      formData.append("difficulty", difficulty); // Using manual value
 
       if (editingCourse) {
         await updateCourse(editingCourse._id, formData);
@@ -105,19 +111,11 @@ const CoursesPage = () => {
     }
   };
 
-  const handleImageUpload = (info) => {
-    if (info.file.status === "done") {
-      message.success(`${info.file.name} file uploaded successfully.`);
-      form.setFieldsValue({ image: info.file.originFileObj });
-    } else if (info.file.status === "error") {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  };
-
   const columns = [
     { title: "COURSE ID", dataIndex: "_id", key: "_id" },
     { title: "COURSE NAME", dataIndex: "course_name", key: "course_name" },
     { title: "CATEGORY", dataIndex: "details", key: "details" },
+    { title: "DIFFICULTY", dataIndex: "difficulty", key: "difficulty" },
     {
       title: "ACTION",
       key: "action",
@@ -154,21 +152,24 @@ const CoursesPage = () => {
           </div>
           <div className="course-filters">
             <Select
-              defaultValue="Course ID"
+              defaultValue="Course Name"
               style={{ width: 150, marginRight: 10 }}
             >
-              <Option value="Course ID">Course ID</Option>
+              {/* <Option value="Course ID">Course ID</Option> */}
               <Option value="Course Name">Course Name</Option>
             </Select>
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
               style={{ width: 200, marginRight: 10 }}
+              onChange={handleSearch}
             />
           </div>
           <Table
             columns={columns}
-            dataSource={courses}
+            dataSource={courses.filter((course) =>
+              course.course_name.toLowerCase().includes(searchText)
+            )}
             pagination={{ position: ["bottomCenter"], pageSize: 5 }}
             rowKey="_id"
           />
@@ -215,15 +216,14 @@ const CoursesPage = () => {
               >
                 <Input />
               </Form.Item>
-              <Form.Item name="image" label="Upload Image">
-                <Upload
-                  name="image"
-                  listType="picture"
-                  beforeUpload={() => false} // Prevent automatic upload
-                  onChange={handleImageUpload}
-                >
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                </Upload>
+              <Form.Item
+                name="difficulty"
+                label="Difficulty"
+                rules={[
+                  { required: true, message: "Please enter course difficulty" },
+                ]}
+              >
+                <Input type="number" />
               </Form.Item>
             </Form>
           </Modal>

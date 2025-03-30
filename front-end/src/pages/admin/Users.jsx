@@ -32,6 +32,7 @@ const { Sider, Content } = Layout;
 const { Option } = Select;
 
 const UserPage = () => {
+  const [searchText, setSearchText] = useState("");
   const [users, setUsers] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -40,6 +41,9 @@ const UserPage = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+  const handleSearch = (e) => {
+    setSearchText(e.target.value.toLowerCase());
+  };
 
   const fetchUsers = async () => {
     try {
@@ -83,10 +87,10 @@ const UserPage = () => {
         birth_date: values.birth_date,
         address: values.address,
         registration_date: values.registration_date || new Date().toISOString(),
-        role_name: values.role_name,
+        role_name: values.role_id,
         referrer_id: values.referrer_id || null, // Default to null if not provided
         total_classes: values.total_classes || 0, // Default to 0 if not provided
-        remaining_classes: values.remaining_classes || 0, // Default to 0 if not provided
+        remaining_session: values.remaining_session || 0, // Default to 0 if not provided
         special_rights: values.special_rights,
       };
 
@@ -120,6 +124,11 @@ const UserPage = () => {
     { title: "First Name", dataIndex: "first_name", key: "first_name" },
     { title: "Last Name", dataIndex: "last_name", key: "last_name" },
     { title: "Email", dataIndex: "email", key: "email" },
+    {
+      title: "Remaining Session",
+      dataIndex: "remaining_session",
+      key: "remaining_session",
+    },
     {
       title: "Role",
       dataIndex: ["role_id"], // Access nested field
@@ -169,7 +178,7 @@ const UserPage = () => {
             </Button>
           </div>
 
-          <div className="user-filters">
+          <div className="user-filters mb-4">
             <Select
               defaultValue="User ID"
               style={{ width: 150, marginRight: 10 }}
@@ -180,12 +189,15 @@ const UserPage = () => {
               placeholder="Search"
               prefix={<SearchOutlined />}
               style={{ width: 200, marginRight: 10 }}
+              onChange={handleSearch}
             />
           </div>
 
           <Table
             columns={columns}
-            dataSource={users}
+            dataSource={users.filter((user) =>
+              user.first_name?.toLowerCase().includes(searchText)
+            )}
             pagination={{ position: ["bottomCenter"], pageSize: 5 }}
             rowKey="_id"
           />
@@ -283,7 +295,7 @@ const UserPage = () => {
                 <Input.TextArea rows={2} />
               </Form.Item>
               <Form.Item
-                name="role_name"
+                name="role_id"
                 label="Role"
                 rules={[{ required: true, message: "Please select the role" }]}
               >
@@ -306,8 +318,8 @@ const UserPage = () => {
                 <Input type="number" />
               </Form.Item>
               <Form.Item
-                name="remaining_classes"
-                label="Remaining Classes"
+                name="remaining_session"
+                label="Remaining Session"
                 rules={[
                   {
                     required: false,

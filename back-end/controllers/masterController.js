@@ -1,4 +1,4 @@
-const Product = require("../models/product");
+const Master = require("../models/master");
 const multer = require("multer");
 const path = require("path");
 const supabase = require("../config/supabaseConfig"); // Import the Supabase client
@@ -9,8 +9,8 @@ dotenv.config(); // Load environment variables
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Product creation (with Supabase file upload)
-exports.createProduct = async (req, res) => {
+// master creation (with Supabase file upload)
+exports.createMaster = async (req, res) => {
   try {
     let imageUrl = req.body.image; // Default to the image URL from the request body
 
@@ -19,7 +19,7 @@ exports.createProduct = async (req, res) => {
       const file = req.file;
       const ext = path.extname(file.originalname); // Get the file extension
       const fileName = `${Date.now()}${ext}`; // Unique file name
-      const folderPath = "products"; // The folder where files will be stored
+      const folderPath = "masters"; // The folder where files will be stored
 
       // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
@@ -36,34 +36,32 @@ exports.createProduct = async (req, res) => {
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
-    // Prepare product data
-    const productData = {
-      sessions: req.body.sessions,
-      price: req.body.price,
-      duration: req.body.duration,
+    // Prepare master data
+    const masterData = {
+      mastername: req.body.mastername,
       image: imageUrl, // Store the public URL of the image
     };
 
-    // Save product to the database
-    const product = new Product(productData);
-    await product.save();
+    // Save master to the database
+    const master = new Master(masterData);
+    await master.save();
 
-    res.status(201).json({ status: "success", data: product });
+    res.status(201).json({ status: "success", data: master });
   } catch (error) {
-    console.error("Error creating product:", error);
+    console.error("Error creating master:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Product update (with Supabase file upload)
-exports.updateProduct = async (req, res) => {
+// master update (with Supabase file upload)
+exports.updateMaster = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    const master = await master.findById(req.params.id);
+    if (!master) {
+      return res.status(404).json({ message: "master not found" });
     }
 
-    let imageUrl = product.image; // Default to the existing image URL
+    let imageUrl = master.image; // Default to the existing image URL
 
     if (imageUrl && typeof imageUrl === "string") {
       try {
@@ -73,10 +71,10 @@ exports.updateProduct = async (req, res) => {
         const fileName = Url.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
 
         if (fileName) {
-          // Correct file path: Remove any spaces between "products" and the file name
+          // Correct file path: Remove any spaces between "masters" and the file name
           const { error } = await supabase.storage
             .from("store") // Replace with your Supabase bucket name
-            .remove([`products/${fileName}`]); // Remove the space between "products" and fileName
+            .remove([`masters/${fileName}`]); // Remove the space between "masters" and fileName
 
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
@@ -97,7 +95,7 @@ exports.updateProduct = async (req, res) => {
           .json({ message: "Error processing the image URL" });
       }
     } else {
-      console.warn("No image URL found for the product, skipping deletion");
+      console.warn("No image URL found for the master, skipping deletion");
     }
 
     // If a new file is uploaded, upload it to Supabase Storage
@@ -105,7 +103,7 @@ exports.updateProduct = async (req, res) => {
       const file = req.file;
       const ext = path.extname(file.originalname); // Get the file extension
       const fileName = `${Date.now()}${ext}`; // Unique file name
-      const folderPath = "products"; // The folder where files will be stored
+      const folderPath = "masters"; // The folder where files will be stored
 
       // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
@@ -122,72 +120,72 @@ exports.updateProduct = async (req, res) => {
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
-    // Update product data
-    product.sessions = req.body.sessions || product.sessions;
-    product.price = req.body.price || product.price;
-    product.duration = req.body.duration || product.duration;
-    product.image = imageUrl;
+    // Update master data
+    master.sessions = req.body.sessions || master.sessions;
+    master.price = req.body.price || master.price;
+    master.duration = req.body.duration || master.duration;
+    master.image = imageUrl;
 
-    // Save updated product to the database
-    await product.save();
+    // Save updated master to the database
+    await master.save();
 
-    res.status(200).json({ status: "success", data: product });
+    res.status(200).json({ status: "success", data: master });
   } catch (error) {
-    console.error("Error updating product:", error);
+    console.error("Error updating master:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get all products
-exports.getProducts = async (req, res) => {
+// Get all masters
+exports.getMasters = async (req, res) => {
   try {
-    const products = await Product.find();
+    const masters = await Master.find();
     res.status(200).json({
       status: "success",
-      productCount: products.length,
-      data: products,
+      masterCount: masters.length,
+      data: masters,
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.error("Error fetching masters:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get a product by ID
-exports.getProductById = async (req, res) => {
+// Get a master by ID
+exports.getMasterById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    const master = await master.findById(req.params.id);
+    if (!master) {
+      return res.status(404).json({ message: "master not found" });
     }
-    res.status(200).json({ status: "success", data: product });
+    res.status(200).json({ status: "success", data: master });
   } catch (error) {
-    console.error("Error fetching product by ID:", error);
+    console.error("Error fetching master by ID:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Delete product
-exports.deleteProduct = async (req, res) => {
+// Delete master
+exports.deleteMaster = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    const master = await Master.findById(req.params.id);
+    if (!master) {
+      return res.status(404).json({ message: "master not found" });
     }
 
-    // Ensure product.image exists and is a valid string before attempting to split it
-    if (product.image && typeof product.image === "string") {
+    // Ensure master.image exists and is a valid string before attempting to split it
+    if (master.image && typeof master.image === "string") {
       try {
-        const imageUrl = product.image;
+        const imageUrl = master.image;
 
         // Extract file name directly from the image URL (after the last '/')
         const fileName = imageUrl.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
 
         if (fileName) {
-          // Correct file path: Remove any spaces between "products" and the file name
+          // Correct file path: Remove any spaces between "masters" and the file name
           const { error } = await supabase.storage
             .from("store") // Replace with your Supabase bucket name
-            .remove([`products/${fileName}`]); // Remove the space between "products" and fileName
+            .remove([`masters/${fileName}`]); // Remove the space between "masters" and fileName
 
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
@@ -208,17 +206,17 @@ exports.deleteProduct = async (req, res) => {
           .json({ message: "Error processing the image URL" });
       }
     } else {
-      console.warn("No image URL found for the product, skipping deletion");
+      console.warn("No image URL found for the master, skipping deletion");
     }
 
-    // Delete the product from the database
-    await Product.findByIdAndDelete(req.params.id);
+    // Delete the master from the database
+    await Master.findByIdAndDelete(req.params.id);
 
     res
       .status(200)
-      .json({ status: "success", message: "Product deleted successfully" });
+      .json({ status: "success", message: "master deleted successfully" });
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error("Error deleting master:", error);
     res.status(500).json({ message: error.message });
   }
 };

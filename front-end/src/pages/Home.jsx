@@ -17,7 +17,6 @@ const Home = () => {
     setLoading(true);
     getProducts()
       .then((response) => {
-        console.log("Fetched Products:", response);
         if (response.status === "success" && Array.isArray(response.data)) {
           setProducts(response.data);
         } else {
@@ -84,17 +83,13 @@ const Home = () => {
         >
           Yoga
         </motion.p>
-        <motion.div
-          variants={staggerVariant}
-          className="flex justify-center gap-6 flex-wrap px-4"
-        >
+        <div className="flex justify-center gap-6 flex-wrap px-4">
           {loading ? (
             <p className="text-center text-gray-500">Loading products...</p>
           ) : products.length > 0 ? (
             products.map((product, index) => (
-              <motion.div
+              <div
                 key={index}
-                variants={fadeInVariant}
                 className="w-40 h-52 bg-white rounded-lg shadow-md flex flex-col items-center justify-center p-4"
               >
                 <img
@@ -107,12 +102,12 @@ const Home = () => {
                     ? `${product.sessions} sessions`
                     : "No session data"}
                 </p>
-              </motion.div>
+              </div>
             ))
           ) : (
             <p className="text-center text-gray-500">No products available</p>
           )}
-        </motion.div>
+        </div>
         <motion.div variants={fadeInVariant} className="text-center mt-4">
           <Button
             type="primary"

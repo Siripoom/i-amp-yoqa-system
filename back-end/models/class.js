@@ -9,6 +9,7 @@ const classSchema = new mongoose.Schema({
   zoom_link: { type: String, required: false }, // ลิงก์ Zoom
   start_time: { type: Date, required: true }, // เวลาเริ่มคลาส
   end_time: { type: Date, required: true }, // เวลาสิ้นสุดคลาส
+  difficulty: { type: Number, required: false }, // ระดับความยาก
 });
 
 module.exports = mongoose.model("Class", classSchema);

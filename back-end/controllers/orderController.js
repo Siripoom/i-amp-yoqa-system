@@ -39,10 +39,13 @@ exports.createOrder = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found." });
     }
-
-    const user = await User.findByIdAndUpdate(
+    const user = await User.findById(user_id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const updatedUser = await User.findByIdAndUpdate(
       user_id,
-      { remaining_session: product.sessions },
+      { remaining_session: product.sessions + user.remaining_session },
       { new: true } // ส่งค่าใหม่กลับไป
     );
     res.status(201).json({ message: "Order created successfully", order });

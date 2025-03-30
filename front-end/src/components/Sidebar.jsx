@@ -8,6 +8,7 @@ import {
   UserOutlined,
   CalendarOutlined,
   LogoutOutlined,
+  FileImageOutlined,
 } from "@ant-design/icons";
 import "./Sidebar.css";
 import logo from "../assets/images/logo.png";
@@ -68,6 +69,13 @@ const Sidebar = () => {
           className="nav-item"
         >
           <CalendarOutlined /> <span>Schedule</span>
+        </NavLink>
+        <NavLink
+          to="/admin/imageSetup"
+          activeClassName="active"
+          className="nav-item"
+        >
+          <FileImageOutlined /> <span>Image Setup</span>
         </NavLink>
         {/* <NavLink to="/" activeClassName="active" className="nav-item">
           <LogoutOutlined /> <span>Sign Out</span>

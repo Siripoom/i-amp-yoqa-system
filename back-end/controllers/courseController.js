@@ -10,7 +10,7 @@ exports.createCourse = [
         course_name: req.body.course_name,
         details: req.body.details,
         user_id: req.body.user_id,
-        imageUrl: req.file ? req.file.path : undefined, // เก็บ path ของรูปภาพที่อัปโหลด
+        difficulty: req.body.difficulty,
       };
 
       const course = new Course(courseData);

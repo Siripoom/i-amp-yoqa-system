@@ -1,11 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const { register, login, getMe } = require("../controllers/authController");
+const {
+  register,
+  login,
+  getMe,
+  loginLine,
+} = require("../controllers/authController");
 const { check } = require("express-validator");
 const authController = require("../controllers/authController");
 
-router.get("/line", authController.lineLogin);
-router.get("/line/callback", authController.lineCallback);
+router.post("/line", loginLine);
 // Route สำหรับเข้าสู่ระบบ
 router.post("/login", login);
 

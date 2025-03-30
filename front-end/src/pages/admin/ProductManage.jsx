@@ -37,7 +37,7 @@ const ProductPage = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-
+  const [searchText, setSearchText] = useState(null);
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -77,20 +77,18 @@ const ProductPage = () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      const productData = {
-        ...values,
-        image: values.image?.[0]?.originFileObj, // Use the uploaded file object
-      };
 
       if (editingProduct) {
-        await updateProduct(editingProduct._id, productData); // Use `_id` from API response
+        // Update product
+        await updateProduct(editingProduct._id, values);
         message.success("Product updated successfully");
       } else {
-        await createProduct(productData);
+        // Create new product
+        await createProduct(values);
         message.success("Product created successfully");
       }
 
-      fetchProducts(); // Refresh product list
+      fetchProducts(); // Refresh the product list
       setIsModalVisible(false);
     } catch (error) {
       message.error("Failed to save product", error);
@@ -108,18 +106,12 @@ const ProductPage = () => {
       message.error("Failed to delete product", error);
     }
   };
-
+  const handleSearch = (e) => {
+    setSearchText(e.target.value);
+  };
   const columns = [
     { title: "SESSIONS", dataIndex: "sessions", key: "sessions" },
     { title: "PRICE", dataIndex: "price", key: "price" },
-    // {
-    //   title: "STATUS",
-    //   dataIndex: "status",
-    //   key: "status",
-    //   render: (status) => (
-    //     <Tag color={status === "Active" ? "green" : "gray"}>{status}</Tag>
-    //   ),
-    // },
     {
       title: "ACTION",
       key: "action",
@@ -155,20 +147,20 @@ const ProductPage = () => {
             </Button>
           </div>
 
-          <div className="product-filters">
+          {/* <div className="product-filters">
             <Select
-              defaultValue="Product ID"
+              defaultValue="Product Name"
               style={{ width: 150, marginRight: 10 }}
             >
-              <Option value="Product ID">Product ID</Option>
               <Option value="Product Name">Product Name</Option>
             </Select>
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
               style={{ width: 200, marginRight: 10 }}
+              onChange={handleSearch}
             />
-          </div>
+          </div> */}
 
           <Table
             columns={columns}
@@ -210,6 +202,24 @@ const ProductPage = () => {
               </Form.Item>
               <Form.Item name="sessions" label="Sessions (for course)">
                 <Input type="number" />
+              </Form.Item>
+              <Form.Item name="duration" label="duration (for course)">
+                <Input type="number" />
+              </Form.Item>
+
+              <Form.Item name="image" label="Upload Image">
+                <Upload
+                  name="image"
+                  listType="picture"
+                  beforeUpload={() => false} // Prevent automatic upload,
+                  onChange={(info) => {
+                    if (info.fileList && info.fileList[0]) {
+                      form.setFieldsValue({ image: info.fileList }); // Update form with selected file
+                    }
+                  }}
+                >
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </Upload>
               </Form.Item>
             </Form>
           </Modal>

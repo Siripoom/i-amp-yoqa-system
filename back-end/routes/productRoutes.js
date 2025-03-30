@@ -6,26 +6,26 @@ const {
   getProductById,
   updateProduct,
   deleteProduct,
-  getProductImage,
+  uploadImage,
 } = require("../controllers/productController");
-const { upload } = require("../utils/upload");
+const multer = require("multer");
 
-// อัปโหลดไฟล์ภาพตอนสร้างสินค้า
-router.post("/", upload.single("image"), createProduct);
+// Configure multer to store the file in memory
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Route สำหรับดึงข้อมูลสินค้าทั้งหมด
+// Route for creating a product with an uploaded image
+router.post("/", upload.single("image"), createProduct); // 'image' is the form field key for the uploaded file
+
+// Route for retrieving all products
 router.get("/", getProducts);
 
-// Route สำหรับดึงข้อมูลสินค้าตาม ID
+// Route for retrieving a product by its ID
 router.get("/:id", getProductById);
 
-// Route สำหรับดึงรูปภาพสินค้า
-router.get("/image/:filename", getProductImage);
+// Route for updating a product
+router.put("/:id", upload.single("image"), updateProduct);
 
-// Route สำหรับอัปเดตสินค้า
-router.put("/:id", updateProduct);
-
-// Route สำหรับลบสินค้า
+// Route for deleting a product
 router.delete("/:id", deleteProduct);
 
 module.exports = router;

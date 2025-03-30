@@ -75,8 +75,9 @@ const Course = () => {
                       className="rounded-lg shadow-lg"
                       cover={
                         <img
-                          src={image}
-                          className="rounded-t-lg object-cover h-48"
+                          //url image
+                          src={product.image || image}
+                          className="rounded-t-lg object-cover h-65"
                           alt="Course"
                         />
                       }

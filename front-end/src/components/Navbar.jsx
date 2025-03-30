@@ -43,9 +43,9 @@ const Navbar = () => {
         {/* Logo image */}
 
         <div className="text-2xl font-bold text-blue-900">
-          <Link to="/">
+          <Link to="/" className="flex items-center space-x-2">
             <img src={logo} alt="Logo" className="h-12" />
-            {/* Replace the text with logo */}
+            <span>IAMPYOQA</span>
           </Link>
         </div>
 

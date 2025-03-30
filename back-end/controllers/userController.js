@@ -55,7 +55,9 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
   try {
     // ค้นหา users ที่ไม่ได้ถูกลบ (deleted: false)
-    const users = await User.find({ deleted: false }).populate("role_id");
+    const users = await User.find({ deleted: false })
+      .sort({ _id: -1 }) //Sort by _id descending
+      .populate("role_id");
     res.status(200).json({
       status: "success",
       userCount: users.length,

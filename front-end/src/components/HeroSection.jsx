@@ -1,8 +1,21 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { Row, Col } from "antd";
-import heroImage from "../assets/images/27615.jpg";
 
+import { HeroImage } from "../services/imageService";
 const HeroSection = () => {
+  const [heroImage, setHeroImage] = useState(""); // Default image
+  useEffect(() => {
+    const fetchHeroImage = async () => {
+      try {
+        const response = await HeroImage.getHeroImage();
+
+        setHeroImage(response.data[0].image); // Update state with the fetched image
+      } catch (error) {
+        console.error("Error fetching hero image:", error);
+      }
+    };
+    fetchHeroImage();
+  }, []);
   return (
     <div className="hero-section py-12 flex justify-center items-center">
       <Row justify="center" align="middle" className="w-full">

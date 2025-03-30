@@ -2,7 +2,7 @@ const Class = require("../models/class");
 const Course = require("../models/course");
 const User = require("../models/user");
 const Reservation = require("../models/reservation");
-
+const dayjs = require("dayjs");
 // สร้างคลาสใหม่
 exports.createClass = async (req, res) => {
   try {
@@ -17,6 +17,13 @@ exports.createClass = async (req, res) => {
       end_time,
     } = req.body;
 
+    const course = await Course.findOne({ course_name: title });
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const difficulty = course.difficulty;
     const newClass = new Class({
       title,
       instructor,
@@ -26,6 +33,7 @@ exports.createClass = async (req, res) => {
       zoom_link,
       start_time,
       end_time,
+      difficulty, // Make sure your Class model has this field
     });
 
     const savedClass = await newClass.save();
@@ -40,10 +48,19 @@ exports.createClass = async (req, res) => {
 // ดึงข้อมูลคลาสทั้งหมด
 exports.getAllClasses = async (req, res) => {
   try {
-    const classes = await Class.find().sort({ _id: -1 }); // Sort by _id in descending order to show the latest class first
-    res
-      .status(200)
-      .json({ status: "success", count: classes.length, data: classes });
+    const now = dayjs();
+
+    const classes = await Class.find().sort({ _id: -1 }).lean(); // Convert Mongoose docs to plain JS objects
+
+    const filteredClasses = classes.filter((cls) =>
+      dayjs(cls.end_time).isAfter(now)
+    );
+
+    res.status(200).json({
+      status: "success",
+      count: filteredClasses.length,
+      data: filteredClasses,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching classes", error });
   }

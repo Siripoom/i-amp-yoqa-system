@@ -12,27 +12,21 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
   },
   password: {
     type: String,
-    required: true,
   },
   first_name: {
     type: String,
-    required: true,
   },
   last_name: {
     type: String,
-    required: true,
   },
   prefix: {
     type: String,
-    required: true,
   },
   phone: {
     type: String,
-    required: true,
   },
   birth_date: {
     type: Date,
@@ -47,7 +41,7 @@ const userSchema = new mongoose.Schema({
   },
   role_id: {
     type: String,
-    required: true,
+    default: "Member",
   },
   referrer_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -61,11 +55,6 @@ const userSchema = new mongoose.Schema({
   },
   special_rights: {
     type: String,
-  },
-  lineId: {
-    type: String,
-    unique: true,
-    required: false, // This will be populated when a user logs in via LINE
   },
 
   deleted: { type: Boolean, default: false }, // ฟิลด์สำหรับ soft delete

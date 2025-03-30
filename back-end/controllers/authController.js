@@ -56,12 +56,36 @@ exports.getMe = async (req, res) => {
   }
 };
 
-exports.lineLogin = (req, res) => {
-  passport.authenticate("line");
-};
+// Login with Line
+exports.loginLine = async (req, res) => {
+  try {
+    const { userId, displayName } = req.body;
+    var data = {
+      username: userId,
+      first_name: displayName,
+      role_id: "Member",
+    };
+    var user = await User.findOneAndUpdate({ username: userId }, { new: true });
+    if (user) {
+      console.log("User found:", user);
+    } else {
+      user = new User(data);
+      await user.save();
+    }
 
-exports.lineCallback = (req, res) => {
-  passport.authenticate("line", { failureRedirect: "/" })(req, res, () => {
-    res.redirect("/profile"); // Redirect to profile page or dashboard after successful login
-  });
+    var playload = {
+      user,
+    };
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role_id },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
+    res.status(200).json({ message: "Login successful", token, data: user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

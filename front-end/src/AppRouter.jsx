@@ -23,6 +23,8 @@ import Myplane from "./pages/Myplane";
 import MyOrders from "./pages/MyOder";
 import Booking from "./pages/Booking";
 import Class from "./pages/Class";
+import ImageSetup from "./pages/admin/ImageSetup";
+import Line from "./pages/Line";
 const AppRouter = () => (
   <Router>
     <Routes>
@@ -34,9 +36,11 @@ const AppRouter = () => (
       <Route path="/admin/courses" element={<CoursesPage />} />
       <Route path="/admin/orders" element={<OrderPage />} />
       <Route path="/admin/schedule" element={<Schedule />} />
+      <Route path="/admin/imageSetup" element={<ImageSetup />} />
       <Route path="/teacher/schedule" element={<ScheduleTeacher />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
+      <Route path="/auth/line" element={<Line />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/class" element={<Class />} />
       <Route path="/my-plane" element={<Myplane />} />
