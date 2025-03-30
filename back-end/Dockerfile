@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # ติดตั้ง dependencies
-RUN npm install
+RUN yarn install
 
 # คัดลอกโค้ดทั้งหมดเข้าไปใน container
 COPY . .
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # รัน server เมื่อ container เริ่มต้น
-CMD ["npm", "start"]
+CMD ["yarn", "start"]
