@@ -9,7 +9,7 @@ const Line = () => {
   useEffect(() => {
     const initLiff = async () => {
       try {
-        await liff.init({ liffId: "2007091295-9VRjXwVY" });
+        await liff.init({ liffId: import.meta.env.VITE_LINE_LIFF });
         if (liff.isLoggedIn()) {
           await handleLiffLogin();
         }
@@ -37,10 +37,10 @@ const Line = () => {
           } else {
             navigate("/");
           }
+          loading(false);
         })
         .catch((error) => {
           console.error("Error during Line login:", error);
-          loading(false);
         });
     } catch (error) {
       console.error("LIFF login failed:", error);
