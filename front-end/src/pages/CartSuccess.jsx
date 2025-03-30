@@ -15,17 +15,21 @@ const CartSuccess = () => {
     >
       <Navbar />
       <div className="container mx-auto py-12 px-6 text-center">
-        {/* Success Message */}
+        {/* ข้อความสำเร็จ */}
         <div className="bg-white p-6 rounded-md shadow-md max-w-lg mx-auto">
           <h1 className="text-3xl font-bold text-green-600 mb-4">
-            Order Placed Successfully!
+            สั่งซื้อสำเร็จแล้ว!
           </h1>
           <p className="text-gray-600 mb-6">
-            Thank you for your purchase. Your order has been placed and is being
-            processed. We will notify you once the payment has been confirmed.
+            ขอบคุณสำหรับการสั่งซื้อของคุณ.
+            การสั่งซื้อของคุณได้รับการดำเนินการแล้ว
+            และกำลังอยู่ในระหว่างการตรวจสอบการชำระเงิน.
+            เราจะแจ้งให้คุณทราบเมื่อการชำระเงินได้รับการยืนยัน.
           </p>
           <p className="text-gray-600 mb-6">
-            If you have any questions, feel free to contact our support team.
+            กรุณาใช้โปรโมชั่น เข้าเรียนครั้งแรกภายใน 90 วัน
+            หลังจากใช้งานครั้งแรกโปรโมชันจะหมดอายุตามระยะเวลาของโปรโมชั่นที่ท่านซื้อ
+            หากคุณมีคำถามใด ๆ กรุณาติดต่อทีมสนับสนุนของเรา.
           </p>
           <div className="flex justify-center">
             <Button
@@ -34,11 +38,12 @@ const CartSuccess = () => {
               className="bg-pink-400 text-white px-6 rounded-2xl"
               onClick={() => (window.location.href = "/")}
             >
-              Back to Home
+              กลับสู่หน้าแรก
             </Button>
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );
