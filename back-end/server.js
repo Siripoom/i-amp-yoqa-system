@@ -15,7 +15,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const masterRoutes = require("./routes/masterRoutes");
 const heroImageRoutes = require("./routes/heroImageRoute");
 const bodyParser = require("body-parser");
-require("./config/passportConfig");
+
 require("dotenv").config();
 const path = require("path");
 const app = express();
