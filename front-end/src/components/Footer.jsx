@@ -33,7 +33,7 @@ const Footer = () => {
           {/* Support Section */}
           <div className="support">
             <h3 className="text-lg font-semibold">Support</h3>
-            <p className="text-sm">imapyoqa@gmail.com</p>
+            <p className="text-sm">iampyoqa@gmail.com</p>
             <p className="text-sm">099-16361699</p>
             <a
               href="https://line.me/R/ti/p/@iampyoqa"
