@@ -12,7 +12,7 @@ const classSchema = new mongoose.Schema({
   difficulty: { type: Number, required: false }, // ระดับความยาก
   amount: { type: Number, required: false }, // จำนวนผู้เรียน
   // ผู้ที่เข้าร่วมคลาส
-  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  participants: [{ type: String }],
 });
 
 module.exports = mongoose.model("Class", classSchema);
