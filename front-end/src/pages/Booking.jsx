@@ -150,23 +150,22 @@ const Booking = () => {
         const reservedClassesInLocalStorage =
           JSON.parse(localStorage.getItem("reservedClasses")) || [];
         setEvents(
-          classResponse.data
-            .map((event) => ({
-              id: event._id,
-              title: event.title,
-              date: new Date(event.start_time),
-              endDate: new Date(event.end_time),
-              instructor: event.instructor,
-              description: event.description,
-              difficulty: event.difficulty,
-              reserved:
-                reservedClassIds.has(event._id) ||
-                reservedClassesInLocalStorage.includes(event._id), // ใช้ข้อมูลจาก LocalStorage ด้วย
-              zoomLink: event.zoom_link,
-              roomNumber: event.room_number,
-              passcode: event.passcode,
-            }))
-            .sort((a, b) => b.date - a.date)
+          classResponse.data.map((event) => ({
+            id: event._id,
+            title: event.title,
+            date: new Date(event.start_time),
+            endDate: new Date(event.end_time),
+            instructor: event.instructor,
+            description: event.description,
+            difficulty: event.difficulty,
+            reserved:
+              reservedClassIds.has(event._id) ||
+              reservedClassesInLocalStorage.includes(event._id), // ใช้ข้อมูลจาก LocalStorage ด้วย
+            zoomLink: event.zoom_link,
+            roomNumber: event.room_number,
+            passcode: event.passcode,
+          }))
+          // Remove the sort operation to keep original API order
         );
       } catch (error) {
         console.error("❌ Error fetching classes:", error);
