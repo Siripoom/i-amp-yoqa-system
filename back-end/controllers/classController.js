@@ -15,6 +15,7 @@ exports.createClass = async (req, res) => {
       zoom_link,
       start_time,
       end_time,
+      color,
     } = req.body;
 
     const course = await Course.findOne({ course_name: title });
@@ -33,6 +34,7 @@ exports.createClass = async (req, res) => {
       zoom_link,
       start_time,
       end_time,
+      color,
       difficulty, // Make sure your Class model has this field
       amount: 0,
       participants: [], // Initialize with an empty array
