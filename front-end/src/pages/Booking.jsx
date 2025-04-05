@@ -246,9 +246,7 @@ const Booking = () => {
                   <p>
                     <strong>รายชื่อคนเข้าร่วม:</strong>{" "}
                     <span className="text-pink-500 text-lg">
-                      {event.participants.length > 0
-                        ? event.participants.join(", ")
-                        : "ไม่มีผู้เข้าร่วม"}
+                      {event.participants}
                     </span>
                   </p>
 
