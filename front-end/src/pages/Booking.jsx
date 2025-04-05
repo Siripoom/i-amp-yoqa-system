@@ -165,6 +165,7 @@ const Booking = () => {
             roomNumber: event.room_number,
             passcode: event.passcode,
             amount: event.amount,
+            color: event.color,
             participants: event.participants,
           }))
           // Remove the sort operation to keep original API order
@@ -214,7 +215,7 @@ const Booking = () => {
                   className="p-4 rounded-lg shadow-md"
                   title={event.title}
                   style={{
-                    backgroundColor: colorMap[event.title] || "white", // Default to white if no match
+                    backgroundColor: `#${event.color}`, // Default to white if no match
                   }}
                 >
                   <p>

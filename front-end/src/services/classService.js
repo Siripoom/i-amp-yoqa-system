@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const classService = {
   // 📌 สร้างคลาสใหม่
   createClass: async (classData) => {
+    console.log(classData);
     try {
       console.log(classData);
       const response = await axios.post(`${API_URL}/api/classes`, classData);
@@ -17,8 +18,10 @@ const classService = {
   // 📌 ดึงข้อมูลคลาสทั้งหมด
   getAllClasses: async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/classes`);
-      console.log(response.data);
+      const response = await axios.get(`${API_URL}/api/classes`, {
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
+
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : error;

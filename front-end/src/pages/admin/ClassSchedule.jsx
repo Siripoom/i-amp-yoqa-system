@@ -1,4 +1,13 @@
-import { Layout, Modal, Input, Form, Button, Select, message } from "antd";
+import {
+  Layout,
+  Modal,
+  Input,
+  Form,
+  Button,
+  Select,
+  message,
+  ColorPicker,
+} from "antd";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import { useState, useEffect } from "react";
 import moment from "moment";
@@ -49,6 +58,7 @@ const Schedule = () => {
         description: cls.description,
         passcode: cls.passcode,
         zoom_link: cls.zoom_link,
+        color: cls.color,
         start: new Date(cls.start_time), // ✅ แปลงเป็น Date
         end: new Date(cls.end_time), // ✅ แปลงเป็น Date
       }));
@@ -60,11 +70,6 @@ const Schedule = () => {
     }
   };
 
-  fetchData();
-  const formatDateTimeLocal = (date) => {
-    return date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : null;
-  };
-
   // 📌 เปิด Modal เพื่อเพิ่มหรือแก้ไขคลาส
   const handleOpenModal = (event = null, start = null, end = null) => {
     if (event) {
@@ -74,6 +79,7 @@ const Schedule = () => {
         instructor: event.instructor,
         room_number: event.room_number,
         description: event.description,
+        color: event.color,
         passcode: event.passcode,
         zoom_link: event.zoom_link,
         start_time: event.start
@@ -111,12 +117,15 @@ const Schedule = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      console.log(values.instructor);
+      const formattedColor =
+        typeof values.color === "string" ? values.color : "789DBC";
+
       const classData = {
         title: values.title,
         instructor: values.instructor,
         room_number: values.room_number,
         description: values.description,
+        color: formattedColor, // Just use the color string here
         passcode: values.passcode,
         zoom_link: values.zoom_link,
         start_time: values.start_time
@@ -126,7 +135,9 @@ const Schedule = () => {
           ? new Date(values.end_time).toISOString()
           : null,
       };
+
       console.log(classData);
+
       if (currentEvent) {
         await classService.updateClass(currentEvent.id, classData);
         message.success("Class updated successfully!");
@@ -330,6 +341,13 @@ const Schedule = () => {
             rules={[{ required: true }]}
           >
             <Input type="datetime-local" />
+          </Form.Item>
+          <Form.Item
+            label="Color"
+            name="color"
+            getValueFromEvent={(color) => color.toHexString().replace("#", "")}
+          >
+            <ColorPicker showText format="hex" />
           </Form.Item>
         </Form>
       </Modal>
