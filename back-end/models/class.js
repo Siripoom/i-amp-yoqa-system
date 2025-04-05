@@ -13,6 +13,8 @@ const classSchema = new mongoose.Schema({
   amount: { type: Number, required: false }, // จำนวนผู้เรียน
   // ผู้ที่เข้าร่วมคลาส
   participants: [{ type: String }],
+  // สีของคลาส (optional)
+  color: { type: String, required: false },
 });
 
 module.exports = mongoose.model("Class", classSchema);
