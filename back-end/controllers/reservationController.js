@@ -10,7 +10,10 @@ exports.createReservation = async (req, res) => {
     // ตรวจสอบว่ามีคลาสนี้อยู่หรือไม่
     const yogaClass = await Class.findById(class_id);
     if (!yogaClass) return res.status(404).json({ message: "Class not found" });
-
+    // update จำนวนผู้เรียน และผูเข้าร่วมคลาส
+    yogaClass.participants.push(user_id);
+    yogaClass.amount += 1;
+    await yogaClass.save();
     // ตรวจสอบความจุของคลาส
     const reservationsCount = await Reservation.countDocuments({
       class_id,
