@@ -219,18 +219,18 @@ const Booking = () => {
                     <strong>ครูผู้สอน:</strong> {event.instructor}
                   </p>
                   <p>
-                    <strong>🕒 Start Time:</strong>{" "}
+                    <strong>🕒 เวลาเริ่มเรียน:</strong>{" "}
                     {moment(event.date).format("MMMM Do YYYY, HH:mm")}
                   </p>
                   <p>
-                    <strong>⏳ End Time:</strong>{" "}
+                    <strong>⏳ เวลาสิ้นสุด:</strong>{" "}
                     {moment(event.endDate).format("MMMM Do YYYY, HH:mm")}
                   </p>
                   <p>
-                    <strong>Description:</strong> {event.description}
+                    <strong>รายละเอียด:</strong> {event.description}
                   </p>
                   <p>
-                    <strong>Difficulty:</strong>{" "}
+                    <strong>ระดับความยาก:</strong>{" "}
                     <span className="text-red-500 text-lg">
                       {"❤️".repeat(event.difficulty)}
                     </span>
