@@ -16,8 +16,8 @@ exports.login = async (req, res) => {
     }
 
     // ตรวจสอบรหัสผ่าน
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
+    const isPasswordValid = bcrypt.compare(password, user.password);
+    console.log("isPasswordValid", isPasswordValid);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
