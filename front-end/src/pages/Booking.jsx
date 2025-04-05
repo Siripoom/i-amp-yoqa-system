@@ -239,7 +239,17 @@ const Booking = () => {
                   </p>
                   <p>
                     <strong>จำนวนคนเข้าร่วม:</strong>{" "}
-                    <span className="text-red-500 text-lg">{event.amount}</span>
+                    <span className="text-pink-500 text-lg">
+                      {event.amount}
+                    </span>
+                  </p>
+                  <p>
+                    <strong>รายชื่อคนเข้าร่วม:</strong>{" "}
+                    <span className="text-pink-500 text-lg">
+                      {event.participants.length > 0
+                        ? event.participants.join(", ")
+                        : "ไม่มีผู้เข้าร่วม"}
+                    </span>
                   </p>
 
                   {/* ✅ เงื่อนไขแสดงข้อมูลหลังจากกด Book now */}
