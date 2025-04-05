@@ -164,6 +164,8 @@ const Booking = () => {
             zoomLink: event.zoom_link,
             roomNumber: event.room_number,
             passcode: event.passcode,
+            amount: event.amount,
+            participants: event.participants,
           }))
           // Remove the sort operation to keep original API order
         );
