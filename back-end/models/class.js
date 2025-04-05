@@ -10,6 +10,8 @@ const classSchema = new mongoose.Schema({
   start_time: { type: Date, required: true }, // เวลาเริ่มคลาส
   end_time: { type: Date, required: true }, // เวลาสิ้นสุดคลาส
   difficulty: { type: Number, required: false }, // ระดับความยาก
+  amount: { type: Number, required: false }, // จำนวนผู้เรียน
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // อ้างอิงถึงผู้ใช้ที่สร้างคลาสนี้
 });
 
 module.exports = mongoose.model("Class", classSchema);
