@@ -50,16 +50,20 @@ exports.getAllClasses = async (req, res) => {
   try {
     const now = dayjs();
 
-    const classes = await Class.find().sort({ _id: -1 }).lean(); // Convert Mongoose docs to plain JS objects
+    // First get all classes that haven't ended yet
+    const classes = await Class.find({
+      end_time: { $gte: now.toDate() },
+    }).lean(); // Convert Mongoose docs to plain JS objects
 
-    const filteredClasses = classes.filter((cls) =>
-      dayjs(cls.end_time).isAfter(now)
+    // Sort by start_time in ascending order (earliest first)
+    const sortedClasses = classes.sort((a, b) =>
+      dayjs(a.start_time).diff(dayjs(b.start_time))
     );
 
     res.status(200).json({
       status: "success",
-      count: filteredClasses.length,
-      data: filteredClasses,
+      count: sortedClasses.length,
+      data: sortedClasses,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching classes", error });
