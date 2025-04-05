@@ -1,10 +1,5 @@
 import { Space } from "antd";
-import {
-  FacebookOutlined,
-  LineOutlined,
-  InstagramOutlined,
-  LinkedinOutlined,
-} from "@ant-design/icons";
+import { FacebookOutlined } from "@ant-design/icons";
 // import "../styles/Footer.css";
 
 const Footer = () => {
@@ -34,7 +29,7 @@ const Footer = () => {
           <div className="support">
             <h3 className="text-lg font-semibold">Support</h3>
             <p className="text-sm">iampyoqa@gmail.com</p>
-            <p className="text-sm">099-16361699</p>
+            <p className="text-sm">099-1636169</p>
             <a
               href="https://line.me/R/ti/p/@iampyoqa"
               target="_blank"
@@ -65,7 +60,7 @@ const Footer = () => {
               </li>
               <li>
                 <a href="#" className="text-gray-300 hover:text-gray-100">
-                  Product
+                  Promotion
                 </a>
               </li>
               <li>
