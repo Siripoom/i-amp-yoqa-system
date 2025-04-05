@@ -34,6 +34,8 @@ exports.createClass = async (req, res) => {
       start_time,
       end_time,
       difficulty, // Make sure your Class model has this field
+      amount: 0,
+      participants: [], // Initialize with an empty array
     });
 
     const savedClass = await newClass.save();
