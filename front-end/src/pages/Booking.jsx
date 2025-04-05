@@ -237,9 +237,7 @@ const Booking = () => {
                   </p>
                   <p>
                     <strong>จำนวนคนเข้าร่วม:</strong>{" "}
-                    <span className="text-red-500 text-lg">
-                      {"❤️".repeat(event.difficulty)}
-                    </span>
+                    <span className="text-red-500 text-lg">{event.amount}</span>
                   </p>
 
                   {/* ✅ เงื่อนไขแสดงข้อมูลหลังจากกด Book now */}
