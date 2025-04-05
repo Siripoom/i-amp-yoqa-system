@@ -36,6 +36,7 @@ exports.updateCourse = [
       course.course_name = req.body.course_name || course.course_name;
       course.details = req.body.details || course.details;
       course.user_id = req.body.user_id || course.user_id;
+      course.difficulty = req.body.difficulty || course.difficulty;
 
       // อัปเดต path ของรูปภาพถ้ามีการอัปโหลดใหม่
       if (req.file) {
