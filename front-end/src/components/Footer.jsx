@@ -82,7 +82,7 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://forms.gle/eUtnCpHBrhGL9HE59"
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSfpFs0mygeynuWU-kDsu5viIH1cdQPrOfVIQZlIO11qmbhCSQ/viewform"
                   target="blank"
                   className="text-gray-300 hover:text-gray-100"
                 >
