@@ -216,7 +216,7 @@ const Booking = () => {
                   }}
                 >
                   <p>
-                    <strong>Master:</strong> {event.instructor}
+                    <strong>ครูผู้สอน:</strong> {event.instructor}
                   </p>
                   <p>
                     <strong>🕒 Start Time:</strong>{" "}
@@ -231,6 +231,12 @@ const Booking = () => {
                   </p>
                   <p>
                     <strong>Difficulty:</strong>{" "}
+                    <span className="text-red-500 text-lg">
+                      {"❤️".repeat(event.difficulty)}
+                    </span>
+                  </p>
+                  <p>
+                    <strong>จำนวนคนเข้าร่วม:</strong>{" "}
                     <span className="text-red-500 text-lg">
                       {"❤️".repeat(event.difficulty)}
                     </span>
