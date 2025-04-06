@@ -113,7 +113,7 @@ const Booking = () => {
         // แสดงรายละเอียดหลังจากจองสำเร็จ
         handleShowDetails(classId);
 
-        message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plan.");
+        message.success("✅ จองคอร์สสำเร็จ!");
       } else {
         message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
       }
