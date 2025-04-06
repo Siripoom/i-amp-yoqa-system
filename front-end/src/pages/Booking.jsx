@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import reservationService from "../services/reservationService";
 import classService from "../services/classService";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const { Title } = Typography;
 
@@ -96,20 +96,29 @@ const Booking = () => {
     }
 
     try {
+      const token = localStorage.getItem("token");
+      const decoded = jwtDecode(token);
+      const fullName = `${decoded.first_name} ${decoded.last_name}`;
+
       const reservationData = { user_id: userId, class_id: classId };
       const response = await reservationService.createReservation(
         reservationData
       );
 
       if (response) {
-        // อัพเดตสถานะการจองใน local state
         setEvents((prevEvents) =>
           prevEvents.map((event) =>
-            event.id === classId ? { ...event, reserved: true } : event
+            event.id === classId
+              ? {
+                  ...event,
+                  reserved: true,
+                  amount: event.amount + 1,
+                  participants: [...(event.participants || []), fullName],
+                }
+              : event
           )
         );
 
-        // บันทึกสถานะการจองใน LocalStorage (เพื่อให้แสดงเมื่อรีเฟรช)
         const reservedClassIds =
           JSON.parse(localStorage.getItem("reservedClasses")) || [];
         localStorage.setItem(
@@ -117,7 +126,6 @@ const Booking = () => {
           JSON.stringify([...reservedClassIds, classId])
         );
 
-        // เพิ่มข้อมูลการจองใหม่เข้าไปใน state
         setReservations((prev) => [
           ...prev,
           {
@@ -127,33 +135,14 @@ const Booking = () => {
           },
         ]);
 
-        // แสดงรายละเอียดหลังจากจองสำเร็จ
         handleShowDetails(classId);
-
-        message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plan.");
+        message.success("✅ จองคอร์สสำเร็จ!");
       } else {
         message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
       }
     } catch (error) {
       console.error("Error reserving class:", error);
-
-      // Check for specific error message about promotion requirement
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        if (
-          error.response.data.message ===
-          "Cannot reserve class, please buy a promotion"
-        ) {
-          message.error("❌ ไม่สามารถจองคลาสได้ กรุณาซื้อโปรโมชั่นก่อน");
-        } else {
-          message.error(`❌ ${error.response.data.message}`);
-        }
-      } else {
-        message.error("❌ ไม่สามารถจองคลาสได้ กรุณาซื้อโปรโมชั่นก่อน");
-      }
+      message.error("❌ ไม่สามารถจองคลาสได้ กรุณาซื้อโปรโมชั่นก่อน");
     }
   };
 
@@ -161,6 +150,7 @@ const Booking = () => {
   const handleCancelReservation = async (classStartTime, classId) => {
     const token = localStorage.getItem("token");
     const decoded = jwtDecode(token);
+    const fullName = `${decoded.first_name} ${decoded.last_name}`;
 
     try {
       const response = await reservationService.getUserReservations(
@@ -177,13 +167,11 @@ const Booking = () => {
       if (now >= fiveMinutesBeforeClass) {
         Modal.error({
           title: "ไม่สามารถยกเลิกการจองได้",
-          content:
-            "ไม่สามารถยกเลิกการจองได้เนื่องจากเหลือเวลาน้อยกว่า 5 นาทีก่อนเริ่มคลาส",
+          content: "เหลือน้อยกว่า 5 นาทีก่อนเริ่มคลาส",
         });
         return;
       }
 
-      // ✅ ค้นหา reservation ที่ตรงกับ classId
       const reservation = reservations.find(
         (res) =>
           res.class_id &&
@@ -196,12 +184,20 @@ const Booking = () => {
         return;
       }
 
-      // ✅ ยกเลิกการจองโดยใช้ reservation._id ที่หาได้
       await reservationService.cancelReservation(reservation._id);
 
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
-          event.id === classId ? { ...event, reserved: false } : event
+          event.id === classId
+            ? {
+                ...event,
+                reserved: false,
+                amount: Math.max(0, event.amount - 1),
+                participants: (event.participants || []).filter(
+                  (name) => name !== fullName
+                ),
+              }
+            : event
         )
       );
 
@@ -306,7 +302,7 @@ const Booking = () => {
                   <p>
                     <strong>รายชื่อคนเข้าร่วม:</strong>{" "}
                     <span className="text-pink-500 text-sm">
-                      {event.participants}
+                      {(event.participants || []).join(", ")}
                     </span>
                   </p>
 

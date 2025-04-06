@@ -66,27 +66,40 @@ exports.getUserReservations = async (req, res) => {
 exports.cancelReservation = async (req, res) => {
   try {
     const { reservation_id } = req.params;
-    // get user id from token
-    const token = req.user;
+    const token = req.user; // ได้มาจาก middleware ที่ decode JWT แล้ว
 
-    const reservation = await Reservation.findById(reservation_id);
+    // 🔍 ดึงข้อมูลการจอง พร้อมข้อมูล user
+    const reservation = await Reservation.findById(reservation_id).populate(
+      "user_id"
+    );
     if (!reservation)
       return res.status(404).json({ message: "Reservation not found" });
 
-    //ลดจำนวนผู้เข้าร่วมคลาสลง 1 และเอาชื่อผู้ใช้ที่ยกเลิกออกจากคลาส
+    // 🔍 ดึงข้อมูลคลาส
     const yogaClass = await Class.findById(reservation.class_id);
     if (!yogaClass) return res.status(404).json({ message: "Class not found" });
-    yogaClass.amount -= 1;
+
+    // ✅ ป้องกัน amount ติดลบ
+    yogaClass.amount = Math.max(0, yogaClass.amount - 1);
+
+    // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
+    const fullName =
+      reservation.user_id.first_name + " " + reservation.user_id.last_name;
+
     yogaClass.participants = yogaClass.participants.filter(
-      (participant) =>
-        participant !==
-        reservation.user_id.first_name + " " + reservation.user_id.last_name
+      (participant) => participant !== fullName
     );
+
     await yogaClass.save();
-    // เพิ่มจำนวน session ของผู้ใช้กลับ 1
+
+    // ✅ เพิ่ม session ให้ user
     const user = await User.findById(token.userId);
-    user.remaining_session += 1;
-    await user.save();
+    if (user) {
+      user.remaining_session += 1;
+      await user.save();
+    }
+
+    // ✅ เปลี่ยนสถานะการจอง
     reservation.status = "Cancelled";
     await reservation.save();
 
