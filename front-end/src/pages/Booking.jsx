@@ -302,7 +302,7 @@ const Booking = () => {
                   <p>
                     <strong>รายชื่อคนเข้าร่วม:</strong>{" "}
                     <span className="text-pink-500 text-sm">
-                      {(event.participants || []).join(", ")}
+                      {event.participants.join(", ")}
                     </span>
                   </p>
 
