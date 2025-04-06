@@ -40,26 +40,35 @@ const Booking = () => {
           return;
         }
 
+        // สร้าง Set ของ class_id ที่ผู้ใช้จองแล้ว
         const reservedClassIds = new Set(
           reservationResponse.data?.map((res) => res.class_id) || []
         );
 
+        // โหลดข้อมูลจาก LocalStorage เพื่อให้แน่ใจว่าแสดงสถานะการจองที่เก็บไว้
+        const reservedClassesInLocalStorage =
+          JSON.parse(localStorage.getItem("reservedClasses")) || [];
+
+        // รวม class_id จากทั้ง API และ LocalStorage
+        reservedClassesInLocalStorage.forEach((id) => reservedClassIds.add(id));
+
         setEvents(
-          classResponse.data
-            .map((event) => ({
-              id: event._id,
-              title: event.title,
-              date: new Date(event.start_time),
-              endDate: new Date(event.end_time),
-              instructor: event.instructor,
-              description: event.description,
-              difficulty: event.difficulty,
-              reserved: reservedClassIds.has(event._id),
-              zoomLink: event.zoom_link,
-              roomNumber: event.room_number,
-              passcode: event.passcode,
-            }))
-            .sort((a, b) => b.date - a.date)
+          classResponse.data.map((event) => ({
+            id: event._id,
+            title: event.title,
+            date: new Date(event.start_time),
+            endDate: new Date(event.end_time),
+            instructor: event.instructor,
+            description: event.description,
+            difficulty: event.difficulty,
+            reserved: reservedClassIds.has(event._id),
+            zoomLink: event.zoom_link,
+            roomNumber: event.room_number,
+            passcode: event.passcode,
+            amount: event.amount,
+            color: event.color,
+            participants: event.participants,
+          }))
         );
       } catch (error) {
         console.error("❌ Error fetching classes:", error);
@@ -101,89 +110,46 @@ const Booking = () => {
           JSON.stringify([...reservedClassIds, classId])
         );
 
-        message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plane.");
+        // แสดงรายละเอียดหลังจากจองสำเร็จ
+        handleShowDetails(classId);
+
+        message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plan.");
       } else {
         message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
       }
     } catch (error) {
       console.error("Error reserving class:", error);
-      message.error("❌ จองคอร์สไม่สำเร็จ กรุณาลองใหม่");
+
+      // Check for specific error message about promotion requirement
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        if (
+          error.response.data.message ===
+          "Cannot reserve class, please buy a promotion"
+        ) {
+          message.error("❌ ไม่สามารถจองคลาสได้ กรุณาซื้อโปรโมชั่นก่อน");
+        } else {
+          message.error(`❌ ${error.response.data.message}`);
+        }
+      } else {
+        message.error("❌ ไม่สามารถจองคลาสได้ กรุณาซื้อโปรโมชั่นก่อน");
+      }
     }
   };
-  const colorMap = {
-    "RELAXING YOGA (R)": "#789DBC",
-    "OFFICE SYNDROME FOR YOGA (O)": "#B99470",
-    "HATHA FLOW YOGA (H)": "#C9E9D2",
-    "BALANCE YOGA (B)": "#FFE3E3",
-    "ASHTANGA YOGA": "#F7DCB9",
-    "POWER FLOW YOGA (P)": "#F9F7C9",
-    "WHEEL YOGA (W) ": "#E4E0E1",
-    "FIT FLOW YOGA (F)": "#FF8787",
-  };
-
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        console.log("📡 Fetching all classes...");
-        const [classResponse, reservationResponse] = await Promise.all([
-          classService.getAllClasses(),
-          userId
-            ? reservationService.getUserReservations(userId)
-            : Promise.resolve({ data: [] }),
-        ]);
-
-        if (
-          !classResponse ||
-          !classResponse.data ||
-          !Array.isArray(classResponse.data)
-        ) {
-          console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้อง:", classResponse);
-          message.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส ❌");
-          return;
-        }
-
-        const reservedClassIds = new Set(
-          reservationResponse.data?.map((res) => res.class_id) || []
-        );
-
-        // โหลดข้อมูลจาก LocalStorage เพื่อให้แน่ใจว่าแสดงสถานะการจองที่เก็บไว้
-        const reservedClassesInLocalStorage =
-          JSON.parse(localStorage.getItem("reservedClasses")) || [];
-        setEvents(
-          classResponse.data.map((event) => ({
-            id: event._id,
-            title: event.title,
-            date: new Date(event.start_time),
-            endDate: new Date(event.end_time),
-            instructor: event.instructor,
-            description: event.description,
-            difficulty: event.difficulty,
-            reserved:
-              reservedClassIds.has(event._id) ||
-              reservedClassesInLocalStorage.includes(event._id), // ใช้ข้อมูลจาก LocalStorage ด้วย
-            zoomLink: event.zoom_link,
-            roomNumber: event.room_number,
-            passcode: event.passcode,
-            amount: event.amount,
-            color: event.color,
-            participants: event.participants,
-          }))
-          // Remove the sort operation to keep original API order
-        );
-      } catch (error) {
-        console.error("❌ Error fetching classes:", error);
-        message.error("ไม่สามารถโหลดข้อมูลคอร์สได้ ❌");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClasses();
-  }, [userId]);
 
   // ✅ ฟังก์ชันแสดงรายละเอียดเมื่อกด "Book now"
   const handleShowDetails = (classId) => {
-    setShowDetails((prev) => [...prev, classId]); // เพิ่ม ID ลงไปใน state
+    setShowDetails((prev) =>
+      prev.includes(classId) ? prev : [...prev, classId]
+    );
+  };
+
+  // ✅ ฟังก์ชันตรวจสอบว่าควรแสดงรายละเอียดหรือไม่
+  const shouldShowDetails = (event) => {
+    return event.reserved || showDetails.includes(event.id);
   };
 
   return (
@@ -215,7 +181,7 @@ const Booking = () => {
                   className="p-4 rounded-lg shadow-md"
                   title={event.title}
                   style={{
-                    backgroundColor: `#${event.color}`, // Default to white if no match
+                    backgroundColor: event.color ? `#${event.color}` : "white",
                   }}
                 >
                   <p>
@@ -251,8 +217,8 @@ const Booking = () => {
                     </span>
                   </p>
 
-                  {/* ✅ เงื่อนไขแสดงข้อมูลหลังจากกด Book now */}
-                  {event.reserved || showDetails.includes(event.id) ? (
+                  {/* ✅ แสดงข้อมูลเมื่อจองแล้วหรือกด Book now */}
+                  {shouldShowDetails(event) && (
                     <>
                       <p>
                         <strong>📌 Room Number:</strong>{" "}
@@ -267,7 +233,7 @@ const Booking = () => {
                         </span>
                       </p>
                       <p>
-                        <strong>🔗 Zoom Link:</strong>
+                        <strong>🔗 Zoom Link:</strong>{" "}
                         <a
                           href={event.zoomLink}
                           target="_blank"
@@ -278,9 +244,8 @@ const Booking = () => {
                         </a>
                       </p>
                     </>
-                  ) : null}
+                  )}
 
-                  {/* ✅ ขยับปุ่มลงมาล่างสุด และใช้ฟังก์ชันเปิดข้อมูล */}
                   <div className="mt-4 text-center">
                     {event.reserved ? (
                       <span className="text-green-500 font-semibold">
@@ -290,10 +255,7 @@ const Booking = () => {
                       <Button
                         type="primary"
                         className="bg-purple-600 text-white"
-                        onClick={() =>
-                          handleReserveCourse(event.id) &&
-                          handleShowDetails(event.id)
-                        }
+                        onClick={() => handleReserveCourse(event.id)}
                       >
                         Book now
                       </Button>
