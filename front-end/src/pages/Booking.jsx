@@ -43,12 +43,30 @@ const Booking = () => {
 
         // เก็บข้อมูลการจองทั้งหมดของผู้ใช้
         if (reservationResponse && reservationResponse.data) {
-          setReservations(reservationResponse.data);
+          // ตรวจสอบโครงสร้างข้อมูล reservations
+          if (reservationResponse.data.reservations) {
+            // ถ้าข้อมูลอยู่ใน property "reservations"
+            setReservations(reservationResponse.data.reservations);
+          } else {
+            // ถ้าข้อมูลอยู่ใน data โดยตรง
+            setReservations(reservationResponse.data);
+          }
         }
 
-        // สร้าง Set ของ class_id ที่ผู้ใช้จองแล้ว
+        // ดึงข้อมูล reservations ที่เก็บไว้ใน state
+        const currentReservations =
+          reservationResponse.data.reservations || reservationResponse.data;
+
+        // สร้าง Set ของ class_id ที่ผู้ใช้จองแล้ว โดยตรวจสอบโครงสร้าง
         const reservedClassIds = new Set(
-          reservationResponse.data?.map((res) => res.class_id) || []
+          currentReservations
+            .map((res) => {
+              // ตรวจสอบว่า class_id เป็น object หรือ string
+              return res.class_id && typeof res.class_id === "object"
+                ? res.class_id._id // ถ้าเป็น object ให้ใช้ _id
+                : res.class_id; // ถ้าเป็น string ให้ใช้ตรงๆ
+            })
+            .filter((id) => id) // กรองค่า null หรือ undefined ออก
         );
 
         // โหลดข้อมูลจาก LocalStorage เพื่อให้แน่ใจว่าแสดงสถานะการจองที่เก็บไว้
@@ -173,8 +191,28 @@ const Booking = () => {
     }
 
     try {
-      // หา reservationId จาก class_id
-      const reservation = reservations.find((res) => res.class_id === classId);
+      // หา reservationId จาก class_id โดยตรวจสอบโครงสร้างข้อมูล
+      let reservation = null;
+
+      for (const res of reservations) {
+        // ตรวจสอบว่า class_id เป็น object หรือ string
+        if (
+          res.class_id &&
+          typeof res.class_id === "object" &&
+          res.class_id._id === classId
+        ) {
+          reservation = res;
+          break;
+        } else if (res.class_id === classId) {
+          reservation = res;
+          break;
+        }
+      }
+
+      // Debug information
+      console.log("🔍 Searching for reservation with class ID:", classId);
+      console.log("📊 Available reservations:", reservations);
+      console.log("🎯 Found reservation:", reservation);
 
       if (!reservation || !reservation._id) {
         message.error("❌ ไม่พบข้อมูลการจอง");
@@ -200,7 +238,15 @@ const Booking = () => {
       );
 
       // ลบข้อมูลการจองออกจาก state
-      setReservations((prev) => prev.filter((res) => res.class_id !== classId));
+      setReservations((prev) =>
+        prev.filter((res) => {
+          // ตรวจสอบโครงสร้างเพื่อเปรียบเทียบ
+          if (res.class_id && typeof res.class_id === "object") {
+            return res.class_id._id !== classId;
+          }
+          return res.class_id !== classId;
+        })
+      );
 
       // ลบออกจาก showDetails ถ้ามี
       setShowDetails((prev) => prev.filter((id) => id !== classId));
@@ -336,7 +382,7 @@ const Booking = () => {
                           <Button
                             danger
                             onClick={() =>
-                              handleCancelReservation(event._id, event.date)
+                              handleCancelReservation(event.id, event.date)
                             }
                           >
                             ยกเลิกการจอง
