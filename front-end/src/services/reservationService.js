@@ -28,9 +28,16 @@ const reservationService = {
 
   // 📌 ยกเลิกการจองคลาส
   cancelReservation: async (reservationId) => {
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.delete(
-        `${API_URL}/api/reservations/cancel/${reservationId}`
+        `${API_URL}/api/cancel/${reservationId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       return response.data;
     } catch (error) {

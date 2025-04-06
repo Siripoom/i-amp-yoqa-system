@@ -1,7 +1,7 @@
 const Reservation = require("../models/reservation");
 const Class = require("../models/class");
 const User = require("../models/user");
-
+const jwtDecode = require("jwt-decode");
 // จองคลาส
 exports.createReservation = async (req, res) => {
   try {
@@ -66,11 +66,27 @@ exports.getUserReservations = async (req, res) => {
 exports.cancelReservation = async (req, res) => {
   try {
     const { reservation_id } = req.params;
+    // get user id from token
+    const token = req.user;
 
     const reservation = await Reservation.findById(reservation_id);
     if (!reservation)
       return res.status(404).json({ message: "Reservation not found" });
 
+    //ลดจำนวนผู้เข้าร่วมคลาสลง 1 และเอาชื่อผู้ใช้ที่ยกเลิกออกจากคลาส
+    const yogaClass = await Class.findById(reservation.class_id);
+    if (!yogaClass) return res.status(404).json({ message: "Class not found" });
+    yogaClass.amount -= 1;
+    yogaClass.participants = yogaClass.participants.filter(
+      (participant) =>
+        participant !==
+        reservation.user_id.first_name + " " + reservation.user_id.last_name
+    );
+    await yogaClass.save();
+    // เพิ่มจำนวน session ของผู้ใช้กลับ 1
+    const user = await User.findById(token.userId);
+    user.remaining_session += 1;
+    await user.save();
     reservation.status = "Cancelled";
     await reservation.save();
 

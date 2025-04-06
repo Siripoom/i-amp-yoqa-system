@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import reservationService from "../services/reservationService";
 import classService from "../services/classService";
+import jwtDecode from "jwt-decode";
 
 const { Title } = Typography;
 
@@ -43,30 +44,12 @@ const Booking = () => {
 
         // เก็บข้อมูลการจองทั้งหมดของผู้ใช้
         if (reservationResponse && reservationResponse.data) {
-          // ตรวจสอบโครงสร้างข้อมูล reservations
-          if (reservationResponse.data.reservations) {
-            // ถ้าข้อมูลอยู่ใน property "reservations"
-            setReservations(reservationResponse.data.reservations);
-          } else {
-            // ถ้าข้อมูลอยู่ใน data โดยตรง
-            setReservations(reservationResponse.data);
-          }
+          setReservations(reservationResponse.data);
         }
 
-        // ดึงข้อมูล reservations ที่เก็บไว้ใน state
-        const currentReservations =
-          reservationResponse.data.reservations || reservationResponse.data;
-
-        // สร้าง Set ของ class_id ที่ผู้ใช้จองแล้ว โดยตรวจสอบโครงสร้าง
+        // สร้าง Set ของ class_id ที่ผู้ใช้จองแล้ว
         const reservedClassIds = new Set(
-          currentReservations
-            .map((res) => {
-              // ตรวจสอบว่า class_id เป็น object หรือ string
-              return res.class_id && typeof res.class_id === "object"
-                ? res.class_id._id // ถ้าเป็น object ให้ใช้ _id
-                : res.class_id; // ถ้าเป็น string ให้ใช้ตรงๆ
-            })
-            .filter((id) => id) // กรองค่า null หรือ undefined ออก
+          reservationResponse.data?.map((res) => res.class_id) || []
         );
 
         // โหลดข้อมูลจาก LocalStorage เพื่อให้แน่ใจว่าแสดงสถานะการจองที่เก็บไว้
@@ -175,61 +158,53 @@ const Booking = () => {
   };
 
   // ✅ ฟังก์ชันยกเลิกการจองคอร์ส
-  const handleCancelReservation = async (classId, classStartTime) => {
-    // ตรวจสอบว่าเวลาเริ่มคลาสห่างจากเวลาปัจจุบันน้อยกว่า 5 นาทีหรือไม่
-    const now = new Date();
-    const fiveMinutesBeforeClass = new Date(classStartTime);
-    fiveMinutesBeforeClass.setMinutes(fiveMinutesBeforeClass.getMinutes() - 5);
-
-    if (now >= fiveMinutesBeforeClass) {
-      Modal.error({
-        title: "ไม่สามารถยกเลิกการจองได้",
-        content:
-          "ไม่สามารถยกเลิกการจองได้เนื่องจากเหลือเวลาน้อยกว่า 5 นาทีก่อนเริ่มคลาส",
-      });
-      return;
-    }
+  const handleCancelReservation = async (classStartTime, classId) => {
+    const token = localStorage.getItem("token");
+    const decoded = jwtDecode(token);
 
     try {
-      // หา reservationId จาก class_id โดยตรวจสอบโครงสร้างข้อมูล
-      let reservation = null;
+      const response = await reservationService.getUserReservations(
+        decoded.userId
+      );
+      const reservations = response.reservations || [];
 
-      for (const res of reservations) {
-        // ตรวจสอบว่า class_id เป็น object หรือ string
-        if (
-          res.class_id &&
-          typeof res.class_id === "object" &&
-          res.class_id._id === classId
-        ) {
-          reservation = res;
-          break;
-        } else if (res.class_id === classId) {
-          reservation = res;
-          break;
-        }
+      const now = new Date();
+      const fiveMinutesBeforeClass = new Date(classStartTime);
+      fiveMinutesBeforeClass.setMinutes(
+        fiveMinutesBeforeClass.getMinutes() - 5
+      );
+
+      if (now >= fiveMinutesBeforeClass) {
+        Modal.error({
+          title: "ไม่สามารถยกเลิกการจองได้",
+          content:
+            "ไม่สามารถยกเลิกการจองได้เนื่องจากเหลือเวลาน้อยกว่า 5 นาทีก่อนเริ่มคลาส",
+        });
+        return;
       }
 
-      // Debug information
-      console.log("🔍 Searching for reservation with class ID:", classId);
-      console.log("📊 Available reservations:", reservations);
-      console.log("🎯 Found reservation:", reservation);
+      // ✅ ค้นหา reservation ที่ตรงกับ classId
+      const reservation = reservations.find(
+        (res) =>
+          res.class_id &&
+          res.class_id._id &&
+          res.class_id._id.toString() === classId.toString()
+      );
 
       if (!reservation || !reservation._id) {
         message.error("❌ ไม่พบข้อมูลการจอง");
         return;
       }
 
-      // เรียก API ยกเลิกการจอง
+      // ✅ ยกเลิกการจองโดยใช้ reservation._id ที่หาได้
       await reservationService.cancelReservation(reservation._id);
 
-      // อัพเดตสถานะการจองใน local state
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
           event.id === classId ? { ...event, reserved: false } : event
         )
       );
 
-      // ลบ classId ออกจาก LocalStorage
       const reservedClassIds =
         JSON.parse(localStorage.getItem("reservedClasses")) || [];
       localStorage.setItem(
@@ -237,23 +212,15 @@ const Booking = () => {
         JSON.stringify(reservedClassIds.filter((id) => id !== classId))
       );
 
-      // ลบข้อมูลการจองออกจาก state
       setReservations((prev) =>
-        prev.filter((res) => {
-          // ตรวจสอบโครงสร้างเพื่อเปรียบเทียบ
-          if (res.class_id && typeof res.class_id === "object") {
-            return res.class_id._id !== classId;
-          }
-          return res.class_id !== classId;
-        })
+        prev.filter((res) => res.class_id && res.class_id._id !== classId)
       );
 
-      // ลบออกจาก showDetails ถ้ามี
       setShowDetails((prev) => prev.filter((id) => id !== classId));
 
       message.success("✅ ยกเลิกการจองสำเร็จ");
     } catch (error) {
-      console.error("Error canceling reservation:", error);
+      console.error("❌ Error canceling reservation:", error);
       message.error("❌ เกิดข้อผิดพลาดในการยกเลิกการจอง");
     }
   };
@@ -378,11 +345,11 @@ const Booking = () => {
                         <span className="text-green-500 font-semibold block mb-2">
                           จองแล้ว ✅
                         </span>
-                        {canCancelReservation(event.date) ? (
+                        {canCancelReservation(event.date, event.id) ? (
                           <Button
                             danger
                             onClick={() =>
-                              handleCancelReservation(event.id, event.date)
+                              handleCancelReservation(event.date, event.id)
                             }
                           >
                             ยกเลิกการจอง
