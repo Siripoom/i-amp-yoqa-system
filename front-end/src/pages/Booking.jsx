@@ -336,7 +336,7 @@ const Booking = () => {
                           <Button
                             danger
                             onClick={() =>
-                              handleCancelReservation(event.id, event.date)
+                              handleCancelReservation(event._id, event.date)
                             }
                           >
                             ยกเลิกการจอง
