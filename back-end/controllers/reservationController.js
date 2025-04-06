@@ -12,6 +12,9 @@ exports.createReservation = async (req, res) => {
     if (!yogaClass) return res.status(404).json({ message: "Class not found" });
     // update จำนวนผู้เรียน และผูเข้าร่วมคลาส
     const user = await User.findById(user_id);
+    // ตรวจสอบว่าผู้ใช้มี session != 0 หรือไม่
+    if (user.remaining_session === 0) {
+    }
     yogaClass.participants.push(user.first_name + " " + user.last_name);
     yogaClass.amount += 1;
     await yogaClass.save();
