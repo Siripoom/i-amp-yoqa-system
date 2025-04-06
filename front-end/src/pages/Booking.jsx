@@ -1,4 +1,4 @@
-import { Button, Card, Typography, message } from "antd";
+import { Button, Card, Typography, message, Modal } from "antd";
 import { useState, useEffect } from "react";
 import moment from "moment";
 import "../styles/Home.css";
@@ -16,7 +16,8 @@ const Booking = () => {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showDetails, setShowDetails] = useState([]); // ✅ เก็บคอร์สที่ถูกกด "Book Now"
+  const [showDetails, setShowDetails] = useState([]);
+  const [reservations, setReservations] = useState([]); // เก็บข้อมูลการจองทั้งหมดของผู้ใช้
   const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
@@ -38,6 +39,11 @@ const Booking = () => {
           console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้อง:", classResponse);
           message.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส ❌");
           return;
+        }
+
+        // เก็บข้อมูลการจองทั้งหมดของผู้ใช้
+        if (reservationResponse && reservationResponse.data) {
+          setReservations(reservationResponse.data);
         }
 
         // สร้าง Set ของ class_id ที่ผู้ใช้จองแล้ว
@@ -110,10 +116,20 @@ const Booking = () => {
           JSON.stringify([...reservedClassIds, classId])
         );
 
+        // เพิ่มข้อมูลการจองใหม่เข้าไปใน state
+        setReservations((prev) => [
+          ...prev,
+          {
+            _id: response._id || `temp-${Date.now()}`,
+            user_id: userId,
+            class_id: classId,
+          },
+        ]);
+
         // แสดงรายละเอียดหลังจากจองสำเร็จ
         handleShowDetails(classId);
 
-        message.success("✅ จองคอร์สสำเร็จ!");
+        message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plan.");
       } else {
         message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
       }
@@ -138,6 +154,70 @@ const Booking = () => {
         message.error("❌ ไม่สามารถจองคลาสได้ กรุณาซื้อโปรโมชั่นก่อน");
       }
     }
+  };
+
+  // ✅ ฟังก์ชันยกเลิกการจองคอร์ส
+  const handleCancelReservation = async (classId, classStartTime) => {
+    // ตรวจสอบว่าเวลาเริ่มคลาสห่างจากเวลาปัจจุบันน้อยกว่า 5 นาทีหรือไม่
+    const now = new Date();
+    const fiveMinutesBeforeClass = new Date(classStartTime);
+    fiveMinutesBeforeClass.setMinutes(fiveMinutesBeforeClass.getMinutes() - 5);
+
+    if (now >= fiveMinutesBeforeClass) {
+      Modal.error({
+        title: "ไม่สามารถยกเลิกการจองได้",
+        content:
+          "ไม่สามารถยกเลิกการจองได้เนื่องจากเหลือเวลาน้อยกว่า 5 นาทีก่อนเริ่มคลาส",
+      });
+      return;
+    }
+
+    try {
+      // หา reservationId จาก class_id
+      const reservation = reservations.find((res) => res.class_id === classId);
+
+      if (!reservation || !reservation._id) {
+        message.error("❌ ไม่พบข้อมูลการจอง");
+        return;
+      }
+
+      // เรียก API ยกเลิกการจอง
+      await reservationService.cancelReservation(reservation._id);
+
+      // อัพเดตสถานะการจองใน local state
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === classId ? { ...event, reserved: false } : event
+        )
+      );
+
+      // ลบ classId ออกจาก LocalStorage
+      const reservedClassIds =
+        JSON.parse(localStorage.getItem("reservedClasses")) || [];
+      localStorage.setItem(
+        "reservedClasses",
+        JSON.stringify(reservedClassIds.filter((id) => id !== classId))
+      );
+
+      // ลบข้อมูลการจองออกจาก state
+      setReservations((prev) => prev.filter((res) => res.class_id !== classId));
+
+      // ลบออกจาก showDetails ถ้ามี
+      setShowDetails((prev) => prev.filter((id) => id !== classId));
+
+      message.success("✅ ยกเลิกการจองสำเร็จ");
+    } catch (error) {
+      console.error("Error canceling reservation:", error);
+      message.error("❌ เกิดข้อผิดพลาดในการยกเลิกการจอง");
+    }
+  };
+
+  // ✅ ฟังก์ชันตรวจสอบว่าสามารถยกเลิกการจองได้หรือไม่ (เหลือเวลามากกว่า 5 นาทีก่อนเริ่มคลาส)
+  const canCancelReservation = (classStartTime) => {
+    const now = new Date();
+    const fiveMinutesBeforeClass = new Date(classStartTime);
+    fiveMinutesBeforeClass.setMinutes(fiveMinutesBeforeClass.getMinutes() - 5);
+    return now < fiveMinutesBeforeClass;
   };
 
   // ✅ ฟังก์ชันแสดงรายละเอียดเมื่อกด "Book now"
@@ -248,9 +328,26 @@ const Booking = () => {
 
                   <div className="mt-4 text-center">
                     {event.reserved ? (
-                      <span className="text-green-500 font-semibold">
-                        จองแล้ว ✅
-                      </span>
+                      <div>
+                        <span className="text-green-500 font-semibold block mb-2">
+                          จองแล้ว ✅
+                        </span>
+                        {canCancelReservation(event.date) ? (
+                          <Button
+                            danger
+                            onClick={() =>
+                              handleCancelReservation(event.id, event.date)
+                            }
+                          >
+                            ยกเลิกการจอง
+                          </Button>
+                        ) : (
+                          <span className="text-red-500 text-sm block">
+                            ไม่สามารถยกเลิกได้ (เหลือน้อยกว่า 5
+                            นาทีก่อนเริ่มคลาส)
+                          </span>
+                        )}
+                      </div>
                     ) : userId ? (
                       <Button
                         type="primary"
