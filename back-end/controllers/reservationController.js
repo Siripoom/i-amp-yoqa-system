@@ -14,6 +14,10 @@ exports.createReservation = async (req, res) => {
     const user = await User.findById(user_id);
     // ตรวจสอบว่าผู้ใช้มี session != 0 หรือไม่
     if (user.remaining_session === 0) {
+      // "ไม่สามารถจองได้เนื่องจากไม่มี session กรุณาซ้อ promotion"
+      return res.status(400).json({
+        message: "Cannot reserve class, please buy a promotion",
+      });
     }
     yogaClass.participants.push(user.first_name + " " + user.last_name);
     yogaClass.amount += 1;
