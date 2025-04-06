@@ -19,6 +19,9 @@ exports.createReservation = async (req, res) => {
         message: "Cannot reserve class, please buy a promotion",
       });
     }
+    // ลดจำนวน session ของผู้ใช้ลง 1
+    user.remaining_session -= 1;
+    await user.save();
     yogaClass.participants.push(user.first_name + " " + user.last_name);
     yogaClass.amount += 1;
     await yogaClass.save();
