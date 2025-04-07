@@ -278,11 +278,15 @@ const Booking = () => {
                   </p>
                   <p>
                     <strong>🕒 เวลาเริ่มเรียน:</strong>{" "}
-                    {moment(event.date).format("MMMM Do YYYY, HH:mm")}
+                    {moment(event.date)
+                      .locale("th")
+                      .format("DD MMMM YYYY, HH:mm")}
                   </p>
                   <p>
                     <strong>⏳ เวลาสิ้นสุด:</strong>{" "}
-                    {moment(event.endDate).format("MMMM Do YYYY, HH:mm")}
+                    {moment(event.endDate)
+                      .locale("th")
+                      .format("DD MMMM YYYY, HH:mm")}
                   </p>
                   <p>
                     <strong>รายละเอียด:</strong> {event.description}

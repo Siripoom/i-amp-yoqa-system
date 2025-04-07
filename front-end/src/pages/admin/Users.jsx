@@ -226,11 +226,7 @@ const UserPage = () => {
             ]}
           >
             <Form form={form} layout="vertical">
-              <Form.Item
-                name="email"
-                label="Email"
-                rules={[{ required: true, message: "Please enter the email" }]}
-              >
+              <Form.Item name="email" label="Email">
                 <Input />
               </Form.Item>
               <Form.Item
@@ -285,7 +281,7 @@ const UserPage = () => {
               >
                 <Input type="date" />
               </Form.Item>
-              <Form.Item
+              {/* <Form.Item
                 name="address"
                 label="Address"
                 rules={[
@@ -293,7 +289,7 @@ const UserPage = () => {
                 ]}
               >
                 <Input.TextArea rows={2} />
-              </Form.Item>
+              </Form.Item> */}
               <Form.Item
                 name="role_id"
                 label="Role"
