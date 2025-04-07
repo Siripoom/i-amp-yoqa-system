@@ -229,13 +229,7 @@ const UserPage = () => {
               <Form.Item name="email" label="Email">
                 <Input />
               </Form.Item>
-              <Form.Item
-                name="password"
-                label="Password"
-                rules={[
-                  { required: true, message: "Please enter the password" },
-                ]}
-              >
+              <Form.Item name="password" label="Password">
                 <Input.Password />
               </Form.Item>
               <Form.Item
