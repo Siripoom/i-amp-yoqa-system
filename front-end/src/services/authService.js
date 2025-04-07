@@ -13,7 +13,7 @@ export const login = async (email, password) => {
 
 export const register = async (userData) => {
   console.log(userData);
-  const response = await axios.post(`${API_URL}api/users`, userData);
+  const response = await axios.post(`${API_URL}/api/users`, userData);
   return response.data;
 };
 
