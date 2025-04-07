@@ -108,13 +108,15 @@ const Home = () => {
             <p className="text-center text-gray-500">No products available</p>
           )}
         </div>
-        <motion.div variants={fadeInVariant} className="text-center mt-4">
-          <Button
-            type="primary"
-            className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-300 px-6"
-          >
-            More
-          </Button>
+        <motion.div variants={fadeInVariant} className="text-center mt-6">
+          <Link to="/course">
+            <Button
+              type="primary"
+              className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-300 px-6"
+            >
+              View All Courses
+            </Button>
+          </Link>
         </motion.div>
       </motion.section>
 
@@ -173,16 +175,6 @@ const Home = () => {
               </Link>
             </div>
           </motion.div>
-        </motion.div>
-        <motion.div variants={fadeInVariant} className="text-center mt-6">
-          <Link to="/course">
-            <Button
-              type="primary"
-              className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-300 px-6"
-            >
-              View All Courses
-            </Button>
-          </Link>
         </motion.div>
       </motion.section>
 
