@@ -20,6 +20,7 @@ const orderService = {
   getAllOrders: async () => {
     try {
       const response = await axios.get(`${API_URL}/api/orders`);
+
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : error.message;

@@ -94,7 +94,7 @@ const Profile = () => {
                   <Input placeholder="Phone" value={user.phone} disabled />
                 </Form.Item>
 
-                <Form.Item label="จำนวนคลาสที่เคยลง">
+                <Form.Item label="จำนวนครั้งทั้งหมด (Total Classes) ">
                   <Input
                     placeholder="Class"
                     value={user.total_classes}
@@ -102,7 +102,7 @@ const Profile = () => {
                   />
                 </Form.Item>
 
-                <Form.Item label="จำนวนคงเหลือโปรโมชั่น">
+                <Form.Item label="จำนวนครั้งคงเหลือ (Remaining Session)">
                   <Input
                     placeholder="Session"
                     value={user.remaining_session}

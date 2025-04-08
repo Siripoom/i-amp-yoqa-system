@@ -48,4 +48,26 @@ export const MasterImage = {
     return response.data;
   },
 };
-//* MasterImage Service
+
+export const QrcodePayment = {
+  getQrcodePayment: async () => {
+    const response = await axios.get(`${API_URL}/api/qrCodes`);
+    return response.data;
+  },
+  updateQrcodePayment: async (id, image) => {
+    const response = await axios.patch(`${API_URL}/api/qrCodes/${id}`, image, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+  deleteQrcodePayment: async (id) => {
+    const response = await axios.delete(`${API_URL}/api/qrCodes/${id}`);
+    return response.data;
+  },
+  createQrcodePayment: async (image) => {
+    const response = await axios.post(`${API_URL}/api/qrCodes`, image, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+};

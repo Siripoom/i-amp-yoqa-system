@@ -1,23 +1,42 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button, Upload, Form, Typography, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import orderService from "../services/orderService";
+import { QrcodePayment } from "../services/imageService";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 const { Title, Text } = Typography;
 import image from "../assets/images/imageC1.png";
-import qr from "../assets/15000.jpg";
+
 const Checkout = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState(null);
+  const [qr, setQr] = useState(null); // State for QR code image
 
   useEffect(() => {
     if (location.state?.product) {
       setProduct(location.state.product);
+      // Create an async function inside the useEffect
+      const fetchQrCode = async () => {
+        try {
+          const response = await QrcodePayment.getQrcodePayment();
+          // Check if response.data is an array and get the first item's image URL
+          if (Array.isArray(response.data) && response.data.length > 0) {
+            setQr(response.data[0].image);
+          } else {
+            message.error("QR code data not found");
+          }
+        } catch (error) {
+          message.error("Failed to load QR code");
+          console.error(error);
+        }
+      };
+
+      fetchQrCode();
     } else {
       message.error("No product selected. Redirecting...");
       navigate("/course"); // กลับไปหน้า Course ถ้าไม่มีสินค้า
@@ -35,7 +54,7 @@ const Checkout = () => {
       if (values.paymentSlip?.length > 0) {
         formData.append("image", values.paymentSlip[0].originFileObj);
       }
-
+      console.log("Form Data:", formData); // Log the form data for debugging
       await orderService.createOrder(formData);
       message.success("Order placed successfully!");
       navigate("/cartSuccess");

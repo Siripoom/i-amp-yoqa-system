@@ -29,8 +29,8 @@ const OrderPage = () => {
 
       if (Array.isArray(response)) {
         setOrders(response); // ✅ ใช้ response เฉพาะกรณีเป็น Array
-      } else if (response.orders && Array.isArray(response.orders)) {
-        setOrders(response.orders); // ✅ ดึง `orders` จาก Response
+      } else if (response.data && Array.isArray(response.data)) {
+        setOrders(response.data); // ✅ ดึง `orders` จาก Response
       } else {
         setOrders([]); // ✅ ป้องกัน `undefined`
       }
@@ -206,7 +206,7 @@ const OrderPage = () => {
                       <strong>Payment Slip:</strong>
                     </p>
                     <img
-                      src={`http://localhost:5000${selectedOrder.image}`} // ✅ ดึงภาพจาก API
+                      src={selectedOrder.image} // ✅ ดึงภาพจาก API
                       alt="Payment Slip"
                       style={{
                         maxWidth: "100%",

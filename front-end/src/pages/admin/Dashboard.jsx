@@ -77,11 +77,10 @@ const Dashboard = () => {
       const response = await orderService.getAllOrders();
 
       if (response.status === "success") {
-        setOrders(response.orders); // ✅ ดึงคำสั่งซื้อ
-        console.log("API Response:", response.orders);
+        setOrders(response); // ✅ ดึงคำสั่งซื้อ
 
         // ✅ คำนวณผลรวมของราคาสินค้าทั้งหมด
-        const total = response.orders.reduce((sum, order) => {
+        const total = response.data.reduce((sum, order) => {
           return sum + (order.product_id?.price || 0);
         }, 0);
         setTotalSales(total);

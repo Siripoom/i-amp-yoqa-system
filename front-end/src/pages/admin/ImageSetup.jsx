@@ -18,6 +18,7 @@ import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import "../../styles/User.css";
 import { HeroImage, MasterImage } from "../../services/imageService";
+import { QrcodePayment } from "../../services/imageService"; // Import the QrcodePayment service
 
 const { Sider, Content } = Layout;
 
@@ -32,11 +33,28 @@ const ImageSetup = () => {
 
   const [masterName, setMasterName] = useState(""); // New state for mastername
   const [selectedMasterImage, setSelectedMasterImage] = useState(null); // Track the selected master image for update
+  const [qrcodes, setQrcodes] = useState([]);
+  const [uploadingQrcode, setUploadingQrcode] = useState(false);
+  const [selectedQrcodeImage, setSelectedQrcodeImage] = useState(null);
+  const [isQrcodeModalVisible, setIsQrcodeModalVisible] = useState(false);
 
   useEffect(() => {
     fetchHeroImages();
     fetchMasterImages();
+    fetchQrcodeImages(); // 👈 เพิ่มเรียก Qrcode ด้วย
   }, []);
+  const fetchQrcodeImages = async () => {
+    try {
+      const response = await QrcodePayment.getQrcodePayment();
+      if (response.status === "success" && Array.isArray(response.data)) {
+        setQrcodes(response.data);
+      } else {
+        message.error("Failed to fetch QR Code images");
+      }
+    } catch (err) {
+      message.error("Error fetching QR Code images");
+    }
+  };
 
   // Fetch Hero images from the API
   const fetchHeroImages = async () => {
@@ -67,6 +85,44 @@ const ImageSetup = () => {
     } catch (err) {
       message.error("Failed to fetch master images");
     }
+  };
+  const handleQrcodeUpload = async (info) => {
+    setUploadingQrcode(true);
+    const formData = new FormData();
+    formData.append("image", info.file);
+
+    try {
+      if (selectedQrcodeImage) {
+        await QrcodePayment.updateQrcodePayment(
+          selectedQrcodeImage._id,
+          formData
+        );
+        message.success("QR Code updated");
+      } else {
+        await QrcodePayment.createQrcodePayment(formData);
+        message.success("QR Code uploaded");
+      }
+      fetchQrcodeImages();
+      setIsQrcodeModalVisible(false);
+    } catch (err) {
+      message.error("QR Code upload failed");
+    } finally {
+      setUploadingQrcode(false);
+    }
+  };
+  const deleteQrcodeImage = async (id) => {
+    try {
+      await QrcodePayment.deleteQrcodePayment(id);
+      message.success("QR Code deleted");
+      fetchQrcodeImages();
+    } catch (err) {
+      message.error("QR Code delete failed");
+    }
+  };
+
+  const updateQrcodeImage = (record) => {
+    setSelectedQrcodeImage(record);
+    setIsQrcodeModalVisible(true);
   };
 
   // Handle Hero Image Upload
@@ -115,6 +171,36 @@ const ImageSetup = () => {
       setUploadingMaster(false);
     }
   };
+  const qrcodeImageColumns = (onDelete, onUpdate) => [
+    {
+      title: "Preview",
+      dataIndex: "image",
+      key: "image",
+      render: (url) => <Image width={100} src={url} />,
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (record) => (
+        <>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => onUpdate(record)}
+            style={{ marginRight: 8 }}
+          >
+            Update
+          </Button>
+          <Button
+            type="danger"
+            icon={<DeleteOutlined />}
+            onClick={() => onDelete(record._id)}
+          >
+            Delete
+          </Button>
+        </>
+      ),
+    },
+  ];
 
   // Columns for displaying images in the table
   const heroImageColumns = (onDelete, onUpdate) => [
@@ -275,8 +361,47 @@ const ImageSetup = () => {
               style={{ marginTop: 16 }}
             />
           </div>
+          {/* Qrcode Image Section */}
+          <div style={{ marginTop: "2rem" }}>
+            <h2>QR Code Payment</h2>
+            <Upload
+              customRequest={handleQrcodeUpload}
+              showUploadList={false}
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
+                Upload QR Code
+              </Button>
+            </Upload>
+
+            <Table
+              dataSource={qrcodes}
+              columns={qrcodeImageColumns(deleteQrcodeImage, updateQrcodeImage)}
+              rowKey="_id"
+              style={{ marginTop: 16 }}
+            />
+          </div>
         </Content>
       </Layout>
+      <Modal
+        title="Update QR Code"
+        visible={isQrcodeModalVisible}
+        onCancel={() => {
+          setIsQrcodeModalVisible(false);
+          setSelectedQrcodeImage(null);
+        }}
+        footer={null}
+      >
+        <Upload
+          customRequest={handleQrcodeUpload}
+          showUploadList={false}
+          accept="image/*"
+        >
+          <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
+            Update QR Code
+          </Button>
+        </Upload>
+      </Modal>
 
       {/* Modal for Hero Image Update */}
       <Modal

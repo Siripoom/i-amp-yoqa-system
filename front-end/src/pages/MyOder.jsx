@@ -30,8 +30,8 @@ const MyOrders = () => {
       const response = await orderService.getOrdersByUserId(userId);
       console.log("Orders Response:", response); // ✅ Debug API Response
 
-      if (response.orders && Array.isArray(response.orders)) {
-        setOrders(response.orders);
+      if (response.data && Array.isArray(response.data)) {
+        setOrders(response.data);
       } else {
         setOrders([]);
       }
@@ -185,7 +185,7 @@ const MyOrders = () => {
                   <strong>Payment Slip:</strong>
                 </p>
                 <img
-                  src={`http://localhost:5000${selectedOrder.image}`}
+                  src={selectedOrder.image}
                   alt="Payment Slip"
                   style={{
                     maxWidth: "100%",

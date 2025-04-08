@@ -62,18 +62,18 @@ exports.createOrder = async (req, res) => {
       return res.status(404).json({ message: "Product not found." });
     }
 
-    // ค้นหา user
-    const user = await User.findById(user_id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    // // ค้นหา user
+    // const user = await User.findById(user_id);
+    // if (!user) {
+    //   return res.status(404).json({ message: "User not found" });
+    // }
 
-    // อัปเดต remaining_session ของ user หลังการสั่งซื้อ
-    const updatedUser = await User.findByIdAndUpdate(
-      user_id,
-      { remaining_session: product.sessions + user.remaining_session },
-      { new: true }
-    );
+    // // อัปเดต remaining_session ของ user หลังการสั่งซื้อ
+    // const updatedUser = await User.findByIdAndUpdate(
+    //   user_id,
+    //   { remaining_session: product.sessions + user.remaining_session },
+    //   { new: true }
+    // );
 
     res.status(201).json({
       status: "success",
@@ -160,6 +160,19 @@ exports.updateOrder = async (req, res) => {
     if (req.body.status) order.status = req.body.status;
     order.image = imageUrl;
 
+    // ค้นหา user
+    const user = await User.findById(req.body.user_id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // อัปเดต remaining_session ของ user หลังการสั่งซื้อ
+    const updatedUser = await User.findByIdAndUpdate(
+      user_id,
+      { remaining_session: product.sessions + user.remaining_session },
+      { new: true }
+    );
+
     // บันทึกคำสั่งซื้อที่อัปเดตแล้วลงในฐานข้อมูล
     await order.save();
 
@@ -173,10 +186,12 @@ exports.updateOrder = async (req, res) => {
 // ดึงข้อมูลคำสั่งซื้อทั้งหมด
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate("user_id product_id");
+    const orders = await Order.find()
+      .populate("user_id product_id")
+      .sort({ createdAt: -1 }); // 🔽 ใหม่สุดก่อน
     res.status(200).json({
       status: "success",
-      count: orders.length,
+      length: orders.length,
       data: orders,
     });
   } catch (error) {
@@ -261,7 +276,9 @@ exports.deleteOrder = async (req, res) => {
 exports.getOrdersByUserId = async (req, res) => {
   try {
     const { user_id } = req.params;
-    const orders = await Order.find({ user_id }).populate("user_id product_id");
+    const orders = await Order.find({ user_id })
+      .populate("user_id product_id")
+      .sort({ createdAt: -1 }); // 🔽 ใหม่สุดก่อน
 
     if (orders.length === 0) {
       return res.status(404).json({ message: "No orders found for this user" });
@@ -289,10 +306,41 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid status value" });
     }
 
-    const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
-
-    if (!order) {
+    // ดึงข้อมูล order เดิมก่อนอัปเดต
+    const existingOrder = await Order.findById(id);
+    if (!existingOrder) {
       return res.status(404).json({ message: "Order not found" });
+    }
+
+    // เก็บสถานะเดิมไว้เพื่อตรวจสอบการเปลี่ยนแปลง
+    const previousStatus = existingOrder.status;
+
+    // อัปเดตสถานะของ order
+    const order = await Order.findByIdAndUpdate(id, { status }, { new: true })
+      .populate("user_id")
+      .populate("product_id");
+
+    // ตรวจสอบว่าสถานะเปลี่ยนจาก "รออนุมัติ" เป็น "อนุมัติ" หรือไม่
+    if (
+      previousStatus === "รออนุมัติ" &&
+      status === "อนุมัติ" &&
+      order.user_id &&
+      order.product_id
+    ) {
+      // ค้นหา user และ product
+      const user = order.user_id;
+      const product = order.product_id;
+
+      if (!product.sessions) {
+        console.warn(`Product ${product._id} does not have sessions defined`);
+      } else {
+        // อัปเดต remaining_session ของ user
+        await User.findByIdAndUpdate(
+          user._id,
+          { $inc: { remaining_session: product.sessions } }, // ใช้ $inc เพื่อเพิ่มค่า
+          { new: true }
+        );
+      }
     }
 
     res.status(200).json({
