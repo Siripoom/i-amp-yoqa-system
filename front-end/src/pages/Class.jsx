@@ -11,8 +11,8 @@ import c02 from "../assets/images/POWER FLOW YOGA (P).jpg";
 import c03 from "../assets/images/HATHA FLOW YOGA (H).jpg";
 import c04 from "../assets/images/OFFICE SYNDROME FOR YOGA (O).jpg";
 import c05 from "../assets/images/FIT FLOW YOGA (F).jpg";
-import c06 from "../assets/images/BALANCE YOGA (B).jpg"; // เปลี่ยนชื่อไฟล์ให้ไม่ซ้ำ
-import c07 from "../assets/images/WHEEL YOGA (W).jpg"; // เปลี่ยนชื่อไฟล์ให้ไม่ซ้ำ
+import c06 from "../assets/images/BALANCE YOGA (B).jpg";
+import c07 from "../assets/images/WHEEL YOGA (W).jpg";
 
 const { Title, Paragraph } = Typography;
 
@@ -76,21 +76,26 @@ const Class = () => {
     >
       <Navbar />
 
-      {/* Grid Layout สำหรับแสดงครูโยคะ */}
       <div className="container mx-auto px-4 py-10">
         <Title level={2} className="text-center text-purple-700 mb-8">
           CLASS YOGA
         </Title>
 
-        <Row gutter={[16, 16]} justify="center">
+        <Row gutter={[16, 24]} justify="center">
           {yogaClasses.map((yogaClass, index) => (
-            <Col span={8} key={index}>
+            <Col xs={24} sm={12} md={8} lg={8} xl={8} key={index}>
               <Card
                 hoverable
                 cover={<img alt={yogaClass.title} src={yogaClass.image} />}
                 style={{
                   borderRadius: "15px",
                   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                  height: "100%",
+                }}
+                bodyStyle={{
+                  display: "flex",
+                  flexDirection: "column",
+                  height: "100%",
                 }}
               >
                 <Title level={4} className="text-center text-purple-600">
