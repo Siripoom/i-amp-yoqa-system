@@ -8,4 +8,4 @@ const masterSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Master", masterSchema);
+module.exports = mongoose.model("ClassCatalog", masterSchema);
