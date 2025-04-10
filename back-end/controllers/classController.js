@@ -135,13 +135,13 @@ exports.createClassCatalog = async (req, res) => {
     let imageUrl = req.body.image;
     if (req.file) {
       const file = req.file;
-      const ext = path.extname(file.originalname); // Get the file extension
-      const fileName = `${Date.now()}${ext}`; // Unique file name
-      const folderPath = "class"; // The folder where files will be stored
+      const ext = path.extname(file.originalname);
+      const fileName = `${Date.now()}${ext}`;
+      const folderPath = "class";
 
       // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
-        .from("store") // Replace with your Supabase bucket name
+        .from("store")
         .upload(`${folderPath}/${fileName}`, file.buffer, {
           contentType: file.mimetype,
         });
@@ -165,11 +165,13 @@ exports.createClassCatalog = async (req, res) => {
       data: savedClassCatalog,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error creating class catalog", error });
+    res
+      .status(500)
+      .json({ message: "Error creating class catalog", error: error.message });
   }
 };
 
-// ดึงข้อมูลคลาสทั้งหมดใน catalog
+// Get all class catalogs
 exports.getAllClassCatalogs = async (req, res) => {
   try {
     const catalogs = await ClassCatalog.find();
@@ -179,64 +181,54 @@ exports.getAllClassCatalogs = async (req, res) => {
       data: catalogs,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching class catalogs", error });
+    res
+      .status(500)
+      .json({ message: "Error fetching class catalogs", error: error.message });
   }
 };
 
 exports.updateClassCatalog = async (req, res) => {
   try {
-    const updatedClassCatalog = await ClassCatalog.findById(req.params.id);
+    const classId = req.params.id;
+    const updatedClassCatalog = await ClassCatalog.findById(classId);
 
     if (!updatedClassCatalog) {
       return res.status(404).json({ message: "Class catalog not found" });
     }
 
-    let imageUrl = master.image;
+    let imageUrl = updatedClassCatalog.image; // Fixed variable reference (was using 'master.image')
 
-    if (imageUrl && typeof imageUrl === "string") {
+    // Handle image deletion if a new file is uploaded
+    if (req.file && imageUrl && typeof imageUrl === "string") {
       try {
-        const Url = imageUrl;
-
-        // Extract file name directly from the image URL (after the last '/')
-        const fileName = Url.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
+        // Extract file name from the image URL
+        const fileName = imageUrl.split("/").pop().split("?")[0];
 
         if (fileName) {
-          // Correct file path: Remove any spaces between "masters" and the file name
           const { error } = await supabase.storage
-            .from("store") // Replace with your Supabase bucket name
-            .remove([`class/${fileName}`]); // Remove the space between "masters" and fileName
+            .from("store")
+            .remove([`class/${fileName}`]);
 
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
-            return res
-              .status(500)
-              .json({ message: "Error deleting file from storage" });
+            // Continue with update even if deletion fails
           }
-        } else {
-          console.error("Image URL structure is incorrect:", imageUrl);
-          return res
-            .status(400)
-            .json({ message: "Invalid image URL structure" });
         }
       } catch (error) {
         console.error("Error processing the image URL:", error.message);
-        return res
-          .status(500)
-          .json({ message: "Error processing the image URL" });
+        // Continue with update even if image URL processing fails
       }
-    } else {
-      console.warn("No image URL found for the class, skipping deletion");
     }
 
+    // Handle new file upload
     if (req.file) {
       const file = req.file;
-      const ext = path.extname(file.originalname); // Get the file extension
-      const fileName = `${Date.now()}${ext}`; // Unique file name
-      const folderPath = "class"; // The folder where files will be stored
+      const ext = path.extname(file.originalname);
+      const fileName = `${Date.now()}${ext}`;
+      const folderPath = "class";
 
-      // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
-        .from("store") // Replace with your Supabase bucket name
+        .from("store")
         .upload(`${folderPath}/${fileName}`, file.buffer, {
           contentType: file.mimetype,
         });
@@ -245,17 +237,18 @@ exports.updateClassCatalog = async (req, res) => {
         return res.status(500).json({ message: error.message });
       }
 
-      // Construct the public URL for the uploaded image
+      // Update the image URL
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
+    // Update class catalog fields
     updatedClassCatalog.image = imageUrl;
     updatedClassCatalog.classname =
       req.body.classname || updatedClassCatalog.classname;
     updatedClassCatalog.description =
       req.body.description || updatedClassCatalog.description;
 
-    // Save updated master to the database
+    // Save updated class catalog
     await updatedClassCatalog.save();
 
     res.status(200).json({
@@ -263,62 +256,49 @@ exports.updateClassCatalog = async (req, res) => {
       data: updatedClassCatalog,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error updating class catalog", error });
+    res
+      .status(500)
+      .json({ message: "Error updating class catalog", error: error.message });
   }
 };
 
-// ลบคลาสใน catalog
 exports.deleteClassCatalog = async (req, res) => {
   try {
-    const deletedClassCatalog = await ClassCatalog.findByIdAndDelete(
-      req.params.id
-    );
-    if (!deletedClassCatalog) {
+    const classId = req.params.id;
+    const classCatalog = await ClassCatalog.findById(classId);
+
+    if (!classCatalog) {
       return res.status(404).json({ message: "Class catalog not found" });
     }
-    // Ensure master.image exists and is a valid string before attempting to split it
-    if (
-      deletedClassCatalog.image &&
-      typeof deletedClassCatalog.image === "string"
-    ) {
-      try {
-        const imageUrl = deletedClassCatalog.image;
 
-        // Extract file name directly from the image URL (after the last '/')
-        const fileName = imageUrl.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
+    // Handle image deletion
+    if (classCatalog.image && typeof classCatalog.image === "string") {
+      try {
+        const fileName = classCatalog.image.split("/").pop().split("?")[0];
 
         if (fileName) {
-          // Correct file path: Remove any spaces between "masters" and the file name
           const { error } = await supabase.storage
-            .from("store") // Replace with your Supabase bucket name
-            .remove([`class/${fileName}`]); // Remove the space between "masters" and fileName
+            .from("store")
+            .remove([`class/${fileName}`]);
 
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
-            return res
-              .status(500)
-              .json({ message: "Error deleting file from storage" });
+            // Continue with deletion even if file removal fails
           }
-        } else {
-          console.error("Image URL structure is incorrect:", imageUrl);
-          return res
-            .status(400)
-            .json({ message: "Invalid image URL structure" });
         }
       } catch (error) {
         console.error("Error processing the image URL:", error.message);
-        return res
-          .status(500)
-          .json({ message: "Error processing the image URL" });
+        // Continue with deletion even if image processing fails
       }
-    } else {
-      console.warn("No image URL found for the class, skipping deletion");
     }
 
-    // Delete the master from the database
-    await deletedClassCatalog.findByIdAndDelete(req.params.id);
+    // Delete the class catalog from the database
+    await ClassCatalog.findByIdAndDelete(classId);
+
     res.status(200).json({ message: "Class catalog deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting class catalog", error });
+    res
+      .status(500)
+      .json({ message: "Error deleting class catalog", error: error.message });
   }
 };
