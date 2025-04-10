@@ -37,7 +37,7 @@ const SignUp = () => {
       };
 
       const response = await register(formattedValues);
-      console.log(response);
+     
       message.success("Registration successful! Redirecting...");
       setTimeout(() => navigate("/auth/signin"), 2000);
     } catch (error) {

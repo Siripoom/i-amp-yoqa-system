@@ -54,7 +54,7 @@ const Checkout = () => {
       if (values.paymentSlip?.length > 0) {
         formData.append("image", values.paymentSlip[0].originFileObj);
       }
-      console.log("Form Data:", formData); // Log the form data for debugging
+   
       await orderService.createOrder(formData);
       message.success("Order placed successfully!");
       navigate("/cartSuccess");

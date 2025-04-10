@@ -24,7 +24,7 @@ const Booking = () => {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        console.log("📡 Fetching all classes...");
+      
         const [classResponse, reservationResponse] = await Promise.all([
           classService.getAllClasses(),
           userId

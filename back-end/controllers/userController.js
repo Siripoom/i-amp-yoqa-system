@@ -197,7 +197,7 @@ exports.restoreUser = async (req, res) => {
       { $set: { deleted: false } }, // อัปเดตฟิลด์ deleted เป็น false
       { new: true }
     );
-    console.log(user);
+    // console.log(user);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

@@ -8,19 +8,26 @@ import {
   Image,
   Modal,
   Input,
+  Form,
 } from "antd";
 import {
   UploadOutlined,
   DeleteOutlined,
   EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import "../../styles/User.css";
-import { HeroImage, MasterImage } from "../../services/imageService";
-import { QrcodePayment } from "../../services/imageService"; // Import the QrcodePayment service
+import {
+  HeroImage,
+  MasterImage,
+  QrcodePayment,
+  ImageCatalog,
+} from "../../services/imageService";
 
 const { Sider, Content } = Layout;
+const { TextArea } = Input;
 
 const ImageSetup = () => {
   const [heroImages, setHeroImages] = useState([]);
@@ -31,18 +38,43 @@ const ImageSetup = () => {
     useState(false);
   const [selectedHeroImage, setSelectedHeroImage] = useState(null);
 
-  const [masterName, setMasterName] = useState(""); // New state for mastername
-  const [selectedMasterImage, setSelectedMasterImage] = useState(null); // Track the selected master image for update
+  const [masterName, setMasterName] = useState("");
+  const [selectedMasterImage, setSelectedMasterImage] = useState(null);
   const [qrcodes, setQrcodes] = useState([]);
   const [uploadingQrcode, setUploadingQrcode] = useState(false);
   const [selectedQrcodeImage, setSelectedQrcodeImage] = useState(null);
   const [isQrcodeModalVisible, setIsQrcodeModalVisible] = useState(false);
 
+  // Class Catalog states
+  const [classCatalogs, setClassCatalogs] = useState([]);
+  const [uploadingClass, setUploadingClass] = useState(false);
+  const [isClassModalVisible, setIsClassModalVisible] = useState(false);
+  const [isClassCreateMode, setIsClassCreateMode] = useState(true);
+  const [selectedClassCatalog, setSelectedClassCatalog] = useState(null);
+  const [form] = Form.useForm();
+
   useEffect(() => {
     fetchHeroImages();
     fetchMasterImages();
-    fetchQrcodeImages(); // 👈 เพิ่มเรียก Qrcode ด้วย
+    fetchQrcodeImages();
+    fetchClassCatalogs(); // Fetch class catalogs on component mount
   }, []);
+
+  // Fetch Class Catalogs from the API
+  const fetchClassCatalogs = async () => {
+    try {
+      const response = await ImageCatalog.getImageCatalog();
+      if (response.status === "success" && Array.isArray(response.data)) {
+        setClassCatalogs(response.data);
+      } else {
+        message.error("Failed to fetch class catalogs");
+      }
+    } catch (err) {
+      console.error("Error fetching class catalogs:", err);
+      message.error("Failed to fetch class catalogs");
+    }
+  };
+
   const fetchQrcodeImages = async () => {
     try {
       const response = await QrcodePayment.getQrcodePayment();
@@ -61,7 +93,7 @@ const ImageSetup = () => {
     try {
       const response = await HeroImage.getHeroImage();
       if (response.status === "success" && Array.isArray(response.data)) {
-        setHeroImages(response.data); // Set the images from the 'data' field
+        setHeroImages(response.data);
       } else {
         console.error("Fetched data is not in the expected format:", response);
         message.error("Failed to fetch hero images");
@@ -77,7 +109,7 @@ const ImageSetup = () => {
     try {
       const response = await MasterImage.getMasterImage();
       if (response.status === "success" && Array.isArray(response.data)) {
-        setMasterImages(response.data); // Set the images from the 'data' field
+        setMasterImages(response.data);
       } else {
         console.error("Fetched data is not in the expected format:", response);
         message.error("Failed to fetch master images");
@@ -86,6 +118,84 @@ const ImageSetup = () => {
       message.error("Failed to fetch master images");
     }
   };
+
+  // Handle Class Catalog Form Submit (Create/Update)
+
+  const handleClassFormSubmit = async (values) => {
+    setUploadingClass(true);
+    const formData = new FormData();
+   
+    // Append form values to FormData - ensure classname is included
+    formData.append("classname", values.classname);
+
+    // Add description if provided, or empty string to avoid undefined
+    formData.append("description", values.description || "");
+
+    formData.append("image", values.image.file);
+
+    try {
+      if (isClassCreateMode) {
+        // Create new class catalog
+        await ImageCatalog.createImageCatalog(formData);
+        message.success("Class catalog created successfully");
+      } else {
+        // Update existing class catalog
+        await ImageCatalog.updateImageCatalog(
+          selectedClassCatalog._id,
+          formData
+        );
+        message.success("Class catalog updated successfully");
+      }
+
+      // Reset form and fetch updated data
+      form.resetFields();
+      fetchClassCatalogs();
+      setIsClassModalVisible(false);
+    } catch (err) {
+      console.error("Error with class catalog operation:", err);
+      // Log more detailed error information
+      if (err.response) {
+        console.error("Response data:", err.response.data);
+        console.error("Response status:", err.response.status);
+      }
+      message.error(
+        "Operation failed. Please check if all required fields are filled."
+      );
+    } finally {
+      setUploadingClass(false);
+    }
+  };
+
+  // Delete Class Catalog
+  const deleteClassCatalog = async (id) => {
+    try {
+      await ImageCatalog.deleteImageCatalog(id);
+      message.success("Class catalog deleted successfully");
+      fetchClassCatalogs();
+    } catch (err) {
+      message.error("Delete failed");
+    }
+  };
+
+  // Open modal for creating a new class catalog
+  const createClassCatalog = () => {
+    setIsClassCreateMode(true);
+    setSelectedClassCatalog(null);
+    form.resetFields();
+    setIsClassModalVisible(true);
+  };
+
+  // Open modal for updating an existing class catalog
+  const updateClassCatalog = (record) => {
+    setIsClassCreateMode(false);
+    setSelectedClassCatalog(record);
+    form.setFieldsValue({
+      classname: record.classname,
+      description: record.description,
+    });
+    setIsClassModalVisible(true);
+  };
+
   const handleQrcodeUpload = async (info) => {
     setUploadingQrcode(true);
     const formData = new FormData();
@@ -110,6 +220,7 @@ const ImageSetup = () => {
       setUploadingQrcode(false);
     }
   };
+
   const deleteQrcodeImage = async (id) => {
     try {
       await QrcodePayment.deleteQrcodePayment(id);
@@ -133,14 +244,14 @@ const ImageSetup = () => {
 
     try {
       if (selectedHeroImage) {
-        await HeroImage.updateHeroImage(selectedHeroImage._id, formData); // Update existing image
+        await HeroImage.updateHeroImage(selectedHeroImage._id, formData);
         message.success("Hero image updated successfully");
       } else {
-        await HeroImage.createHeroImage(formData); // Create new image
+        await HeroImage.createHeroImage(formData);
         message.success("Hero image uploaded successfully");
       }
       fetchHeroImages();
-      setIsHeroUpdateModalVisible(false); // Close the modal
+      setIsHeroUpdateModalVisible(false);
     } catch (err) {
       message.error("Hero image upload failed");
     } finally {
@@ -153,24 +264,68 @@ const ImageSetup = () => {
     setUploadingMaster(true);
     const formData = new FormData();
     formData.append("image", info.file);
-    formData.append("mastername", masterName); // Include mastername in the request body
+    formData.append("mastername", masterName);
 
     try {
       if (selectedMasterImage) {
-        await MasterImage.updateMasterImage(selectedMasterImage._id, formData); // Update the master image
+        await MasterImage.updateMasterImage(selectedMasterImage._id, formData);
         message.success("Master image updated successfully");
       } else {
-        await MasterImage.createMasterImage(formData); // Create new master image
+        await MasterImage.createMasterImage(formData);
         message.success("Master image uploaded successfully");
       }
       fetchMasterImages();
-      setMasterName(""); // Clear the mastername input field
+      setMasterName("");
     } catch (err) {
       message.error("Master image upload failed");
     } finally {
       setUploadingMaster(false);
     }
   };
+
+  // Columns for Class Catalog table
+  const classCatalogColumns = [
+    {
+      title: "Class Name",
+      dataIndex: "classname",
+      key: "classname",
+    },
+    {
+      title: "Preview",
+      dataIndex: "image",
+      key: "image",
+      render: (url) => (url ? <Image width={100} src={url} /> : "No image"),
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      ellipsis: true,
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (record) => (
+        <>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => updateClassCatalog(record)}
+            style={{ marginRight: 8 }}
+          >
+            Update
+          </Button>
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => deleteClassCatalog(record._id)}
+          >
+            Delete
+          </Button>
+        </>
+      ),
+    },
+  ];
+
   const qrcodeImageColumns = (onDelete, onUpdate) => [
     {
       title: "Preview",
@@ -294,14 +449,14 @@ const ImageSetup = () => {
 
   // Update Hero Image (opens the modal)
   const updateHeroImage = (record) => {
-    setSelectedHeroImage(record); // Store the selected image for updating
-    setIsHeroUpdateModalVisible(true); // Open the update modal
+    setSelectedHeroImage(record);
+    setIsHeroUpdateModalVisible(true);
   };
 
   // Update Master Image (opens the modal)
   const updateMasterImage = (record) => {
-    setSelectedMasterImage(record); // Store the selected master image for updating
-    setMasterName(record.mastername); // Set the master name in the input field
+    setSelectedMasterImage(record);
+    setMasterName(record.mastername);
   };
 
   return (
@@ -336,7 +491,7 @@ const ImageSetup = () => {
           </div>
 
           {/* Master Image Section */}
-          <div>
+          <div className="mb-6">
             <h2>Master Images</h2>
             <Input
               value={masterName}
@@ -361,8 +516,9 @@ const ImageSetup = () => {
               style={{ marginTop: 16 }}
             />
           </div>
+
           {/* Qrcode Image Section */}
-          <div style={{ marginTop: "2rem" }}>
+          <div className="mb-6">
             <h2>QR Code Payment</h2>
             <Upload
               customRequest={handleQrcodeUpload}
@@ -381,8 +537,30 @@ const ImageSetup = () => {
               style={{ marginTop: 16 }}
             />
           </div>
+
+          {/* Class Catalog Section */}
+          <div className="mb-6">
+            <h2>Class Catalogs</h2>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={createClassCatalog}
+              style={{ marginBottom: 16 }}
+            >
+              Add New Class
+            </Button>
+
+            <Table
+              dataSource={classCatalogs}
+              columns={classCatalogColumns}
+              rowKey="_id"
+              style={{ marginTop: 16 }}
+            />
+          </div>
         </Content>
       </Layout>
+
+      {/* Modal for QR Code Update */}
       <Modal
         title="Update QR Code"
         visible={isQrcodeModalVisible}
@@ -419,6 +597,55 @@ const ImageSetup = () => {
             Update Hero Image
           </Button>
         </Upload>
+      </Modal>
+
+      {/* Modal for Class Catalog Create/Update */}
+      <Modal
+        title={isClassCreateMode ? "Add New Class" : "Update Class"}
+        visible={isClassModalVisible}
+        onCancel={() => {
+          setIsClassModalVisible(false);
+          form.resetFields();
+        }}
+        footer={null}
+      >
+        <Form form={form} layout="vertical" onFinish={handleClassFormSubmit}>
+          <Form.Item name="classname" label="Class Name">
+            <Input placeholder="Enter class name" />
+          </Form.Item>
+
+          <Form.Item name="description" label="Description">
+            <TextArea rows={4} placeholder="Enter class description" />
+          </Form.Item>
+
+          <Form.Item name="image" label="Class Image" valuePropName="file">
+            <Upload
+              listType="picture-card"
+              beforeUpload={() => false}
+              maxCount={1}
+              accept="image/*"
+            >
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>Upload</div>
+              </div>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={uploadingClass}
+              style={{ marginRight: 8 }}
+            >
+              {isClassCreateMode ? "Create" : "Update"}
+            </Button>
+            <Button onClick={() => setIsClassModalVisible(false)}>
+              Cancel
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
     </Layout>
   );

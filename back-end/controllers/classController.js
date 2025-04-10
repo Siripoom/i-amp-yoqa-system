@@ -131,7 +131,7 @@ exports.deleteClass = async (req, res) => {
 
 //! =================== Class Catalog show in คลาสโยคะ ===================
 exports.createClassCatalog = async (req, res) => {
-  console.log(req.body.classname);
+  // console.log(req.body.classname);
   try {
     // Check if required fields are present
     if (!req.body.classname) {

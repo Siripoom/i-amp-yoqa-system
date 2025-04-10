@@ -28,7 +28,7 @@ const MyOrders = () => {
       }
 
       const response = await orderService.getOrdersByUserId(userId);
-      console.log("Orders Response:", response); // ✅ Debug API Response
+     
 
       if (response.data && Array.isArray(response.data)) {
         setOrders(response.data);
