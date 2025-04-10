@@ -156,6 +156,7 @@ exports.createClassCatalog = async (req, res) => {
 
     const newClassCatalog = new ClassCatalog({
       classname: req.body.classname,
+      description: req.body.description,
       image: imageUrl,
     });
     const savedClassCatalog = await newClassCatalog.save();
@@ -249,6 +250,10 @@ exports.updateClassCatalog = async (req, res) => {
     }
 
     updatedClassCatalog.image = imageUrl;
+    updatedClassCatalog.classname =
+      req.body.classname || updatedClassCatalog.classname;
+    updatedClassCatalog.description =
+      req.body.description || updatedClassCatalog.description;
 
     // Save updated master to the database
     await updatedClassCatalog.save();
