@@ -4,6 +4,15 @@ const User = require("../models/user");
 const Reservation = require("../models/reservation");
 const dayjs = require("dayjs");
 const ClassCatalog = require("../models/classCatalog");
+const multer = require("multer");
+const path = require("path");
+const supabase = require("../config/supabaseConfig"); // Import the Supabase client
+const dotenv = require("dotenv");
+dotenv.config(); // Load environment variables
+
+// Use Multer for file uploads (memory storage)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 // สร้างคลาสใหม่
 exports.createClass = async (req, res) => {
   try {
@@ -120,11 +129,10 @@ exports.deleteClass = async (req, res) => {
   }
 };
 
-
 //! =================== Class Catalog show in คลาสโยคะ ===================
 exports.createClassCatalog = async (req, res) => {
   try {
-    const { classname, image } = req.body;
+    const { classname } = req.body;
     const newClassCatalog = new ClassCatalog({
       classname,
       image,
