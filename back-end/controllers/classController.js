@@ -155,8 +155,8 @@ exports.createClassCatalog = async (req, res) => {
     }
 
     const newClassCatalog = new ClassCatalog({
-      classname:req.body.classname,
-      image,
+      classname: req.body.classname,
+      image: imageUrl,
     });
     const savedClassCatalog = await newClassCatalog.save();
     res.status(201).json({
