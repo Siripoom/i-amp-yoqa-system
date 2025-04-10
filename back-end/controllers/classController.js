@@ -184,14 +184,75 @@ exports.getAllClassCatalogs = async (req, res) => {
 
 exports.updateClassCatalog = async (req, res) => {
   try {
-    const updatedClassCatalog = await ClassCatalog.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const updatedClassCatalog = await ClassCatalog.findById(req.params.id);
+
     if (!updatedClassCatalog) {
       return res.status(404).json({ message: "Class catalog not found" });
     }
+
+    let imageUrl = master.image;
+
+    if (imageUrl && typeof imageUrl === "string") {
+      try {
+        const Url = imageUrl;
+
+        // Extract file name directly from the image URL (after the last '/')
+        const fileName = Url.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
+
+        if (fileName) {
+          // Correct file path: Remove any spaces between "masters" and the file name
+          const { error } = await supabase.storage
+            .from("store") // Replace with your Supabase bucket name
+            .remove([`class/${fileName}`]); // Remove the space between "masters" and fileName
+
+          if (error) {
+            console.error("Error deleting file from Supabase:", error.message);
+            return res
+              .status(500)
+              .json({ message: "Error deleting file from storage" });
+          }
+        } else {
+          console.error("Image URL structure is incorrect:", imageUrl);
+          return res
+            .status(400)
+            .json({ message: "Invalid image URL structure" });
+        }
+      } catch (error) {
+        console.error("Error processing the image URL:", error.message);
+        return res
+          .status(500)
+          .json({ message: "Error processing the image URL" });
+      }
+    } else {
+      console.warn("No image URL found for the class, skipping deletion");
+    }
+
+    if (req.file) {
+      const file = req.file;
+      const ext = path.extname(file.originalname); // Get the file extension
+      const fileName = `${Date.now()}${ext}`; // Unique file name
+      const folderPath = "class"; // The folder where files will be stored
+
+      // Upload the file to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from("store") // Replace with your Supabase bucket name
+        .upload(`${folderPath}/${fileName}`, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        return res.status(500).json({ message: error.message });
+      }
+
+      // Construct the public URL for the uploaded image
+      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+    }
+
+    updatedClassCatalog.image = imageUrl;
+
+    // Save updated master to the database
+    await updatedClassCatalog.save();
+
     res.status(200).json({
       message: "Class catalog updated successfully",
       data: updatedClassCatalog,
