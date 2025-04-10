@@ -25,7 +25,7 @@ const OrderPage = () => {
       setLoading(true);
       const response = await orderService.getAllOrders();
 
-      console.log("API Response:", response); // ✅ ตรวจสอบค่าที่ได้รับ
+    
 
       if (Array.isArray(response)) {
         setOrders(response); // ✅ ใช้ response เฉพาะกรณีเป็น Array

@@ -16,7 +16,7 @@ export const getUsers = async () => {
 
 export const createUser = async (userData) => {
   try {
-    console.log(userData);
+  
     const response = await axios.post(`${API_URL}/api/users`, userData);
     return response.data;
   } catch (error) {

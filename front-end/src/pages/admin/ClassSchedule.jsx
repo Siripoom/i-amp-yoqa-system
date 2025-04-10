@@ -45,11 +45,11 @@ const Schedule = () => {
       setCourses(courseData.courses);
 
       const classData = await classService.getAllClasses();
-      // console.log("Raw classData:", classData);
+      
 
       const userData = await getUsers();
       setUsers(userData.users);
-      // console.log("Raw userData:", userData.users);
+ 
       const formattedEvents = classData.data.map((cls) => ({
         id: cls._id,
         title: cls.title,
@@ -63,7 +63,7 @@ const Schedule = () => {
         end: new Date(cls.end_time), // ✅ แปลงเป็น Date
       }));
 
-      // console.log("Formatted events:", formattedEvents);
+      
       setEvents(formattedEvents);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -136,7 +136,7 @@ const Schedule = () => {
           : null,
       };
 
-      console.log(classData);
+     
 
       if (currentEvent) {
         await classService.updateClass(currentEvent.id, classData);

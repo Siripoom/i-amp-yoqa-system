@@ -5,9 +5,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 const classService = {
   // 📌 สร้างคลาสใหม่
   createClass: async (classData) => {
-    console.log(classData);
+   
     try {
-      console.log(classData);
+     
       const response = await axios.post(`${API_URL}/api/classes`, classData);
       return response.data;
     } catch (error) {

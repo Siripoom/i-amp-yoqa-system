@@ -47,11 +47,11 @@ const Schedule = () => {
       setCourses(courseData.courses);
 
       const classData = await classService.getAllClasses();
-      console.log("Raw classData:", classData);
+   
 
       const userData = await getUsers();
       setUsers(userData.users);
-      console.log("Raw userData:", userData.users);
+  
 
       const formattedEvents = classData.data.map((cls) => ({
         id: cls._id,
@@ -65,7 +65,7 @@ const Schedule = () => {
         end: new Date(cls.end_time),
       }));
 
-      console.log("Formatted events:", formattedEvents);
+     
       setEvents(formattedEvents);
     } catch (error) {
       console.error("Error fetching data:", error);

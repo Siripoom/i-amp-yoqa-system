@@ -99,9 +99,9 @@ exports.deleteCourse = async (req, res) => {
 
 exports.restoreCourse = async (req, res) => {
   try {
-    console.log("ok");
+   
 
-    console.log("Course ID to restore:", req.params.id); // Debug: ตรวจสอบว่า ID ที่ถูกส่งมาตรงหรือไม่
+   
 
     // ค้นหาคอร์สตาม id และทำการ restore (ตั้งค่า deleted เป็น false)
     const course = await Course.findById(req.params.id);

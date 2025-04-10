@@ -71,3 +71,33 @@ export const QrcodePayment = {
     return response.data;
   },
 };
+
+// image Catalog
+
+export const ImageCatalog = {
+  getImageCatalog: async () => {
+    const response = await axios.get(`${API_URL}/api/class-catalog`);
+    return response.data;
+  },
+  updateImageCatalog: async (id, data) => {
+    
+    const response = await axios.put(
+      `${API_URL}/api/class-catalog/${id}`,
+      data,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return response.data;
+  },
+  deleteImageCatalog: async (id) => {
+    const response = await axios.delete(`${API_URL}/api/class-catalog/${id}`);
+    return response.data;
+  },
+  createImageCatalog: async (data) => {
+    const response = await axios.post(`${API_URL}/api/class-catalog`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+};

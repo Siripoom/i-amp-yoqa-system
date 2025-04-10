@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
   last_name: {
     type: String,
   },
-  prefix: {
+  code: {
     type: String,
   },
   phone: {

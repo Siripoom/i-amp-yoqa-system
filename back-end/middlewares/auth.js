@@ -22,7 +22,7 @@ const authenticate = (req, res, next) => {
 
 // Middleware สำหรับตรวจสอบ role (Admin เท่านั้น)
 const authorizeAdmin = (req, res, next) => {
-  // console.log("teq token", req.token);
+ 
   if (req.user.role !== "admin") {
     return res.status(403).json({ error: "Access denied. Admins only." });
   }

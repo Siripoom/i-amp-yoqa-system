@@ -16,7 +16,7 @@ exports.createUser = async (req, res) => {
       password: hashedPassword,
       first_name: req.body.first_name,
       last_name: req.body.last_name,
-      prefix: req.body.prefix,
+      code: req.body.code,
       phone: req.body.phone,
       birth_date: req.body.birth_date,
       address: req.body.address,
@@ -197,7 +197,7 @@ exports.restoreUser = async (req, res) => {
       { $set: { deleted: false } }, // อัปเดตฟิลด์ deleted เป็น false
       { new: true }
     );
-    console.log(user);
+    // console.log(user);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
