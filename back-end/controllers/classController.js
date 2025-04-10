@@ -132,9 +132,30 @@ exports.deleteClass = async (req, res) => {
 //! =================== Class Catalog show in คลาสโยคะ ===================
 exports.createClassCatalog = async (req, res) => {
   try {
-    const { classname } = req.body;
+    let imageUrl = req.body.image;
+    if (req.file) {
+      const file = req.file;
+      const ext = path.extname(file.originalname); // Get the file extension
+      const fileName = `${Date.now()}${ext}`; // Unique file name
+      const folderPath = "class"; // The folder where files will be stored
+
+      // Upload the file to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from("store") // Replace with your Supabase bucket name
+        .upload(`${folderPath}/${fileName}`, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) {
+        return res.status(500).json({ message: error.message });
+      }
+
+      // Construct the public URL for the uploaded image
+      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+    }
+
     const newClassCatalog = new ClassCatalog({
-      classname,
+      classname:req.body.classname,
       image,
     });
     const savedClassCatalog = await newClassCatalog.save();
