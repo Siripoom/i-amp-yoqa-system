@@ -37,7 +37,7 @@ const SignUp = () => {
       };
 
       const response = await register(formattedValues);
-     
+
       message.success("Registration successful! Redirecting...");
       setTimeout(() => navigate("/auth/signin"), 2000);
     } catch (error) {
@@ -65,14 +65,6 @@ const SignUp = () => {
           Sign-Up
         </Title>
         <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item name="prefix">
-            <Select placeholder="Prefix (คำนำหน้า)" size="large">
-              <Option value="Mr.">Mr.</Option>
-              <Option value="Ms.">Ms.</Option>
-              <Option value="Mrs.">Mrs.</Option>
-            </Select>
-          </Form.Item>
-
           <Form.Item
             name="first_name"
             rules={[{ required: true, message: "First name is required" }]}
