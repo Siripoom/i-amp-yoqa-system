@@ -131,7 +131,16 @@ exports.deleteClass = async (req, res) => {
 
 //! =================== Class Catalog show in คลาสโยคะ ===================
 exports.createClassCatalog = async (req, res) => {
+  console.log(req.body.classname);
   try {
+    // Check if required fields are present
+    if (!req.body.classname) {
+      return res.status(400).json({
+        message: "Validation failed",
+        error: "classname is required",
+      });
+    }
+
     let imageUrl = req.body.image;
     if (req.file) {
       const file = req.file;
@@ -156,18 +165,23 @@ exports.createClassCatalog = async (req, res) => {
 
     const newClassCatalog = new ClassCatalog({
       classname: req.body.classname,
-      description: req.body.description,
-      image: imageUrl,
+      description: req.body.description || "", // Provide default empty string if missing
+      image: imageUrl || "", // Provide default empty string if missing
     });
+
     const savedClassCatalog = await newClassCatalog.save();
     res.status(201).json({
       message: "Class catalog created successfully",
       data: savedClassCatalog,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating class catalog", error: error.message });
+    // For debugging purposes, log the full error
+    console.error("Error creating class catalog:", error);
+    // Return a more user-friendly error message
+    res.status(500).json({
+      message: "Error creating class catalog",
+      error: error.message || "Unknown error occurred",
+    });
   }
 };
 
