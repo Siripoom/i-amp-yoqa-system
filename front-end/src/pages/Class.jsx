@@ -67,11 +67,17 @@ const Class = () => {
                 <Card
                   hoverable
                   cover={
-                    <img
-                      alt={yogaClass.classname}
-                      src={yogaClass.image}
-                      style={{ height: "200px", objectFit: "cover" }}
-                    />
+                    <div style={{ overflow: "hidden", width: "100%" }}>
+                      <img
+                        alt={yogaClass.classname}
+                        src={yogaClass.image}
+                        style={{
+                          width: "100%",
+                          aspectRatio: "3/4",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </div>
                   }
                   style={{
                     borderRadius: "15px",
