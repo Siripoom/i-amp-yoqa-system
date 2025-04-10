@@ -19,8 +19,13 @@ const Class = () => {
   const fetchYogaClasses = async () => {
     try {
       setLoading(true);
-      const data = await ImageCatalog.getImageCatalog();
-      setYogaClasses(data);
+      const response = await ImageCatalog.getImageCatalog();
+      // Access the array from the data property
+      if (response && response.data) {
+        setYogaClasses(response.data);
+      } else {
+        throw new Error("Invalid response structure");
+      }
       setLoading(false);
     } catch (error) {
       console.error("Error fetching yoga classes:", error);
@@ -57,14 +62,14 @@ const Class = () => {
                 md={8}
                 lg={8}
                 xl={8}
-                key={yogaClass.id || index}
+                key={yogaClass._id || index}
               >
                 <Card
                   hoverable
                   cover={
                     <img
-                      alt={yogaClass.title}
-                      src={yogaClass.image || yogaClass.imageUrl}
+                      alt={yogaClass.classname}
+                      src={yogaClass.image}
                       style={{ height: "200px", objectFit: "cover" }}
                     />
                   }
@@ -80,7 +85,7 @@ const Class = () => {
                   }}
                 >
                   <Title level={4} className="text-center text-purple-600">
-                    {yogaClass.title}
+                    {yogaClass.classname}
                   </Title>
                   <Paragraph className="text-center text-gray-600">
                     {yogaClass.description}
