@@ -257,10 +257,8 @@ exports.updateClassCatalog = async (req, res) => {
 
     // Update class catalog fields
     updatedClassCatalog.image = imageUrl;
-    updatedClassCatalog.classname =
-      req.body.classname || updatedClassCatalog.classname;
-    updatedClassCatalog.description =
-      req.body.description || updatedClassCatalog.description;
+    updatedClassCatalog.classname = req.body.classname || updatedClassCatalog.classname;
+    updatedClassCatalog.description = req.body.description || updatedClassCatalog.description;
 
     // Save updated class catalog
     await updatedClassCatalog.save();
