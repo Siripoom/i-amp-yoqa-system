@@ -271,6 +271,47 @@ exports.deleteClassCatalog = async (req, res) => {
     if (!deletedClassCatalog) {
       return res.status(404).json({ message: "Class catalog not found" });
     }
+    // Ensure master.image exists and is a valid string before attempting to split it
+    if (
+      deletedClassCatalog.image &&
+      typeof deletedClassCatalog.image === "string"
+    ) {
+      try {
+        const imageUrl = deletedClassCatalog.image;
+
+        // Extract file name directly from the image URL (after the last '/')
+        const fileName = imageUrl.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
+
+        if (fileName) {
+          // Correct file path: Remove any spaces between "masters" and the file name
+          const { error } = await supabase.storage
+            .from("store") // Replace with your Supabase bucket name
+            .remove([`class/${fileName}`]); // Remove the space between "masters" and fileName
+
+          if (error) {
+            console.error("Error deleting file from Supabase:", error.message);
+            return res
+              .status(500)
+              .json({ message: "Error deleting file from storage" });
+          }
+        } else {
+          console.error("Image URL structure is incorrect:", imageUrl);
+          return res
+            .status(400)
+            .json({ message: "Invalid image URL structure" });
+        }
+      } catch (error) {
+        console.error("Error processing the image URL:", error.message);
+        return res
+          .status(500)
+          .json({ message: "Error processing the image URL" });
+      }
+    } else {
+      console.warn("No image URL found for the class, skipping deletion");
+    }
+
+    // Delete the master from the database
+    await deletedClassCatalog.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Class catalog deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting class catalog", error });
