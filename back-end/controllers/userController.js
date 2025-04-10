@@ -16,7 +16,7 @@ exports.createUser = async (req, res) => {
       password: hashedPassword,
       first_name: req.body.first_name,
       last_name: req.body.last_name,
-      prefix: req.body.prefix,
+      code: req.body.code,
       phone: req.body.phone,
       birth_date: req.body.birth_date,
       address: req.body.address,

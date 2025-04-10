@@ -255,7 +255,8 @@ const Booking = () => {
           <Title level={3} className="text-purple-700">
             Class Booking
           </Title>
-          ยกเลิกการจองคลาสได้ก่อนเริ่มคลาส 5 นาที
+          จองคลาสได้ตลอด และ &quot; 5 นาทีก่อนเริ่มคลาสไม่สามารถยกเลิกการจองได้
+          &quot;
           {loading ? (
             <p className="text-center text-gray-500">กำลังโหลดข้อมูลคอร์ส...</p>
           ) : events.length === 0 ? (

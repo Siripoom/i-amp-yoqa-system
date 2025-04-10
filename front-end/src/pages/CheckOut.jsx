@@ -85,12 +85,14 @@ const Checkout = () => {
               {/* Payment Section */}
               <div className="bg-gray-100 p-4 rounded-md mb-6">
                 <Title level={4}>Payment Details</Title>
-                <Text>Bank Name: กสิกรไทย</Text>
+                <Text>ชำระค่าบริการช่องทางอื่นๆติดต่อได้ที่ไลน์ @iampyoqa</Text>
+                {/* <br />
+                <Text>Bank : กสิกรไทย</Text>
                 <br />
-                <Text>Account Number: 180-820-700-8</Text>
+                <Text>180-820-700-8</Text>
                 <br />
-                <Text>Account Name: น.ส. อริจรา แท่นประเสริฐกุล</Text>
-                <br />
+                <Text>Account : น.ส. อริจรา แท่นประเสริฐกุล</Text>
+                <br /> */}
               </div>
               {/* show qwr code picture */}
               <div className="bg-gray-100 p-4 rounded-md mb-6 ">

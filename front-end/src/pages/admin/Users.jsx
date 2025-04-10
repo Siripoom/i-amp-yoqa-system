@@ -82,7 +82,7 @@ const UserPage = () => {
         password: values.password,
         first_name: values.first_name,
         last_name: values.last_name,
-        prefix: values.prefix,
+        code: values.code,
         phone: values.phone,
         birth_date: values.birth_date,
         address: values.address,
@@ -120,7 +120,7 @@ const UserPage = () => {
   };
 
   const columns = [
-    { title: "ID", dataIndex: "_id", key: "_id" },
+    { title: "Code", dataIndex: "code", key: "code" },
     { title: "First Name", dataIndex: "first_name", key: "first_name" },
     { title: "Last Name", dataIndex: "last_name", key: "last_name" },
     { title: "Email", dataIndex: "email", key: "email" },
@@ -250,11 +250,7 @@ const UserPage = () => {
               >
                 <Input />
               </Form.Item>
-              <Form.Item
-                name="prefix"
-                label="Prefix"
-                rules={[{ required: true, message: "Please enter the prefix" }]}
-              >
+              <Form.Item name="code" label="code">
                 <Input />
               </Form.Item>
               <Form.Item

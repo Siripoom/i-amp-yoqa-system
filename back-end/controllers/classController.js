@@ -3,6 +3,7 @@ const Course = require("../models/course");
 const User = require("../models/user");
 const Reservation = require("../models/reservation");
 const dayjs = require("dayjs");
+const ClassCatalog = require("../models/classCatalog");
 // สร้างคลาสใหม่
 exports.createClass = async (req, res) => {
   try {
@@ -116,5 +117,72 @@ exports.deleteClass = async (req, res) => {
     res.status(200).json({ message: "Class deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting class", error });
+  }
+};
+
+
+//! =================== Class Catalog show in คลาสโยคะ ===================
+exports.createClassCatalog = async (req, res) => {
+  try {
+    const { classname, image } = req.body;
+    const newClassCatalog = new ClassCatalog({
+      classname,
+      image,
+    });
+    const savedClassCatalog = await newClassCatalog.save();
+    res.status(201).json({
+      message: "Class catalog created successfully",
+      data: savedClassCatalog,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating class catalog", error });
+  }
+};
+
+// ดึงข้อมูลคลาสทั้งหมดใน catalog
+exports.getAllClassCatalogs = async (req, res) => {
+  try {
+    const catalogs = await ClassCatalog.find();
+    res.status(200).json({
+      status: "success",
+      count: catalogs.length,
+      data: catalogs,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching class catalogs", error });
+  }
+};
+
+exports.updateClassCatalog = async (req, res) => {
+  try {
+    const updatedClassCatalog = await ClassCatalog.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedClassCatalog) {
+      return res.status(404).json({ message: "Class catalog not found" });
+    }
+    res.status(200).json({
+      message: "Class catalog updated successfully",
+      data: updatedClassCatalog,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating class catalog", error });
+  }
+};
+
+// ลบคลาสใน catalog
+exports.deleteClassCatalog = async (req, res) => {
+  try {
+    const deletedClassCatalog = await ClassCatalog.findByIdAndDelete(
+      req.params.id
+    );
+    if (!deletedClassCatalog) {
+      return res.status(404).json({ message: "Class catalog not found" });
+    }
+    res.status(200).json({ message: "Class catalog deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting class catalog", error });
   }
 };
