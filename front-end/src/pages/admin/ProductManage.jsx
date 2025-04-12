@@ -112,6 +112,7 @@ const ProductPage = () => {
   const columns = [
     { title: "SESSIONS", dataIndex: "sessions", key: "sessions" },
     { title: "PRICE", dataIndex: "price", key: "price" },
+    { title: "DURATION", dataIndex: "duration", key: "duration" },
     {
       title: "ACTION",
       key: "action",
@@ -207,7 +208,7 @@ const ProductPage = () => {
                 <Input type="number" />
               </Form.Item>
 
-              <Form.Item name="image" label="Upload Image">
+              {/* <Form.Item name="image" label="Upload Image">
                 <Upload
                   name="image"
                   listType="picture"
@@ -220,7 +221,7 @@ const ProductPage = () => {
                 >
                   <Button icon={<UploadOutlined />}>Click to Upload</Button>
                 </Upload>
-              </Form.Item>
+              </Form.Item> */}
             </Form>
           </Modal>
         </Content>
