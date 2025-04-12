@@ -8,7 +8,7 @@ router.get("/classes", classController.getAllClasses);
 router.get("/classes/:id", classController.getClassById);
 router.put("/classes/:id", classController.updateClass);
 router.delete("/classes/:id", classController.deleteClass);
-
+router.post("/classes/:id/duplicate", classController.duplicateClass);
 router.post(
   "/class-catalog",
   upload.single("image"),

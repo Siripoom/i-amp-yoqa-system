@@ -112,7 +112,7 @@ const CoursesPage = () => {
   };
 
   const columns = [
-    { title: "COURSE ID", dataIndex: "_id", key: "_id" },
+    // { title: "COURSE ID", dataIndex: "_id", key: "_id" },
     { title: "COURSE NAME", dataIndex: "course_name", key: "course_name" },
     { title: "CATEGORY", dataIndex: "details", key: "details" },
     { title: "DIFFICULTY", dataIndex: "difficulty", key: "difficulty" },

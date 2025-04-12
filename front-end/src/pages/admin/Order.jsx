@@ -25,8 +25,6 @@ const OrderPage = () => {
       setLoading(true);
       const response = await orderService.getAllOrders();
 
-    
-
       if (Array.isArray(response)) {
         setOrders(response); // ✅ ใช้ response เฉพาะกรณีเป็น Array
       } else if (response.data && Array.isArray(response.data)) {
@@ -98,7 +96,7 @@ const OrderPage = () => {
 
   // ✅ คอลัมน์ของตาราง
   const columns = [
-    { title: "ORDER ID", dataIndex: "_id", key: "_id" },
+    // { title: "ORDER ID", dataIndex: "_id", key: "_id" },
     {
       title: "USER",
       dataIndex: "user_id",

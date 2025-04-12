@@ -24,7 +24,11 @@ exports.login = async (req, res) => {
 
     // สร้าง JWT Token
     const token = jwt.sign(
-      { userId: user._id, role: user.role_name },
+      {
+        userId: user._id,
+        role: user.role_id,
+        user: user.first_name + user.last_name,
+      },
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
@@ -60,6 +64,7 @@ exports.getMe = async (req, res) => {
 // Login with Line
 exports.loginLine = async (req, res) => {
   try {
+    console.log("req.body", req.body);
     const { userId, displayName } = req.body;
     var data = {
       username: userId,
@@ -79,7 +84,11 @@ exports.loginLine = async (req, res) => {
     };
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role_id },
+      {
+        userId: user._id,
+        role: user.role_id,
+        user: user.first_name + user.last_name,
+      },
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
