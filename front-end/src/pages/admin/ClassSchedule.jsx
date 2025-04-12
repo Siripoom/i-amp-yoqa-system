@@ -7,11 +7,11 @@ import {
   Select,
   message,
   ColorPicker,
-  Checkbox,
+  DatePicker,
   Space,
-  Row,
-  Col,
   Typography,
+  Tag,
+  Tooltip,
 } from "antd";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import { useState, useEffect } from "react";
@@ -20,6 +20,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import dayjs from "dayjs";
+import locale from "antd/es/date-picker/locale/th_TH";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import "../../styles/Course.css";
@@ -27,28 +28,18 @@ import "../../styles/Calendar.css";
 import { getCourses } from "../../services/courseService";
 import classService from "../../services/classService";
 import { getUsers } from "../../services/userService";
-import { CalendarOutlined, CopyOutlined } from "@ant-design/icons";
+import {
+  CalendarOutlined,
+  CopyOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 const localizer = momentLocalizer(moment);
-
-// รายชื่อเดือนในภาษาไทย
-const thaiMonths = [
-  "มกราคม",
-  "กุมภาพันธ์",
-  "มีนาคม",
-  "เมษายน",
-  "พฤษภาคม",
-  "มิถุนายน",
-  "กรกฎาคม",
-  "สิงหาคม",
-  "กันยายน",
-  "ตุลาคม",
-  "พฤศจิกายน",
-  "ธันวาคม",
-];
 
 const Schedule = () => {
   const [instructorType, setInstructorType] = useState(null);
@@ -60,8 +51,9 @@ const Schedule = () => {
   const [form] = Form.useForm();
   const [isDuplicating, setIsDuplicating] = useState(false);
 
-  // เก็บข้อมูลเดือนที่ต้องการทำซ้ำ
-  const [selectedMonths, setSelectedMonths] = useState([]);
+  // เก็บข้อมูลวันที่ที่ต้องการทำซ้ำ
+  const [duplicateDates, setDuplicateDates] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   // 📌 โหลดข้อมูลคอร์สและคลาสทั้งหมด
   useEffect(() => {
@@ -132,7 +124,8 @@ const Schedule = () => {
     }
     setIsModalOpen(true);
     setIsDuplicating(false);
-    setSelectedMonths([]); // รีเซ็ตเดือนที่เลือกเมื่อเปิด Modal ใหม่
+    setDuplicateDates([]); // รีเซ็ตวันที่ที่เลือกเมื่อเปิด Modal ใหม่
+    setSelectedDate(null);
   };
 
   // 📌 ปิด Modal และโหลดข้อมูลใหม่
@@ -141,7 +134,8 @@ const Schedule = () => {
     await fetchData();
     form.resetFields();
     setIsDuplicating(false);
-    setSelectedMonths([]);
+    setDuplicateDates([]);
+    setSelectedDate(null);
   };
 
   // 📌 เพิ่มหรือแก้ไขคลาส
@@ -211,22 +205,46 @@ const Schedule = () => {
     }
   };
 
-  // 📌 จัดการ Checkbox สำหรับเลือกเดือน
-  const onMonthChange = (checkedValues) => {
-    setSelectedMonths(checkedValues);
+  // 📌 เพิ่มวันที่ที่ต้องการทำซ้ำ
+  const addDuplicateDate = () => {
+    if (!selectedDate) {
+      message.warning("กรุณาเลือกวันที่");
+      return;
+    }
+
+    // ตรวจสอบว่าวันที่ซ้ำหรือไม่
+    const dateString = selectedDate.format("YYYY-MM-DD");
+    if (
+      duplicateDates.some((date) => date.format("YYYY-MM-DD") === dateString)
+    ) {
+      message.warning("วันที่นี้ถูกเลือกไว้แล้ว");
+      return;
+    }
+
+    setDuplicateDates([...duplicateDates, selectedDate]);
+    setSelectedDate(null); // รีเซ็ตการเลือกวันที่
   };
 
-  // 📌 ทำซ้ำคลาสตามเดือนที่เลือก
+  // 📌 ลบวันที่ที่ต้องการทำซ้ำ
+  const removeDuplicateDate = (dateToRemove) => {
+    setDuplicateDates(
+      duplicateDates.filter(
+        (date) =>
+          date.format("YYYY-MM-DD") !== dateToRemove.format("YYYY-MM-DD")
+      )
+    );
+  };
+
+  // 📌 ทำซ้ำคลาสตามวันที่ที่เลือก
   const handleDuplicateEvent = async () => {
     try {
-      if (!currentEvent || selectedMonths.length === 0) {
-        message.warning("Please select at least one month for duplication");
+      if (!currentEvent || duplicateDates.length === 0) {
+        message.warning("กรุณาเลือกวันที่สำหรับการทำซ้ำคลาสอย่างน้อย 1 วัน");
         return;
       }
 
-      // วันที่ของคลาสต้นฉบับ
+      // เวลาของคลาสต้นฉบับ
       const originalDate = dayjs(currentEvent.start);
-      const originalDay = originalDate.date(); // วันที่ในเดือน (1-31)
       const originalHour = originalDate.hour();
       const originalMinute = originalDate.minute();
 
@@ -236,43 +254,10 @@ const Schedule = () => {
         "minute"
       );
 
-      // ข้อมูลปีปัจจุบันและปีถัดไป
-      const currentYear = dayjs().year();
-      const nextYear = currentYear + 1;
-
-      // สร้างคลาสสำหรับแต่ละเดือนที่เลือก
-      for (const monthIndex of selectedMonths) {
-        // กำหนดปีตามเดือน (เช่น ถ้าเดือนปัจจุบันคือเดือน 11 และเลือกเดือน 2 ให้เป็นปีถัดไป)
-        const currentMonth = originalDate.month();
-
-        // หาปีที่ควรใช้ (ปีปัจจุบัน หรือ ปีถัดไป)
-        let targetYear;
-        if (monthIndex < currentMonth) {
-          targetYear = nextYear; // ถ้าเดือนที่เลือกน้อยกว่าเดือนปัจจุบัน = ปีถัดไป
-        } else if (monthIndex > currentMonth) {
-          targetYear = currentYear; // ถ้าเดือนที่เลือกมากกว่าเดือนปัจจุบัน = ปีปัจจุบัน
-        } else {
-          continue; // ถ้าเลือกเดือนเดียวกับเดือนต้นฉบับ ให้ข้าม
-        }
-
-        // สร้างวันที่ใหม่ที่จะใช้ในการทำซ้ำ
-        let newStartDate = dayjs()
-          .year(targetYear)
-          .month(monthIndex)
-          .date(originalDay)
-          .hour(originalHour)
-          .minute(originalMinute);
-
-        // ตรวจสอบว่าวันที่ถูกต้องหรือไม่ (เช่น 31 กุมภาพันธ์ไม่มี)
-        if (newStartDate.date() !== originalDay) {
-          // หากวันที่ไม่ตรง ให้ใช้วันสุดท้ายของเดือนนั้นแทน
-          newStartDate = dayjs()
-            .year(targetYear)
-            .month(monthIndex)
-            .endOf("month")
-            .hour(originalHour)
-            .minute(originalMinute);
-        }
+      // สร้างคลาสสำหรับแต่ละวันที่เลือก
+      for (const date of duplicateDates) {
+        // สร้างวันที่และเวลาใหม่
+        const newStartDate = date.hour(originalHour).minute(originalMinute);
 
         // คำนวณเวลาสิ้นสุด
         const newEndDate = newStartDate.add(classDurationMinutes, "minute");
@@ -284,13 +269,45 @@ const Schedule = () => {
         });
       }
 
-      message.success(
-        `Class duplicated to ${selectedMonths.length} selected months successfully!`
-      );
+      message.success(`ทำซ้ำคลาสสำเร็จ ${duplicateDates.length} วัน`);
       await handleCloseModal();
     } catch (error) {
-      message.error("Error duplicating classes!");
+      message.error("เกิดข้อผิดพลาดในการทำซ้ำคลาส");
       console.error(error);
+    }
+  };
+
+  // 📌 ควบคุมการทำซ้ำหลายวัน
+  const handleMultipleDates = (dates) => {
+    if (dates && dates.length > 0) {
+      const startDate = dates[0];
+      const endDate = dates[1];
+
+      if (startDate && endDate) {
+        // สร้างรายการวันที่ระหว่างวันที่เริ่มต้นและวันที่สิ้นสุด
+        const allDates = [];
+        let currentDate = startDate;
+
+        while (
+          currentDate.isBefore(endDate) ||
+          currentDate.isSame(endDate, "day")
+        ) {
+          allDates.push(currentDate);
+          currentDate = currentDate.add(1, "day");
+        }
+
+        // กรองวันที่ที่ซ้ำซ้อนกับที่มีอยู่แล้ว
+        const newDates = allDates.filter(
+          (newDate) =>
+            !duplicateDates.some(
+              (existingDate) =>
+                existingDate.format("YYYY-MM-DD") ===
+                newDate.format("YYYY-MM-DD")
+            )
+        );
+
+        setDuplicateDates([...duplicateDates, ...newDates]);
+      }
     }
   };
 
@@ -365,7 +382,7 @@ const Schedule = () => {
               key="duplicate-confirm"
               type="primary"
               onClick={handleDuplicateEvent}
-              disabled={selectedMonths.length === 0}
+              disabled={duplicateDates.length === 0}
             >
               ทำซ้ำคลาส
             </Button>
@@ -379,48 +396,86 @@ const Schedule = () => {
         {isDuplicating && currentEvent ? (
           <div className="duplication-form">
             <div style={{ marginBottom: 20 }}>
-              <Title level={5}>ทำซ้ำคลาส "{currentEvent.title}"</Title>
+              <Title level={5}>
+                ทำซ้ำคลาส &quot;{currentEvent.title}&quot;
+              </Title>
               <Text>
                 วันที่ต้นฉบับ: {dayjs(currentEvent.start).format("DD/MM/YYYY")}
               </Text>
-              <div style={{ marginTop: 10 }}>
-                <Text type="secondary">
-                  เลือกเดือนที่ต้องการสร้างคลาสซ้ำ (วันและเวลาจะเหมือนเดิม)
-                </Text>
-              </div>
+              <Text style={{ display: "block", marginTop: 5 }}>
+                เวลา: {dayjs(currentEvent.start).format("HH:mm")} -{" "}
+                {dayjs(currentEvent.end).format("HH:mm")} น.
+              </Text>
             </div>
 
             <div style={{ marginTop: 20 }}>
-              <Checkbox.Group
-                onChange={onMonthChange}
-                value={selectedMonths}
-                style={{ width: "100%" }}
-              >
-                <Row gutter={[8, 16]}>
-                  {thaiMonths.map((month, index) => (
-                    <Col span={8} key={index}>
-                      <Checkbox value={index}>{month}</Checkbox>
-                    </Col>
-                  ))}
-                </Row>
-              </Checkbox.Group>
-            </div>
+              <Title level={5}>เลือกวันที่ต้องการทำซ้ำ</Title>
 
-            {selectedMonths.length > 0 && (
-              <div
-                style={{
-                  marginTop: 20,
-                  padding: 10,
-                  background: "#f0f7ff",
-                  borderRadius: 4,
-                }}
+              <Space
+                direction="vertical"
+                style={{ width: "100%", marginBottom: 20 }}
               >
-                <Text strong>จะทำซ้ำคลาส {selectedMonths.length} เดือน: </Text>
-                <Text>
-                  {selectedMonths.map((i) => thaiMonths[i]).join(", ")}
-                </Text>
-              </div>
-            )}
+                <div style={{ display: "flex", gap: 10 }}>
+                  <DatePicker
+                    value={selectedDate}
+                    onChange={setSelectedDate}
+                    locale={locale}
+                    format="DD/MM/YYYY"
+                    placeholder="เลือกวันที่"
+                    style={{ width: "100%" }}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={addDuplicateDate}
+                    disabled={!selectedDate}
+                  >
+                    เพิ่ม
+                  </Button>
+                </div>
+
+                {/* <Text type="secondary">หรือเลือกช่วงวันที่</Text>
+
+                <RangePicker
+                  onChange={handleMultipleDates}
+                  locale={locale}
+                  format="DD/MM/YYYY"
+                /> */}
+              </Space>
+
+              {duplicateDates.length > 0 && (
+                <div
+                  style={{
+                    marginTop: 20,
+                    padding: 10,
+                    background: "#f0f7ff",
+                    borderRadius: 4,
+                    maxHeight: "150px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <div style={{ marginBottom: 10 }}>
+                    <Text strong>
+                      วันที่ทำซ้ำ ({duplicateDates.length} วัน):
+                    </Text>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {duplicateDates
+                      .sort((a, b) => a.diff(b)) // เรียงลำดับตามวันที่
+                      .map((date, index) => (
+                        <Tag
+                          key={index}
+                          closable
+                          onClose={() => removeDuplicateDate(date)}
+                          style={{ margin: "4px 0" }}
+                        >
+                          {date.format("DD/MM/YYYY")}
+                        </Tag>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <Form form={form} layout="vertical">

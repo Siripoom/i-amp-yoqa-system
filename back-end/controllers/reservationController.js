@@ -22,7 +22,7 @@ exports.createReservation = async (req, res) => {
     // ลดจำนวน session ของผู้ใช้ลง 1
     user.remaining_session -= 1;
     await user.save();
-    yogaClass.participants.push(user.first_name + " " + user.last_name);
+    yogaClass.participants.push(user.first_name);
     yogaClass.amount += 1;
     await yogaClass.save();
     // ตรวจสอบความจุของคลาส
@@ -83,8 +83,7 @@ exports.cancelReservation = async (req, res) => {
     yogaClass.amount = Math.max(0, yogaClass.amount - 1);
 
     // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
-    const fullName =
-      reservation.user_id.first_name + " " + reservation.user_id.last_name;
+    const fullName = reservation.user_id.first_name;
 
     yogaClass.participants = yogaClass.participants.filter(
       (participant) => participant !== fullName

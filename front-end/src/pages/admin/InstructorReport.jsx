@@ -18,6 +18,8 @@ import {
   List,
   Alert,
   Empty,
+  DatePicker,
+  Select,
 } from "antd";
 import {
   SearchOutlined,
@@ -27,6 +29,7 @@ import {
   BookOutlined,
   ClockCircleOutlined,
   EnvironmentOutlined,
+  FilterOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -36,6 +39,7 @@ import moment from "moment";
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const InstructorReport = () => {
   const [instructors, setInstructors] = useState([]);
@@ -45,10 +49,21 @@ const InstructorReport = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInstructor, setSelectedInstructor] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [filteredClasses, setFilteredClasses] = useState([]);
+  const [allClassesOfInstructor, setAllClassesOfInstructor] = useState([]);
 
   useEffect(() => {
     fetchInstructorReport();
   }, []);
+
+  // เมื่อข้อมูล instructor เปลี่ยนหรือมีการเลือกเดือน ให้กรองข้อมูลใหม่
+  useEffect(() => {
+    if (selectedInstructor) {
+      setAllClassesOfInstructor(selectedInstructor.classes);
+      filterClassesByMonth(selectedInstructor.classes, selectedMonth);
+    }
+  }, [selectedInstructor, selectedMonth]);
 
   const fetchInstructorReport = async () => {
     setLoading(true);
@@ -75,18 +90,25 @@ const InstructorReport = () => {
       const response = await MasterReport.getMasterReportByName(instructorName);
       if (response.success && response.data) {
         setSelectedInstructor(response.data);
+        setFilteredClasses(response.data.classes);
+        setAllClassesOfInstructor(response.data.classes);
       } else {
         setSelectedInstructor(null);
+        setFilteredClasses([]);
+        setAllClassesOfInstructor([]);
       }
     } catch (err) {
       console.error("Error fetching instructor detail:", err);
       setSelectedInstructor(null);
+      setFilteredClasses([]);
+      setAllClassesOfInstructor([]);
     } finally {
       setDetailLoading(false);
     }
   };
 
   const handleViewDetail = (record) => {
+    setSelectedMonth(null); // รีเซ็ตการเลือกเดือนเมื่อดูผู้สอนคนใหม่
     fetchInstructorDetail(record.name);
     setDrawerVisible(true);
   };
@@ -97,6 +119,53 @@ const InstructorReport = () => {
 
   const formatTime = (dateString) => {
     return moment(dateString).format("HH:mm");
+  };
+
+  // ฟังก์ชันกรองคลาสตามเดือนที่เลือก
+  const filterClassesByMonth = (classes, monthDate) => {
+    if (!monthDate) {
+      setFilteredClasses(classes); // แสดงทั้งหมดถ้าไม่มีการเลือกเดือน
+      return;
+    }
+
+    const selectedMonthYear = moment(monthDate).format("MM/YYYY");
+
+    const filtered = classes.filter((classItem) => {
+      const classDate = moment(classItem.date);
+      const classMonthYear = classDate.format("MM/YYYY");
+      return classMonthYear === selectedMonthYear;
+    });
+
+    setFilteredClasses(filtered);
+  };
+
+  // ฟังก์ชันจัดการการเลือกเดือน
+  const handleMonthChange = (date) => {
+    setSelectedMonth(date);
+  };
+
+  // ฟังก์ชันรีเซ็ตตัวกรองเดือน
+  const resetMonthFilter = () => {
+    setSelectedMonth(null);
+    setFilteredClasses(allClassesOfInstructor);
+  };
+
+  // สร้างรายการเดือนให้เลือกจากข้อมูลที่มี
+  const getAvailableMonths = () => {
+    if (!allClassesOfInstructor || allClassesOfInstructor.length === 0) {
+      return [];
+    }
+
+    const monthsSet = new Set();
+
+    allClassesOfInstructor.forEach((classItem) => {
+      const monthYear = moment(classItem.date).format("MM/YYYY");
+      monthsSet.add(monthYear);
+    });
+
+    return Array.from(monthsSet).sort((a, b) => {
+      return moment(a, "MM/YYYY").diff(moment(b, "MM/YYYY"));
+    });
   };
 
   const columns = [
@@ -159,6 +228,18 @@ const InstructorReport = () => {
         item.name.toLowerCase().includes(searchText.toLowerCase())
       )
     : instructors;
+
+  // คำนวณยอดรวมผู้เรียนสำหรับคลาสที่กรองตามเดือน
+  const calculateTotalStudentsForFilteredClasses = () => {
+    if (!filteredClasses || filteredClasses.length === 0) return 0;
+    return filteredClasses.reduce(
+      (total, item) => total + (item.studentCount || 0),
+      0
+    );
+  };
+
+  // จัดเตรียมเดือนที่มีในรายการคลาส
+  const availableMonths = getAvailableMonths();
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
@@ -228,8 +309,39 @@ const InstructorReport = () => {
             }
             placement="right"
             onClose={() => setDrawerVisible(false)}
-            visible={drawerVisible}
+            open={drawerVisible}
             width={700}
+            extra={
+              <Space>
+                <Select
+                  placeholder="เลือกเดือน"
+                  style={{ width: 200 }}
+                  onChange={(value) =>
+                    handleMonthChange(value ? moment(value, "MM/YYYY") : null)
+                  }
+                  value={
+                    selectedMonth
+                      ? moment(selectedMonth).format("MM/YYYY")
+                      : undefined
+                  }
+                  allowClear
+                  suffixIcon={<CalendarOutlined />}
+                >
+                  {availableMonths.map((month) => (
+                    <Option key={month} value={month}>
+                      {moment(month, "MM/YYYY").format("MMMM YYYY")}
+                    </Option>
+                  ))}
+                </Select>
+                <Button
+                  onClick={resetMonthFilter}
+                  disabled={!selectedMonth}
+                  type="default"
+                >
+                  รีเซ็ตตัวกรอง
+                </Button>
+              </Space>
+            }
             footer={
               <div style={{ textAlign: "right" }}>
                 <Button onClick={() => setDrawerVisible(false)}>ปิด</Button>
@@ -246,72 +358,110 @@ const InstructorReport = () => {
             ) : (
               <>
                 <Row gutter={[16, 16]}>
-                  <Col span={12}>
+                  <Col span={8}>
                     <Statistic
                       title="จำนวนคลาสที่สอน"
-                      value={selectedInstructor.totalClasses}
+                      value={
+                        selectedMonth
+                          ? filteredClasses.length
+                          : selectedInstructor.totalClasses
+                      }
                       prefix={<BookOutlined />}
                       suffix="คลาส"
                     />
                   </Col>
-                  <Col span={12}>
+                  <Col span={8}>
                     <Statistic
                       title="จำนวนผู้เรียนทั้งหมด"
-                      value={selectedInstructor.totalStudents}
+                      value={
+                        selectedMonth
+                          ? calculateTotalStudentsForFilteredClasses()
+                          : selectedInstructor.totalStudents
+                      }
                       prefix={<TeamOutlined />}
                       suffix="คน"
                     />
                   </Col>
+                  <Col span={8}>
+                    {selectedMonth && (
+                      <Statistic
+                        title="เดือนที่แสดง"
+                        value={moment(selectedMonth).format("MMMM YYYY")}
+                        prefix={<CalendarOutlined />}
+                      />
+                    )}
+                  </Col>
                 </Row>
 
-                <Divider orientation="left">รายการคลาสที่สอน</Divider>
-
-                <List
-                  itemLayout="vertical"
-                  dataSource={selectedInstructor.classes}
-                  renderItem={(item) => (
-                    <List.Item>
-                      <Card style={{ width: "100%" }}>
-                        <div style={{ marginBottom: 8 }}>
-                          <Tag color="blue">
-                            <BookOutlined /> {item.title}
-                          </Tag>
-                        </div>
-
-                        <Row gutter={[16, 16]}>
-                          <Col span={12}>
-                            <Text strong>
-                              <CalendarOutlined /> วันที่:
-                            </Text>{" "}
-                            {formatDate(item.date)}
-                          </Col>
-                          <Col span={12}>
-                            <Text strong>
-                              <ClockCircleOutlined /> เวลา:
-                            </Text>{" "}
-                            {formatTime(item.startTime)} -{" "}
-                            {formatTime(item.endTime)}
-                          </Col>
-                        </Row>
-
-                        <Row gutter={[16, 16]}>
-                          <Col span={12}>
-                            <Text strong>
-                              <TeamOutlined /> จำนวนผู้เรียน:
-                            </Text>{" "}
-                            {item.studentCount} คน
-                          </Col>
-                          <Col span={12}>
-                            <Text strong>
-                              <EnvironmentOutlined /> ห้องเรียน:
-                            </Text>{" "}
-                            {item.roomNumber}
-                          </Col>
-                        </Row>
-                      </Card>
-                    </List.Item>
+                <Divider orientation="left">
+                  รายการคลาสที่สอน
+                  {selectedMonth && (
+                    <Tag color="blue" style={{ marginLeft: 8 }}>
+                      {`กรองเดือน: ${moment(selectedMonth).format(
+                        "MMMM YYYY"
+                      )}`}
+                    </Tag>
                   )}
-                />
+                </Divider>
+
+                {filteredClasses.length === 0 ? (
+                  <Empty
+                    description={
+                      selectedMonth
+                        ? `ไม่พบคลาสในเดือน ${moment(selectedMonth).format(
+                            "MMMM YYYY"
+                          )}`
+                        : "ไม่พบข้อมูลคลาส"
+                    }
+                  />
+                ) : (
+                  <List
+                    itemLayout="vertical"
+                    dataSource={filteredClasses}
+                    renderItem={(item) => (
+                      <List.Item>
+                        <Card style={{ width: "100%" }}>
+                          <div style={{ marginBottom: 8 }}>
+                            <Tag color="blue">
+                              <BookOutlined /> {item.title}
+                            </Tag>
+                          </div>
+
+                          <Row gutter={[16, 16]}>
+                            <Col span={12}>
+                              <Text strong>
+                                <CalendarOutlined /> วันที่:
+                              </Text>{" "}
+                              {formatDate(item.date)}
+                            </Col>
+                            <Col span={12}>
+                              <Text strong>
+                                <ClockCircleOutlined /> เวลา:
+                              </Text>{" "}
+                              {formatTime(item.startTime)} -{" "}
+                              {formatTime(item.endTime)}
+                            </Col>
+                          </Row>
+
+                          <Row gutter={[16, 16]}>
+                            <Col span={12}>
+                              <Text strong>
+                                <TeamOutlined /> จำนวนผู้เรียน:
+                              </Text>{" "}
+                              {item.studentCount} คน
+                            </Col>
+                            <Col span={12}>
+                              <Text strong>
+                                <EnvironmentOutlined /> ห้องเรียน:
+                              </Text>{" "}
+                              {item.roomNumber}
+                            </Col>
+                          </Row>
+                        </Card>
+                      </List.Item>
+                    )}
+                  />
+                )}
               </>
             )}
           </Drawer>

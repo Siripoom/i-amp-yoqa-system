@@ -25,6 +25,14 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    approval_date: {
+      type: Date,
+      default: null,
+    },
+    first_used_date: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
