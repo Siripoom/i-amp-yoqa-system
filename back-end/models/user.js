@@ -53,6 +53,14 @@ const userSchema = new mongoose.Schema({
   remaining_session: {
     type: Number,
   },
+  first_used_date: {
+    type: Date,
+    default: null,
+  },
+  sessions_expiry_date: {
+    type: Date,
+    default: null,
+  },
   special_rights: {
     type: String,
   },
