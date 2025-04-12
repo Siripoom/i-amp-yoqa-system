@@ -7,7 +7,7 @@ import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
 import classService from "../services/classService";
 import reservationService from "../services/reservationService";
-import userService from "../services/userService";
+import { getUserById } from "../services/userService";
 
 const { Title } = Typography;
 
@@ -27,7 +27,7 @@ const Myplane = () => {
         // Fetch user info and class data in parallel
         const [userResponse, classResponse, reservationResponse] =
           await Promise.all([
-            userId ? userService.getUserById(userId) : Promise.resolve(null),
+            userId ? getUserById(userId) : Promise.resolve(null),
             classService.getAllClasses(),
             userId
               ? reservationService.getUserReservations(userId)
@@ -142,7 +142,7 @@ const Myplane = () => {
         );
 
         // Refresh user info to get updated session count and expiry date
-        const userResponse = await userService.getUserById(userId);
+        const userResponse = await getUserById(userId);
         if (userResponse && userResponse.user) {
           setUserInfo(userResponse.user);
         }
