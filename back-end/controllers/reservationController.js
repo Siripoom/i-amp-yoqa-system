@@ -69,7 +69,7 @@ exports.createReservation = async (req, res) => {
     await user.save();
 
     // Update class participants
-    yogaClass.participants.push(user.first_name + " " + user.last_name);
+    yogaClass.participants.push(user.first_name);
     yogaClass.amount += 1;
     await yogaClass.save();
 
