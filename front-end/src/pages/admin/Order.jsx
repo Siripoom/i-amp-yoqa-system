@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { Layout, Table, Button, Tag, Modal, Select, message } from "antd";
+import {
+  Layout,
+  Table,
+  Button,
+  Tag,
+  Modal,
+  Select,
+  message,
+  Input,
+} from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -15,6 +24,7 @@ const OrderPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null); // คำสั่งซื้อที่เลือก
   const [newStatus, setNewStatus] = useState(""); // สถานะใหม่ที่เลือก
+  const [newInvoice, setNewInvoice] = useState(""); // สถานะใหม่ที่เลือก
 
   useEffect(() => {
     fetchOrders();
@@ -24,8 +34,6 @@ const OrderPage = () => {
     try {
       setLoading(true);
       const response = await orderService.getAllOrders();
-
-    
 
       if (Array.isArray(response)) {
         setOrders(response); // ✅ ใช้ response เฉพาะกรณีเป็น Array
@@ -46,6 +54,7 @@ const OrderPage = () => {
   const showModal = (order) => {
     setSelectedOrder(order);
     setNewStatus(order.status); // ตั้งค่าค่าสถานะเดิม
+    setNewInvoice(order.invoice_number); // ตั้งค่าหมายเลขใบแจ้งหนี้เดิม
     setIsModalVisible(true);
   };
 
@@ -59,7 +68,11 @@ const OrderPage = () => {
     if (!selectedOrder) return;
 
     try {
-      await orderService.updateOrderStatus(selectedOrder._id, newStatus);
+      await orderService.updateOrderStatus(
+        selectedOrder._id,
+        newStatus,
+        newInvoice
+      );
       message.success("Order status updated successfully.");
       fetchOrders(); // โหลดข้อมูลใหม่
       setIsModalVisible(false);
@@ -98,7 +111,13 @@ const OrderPage = () => {
 
   // ✅ คอลัมน์ของตาราง
   const columns = [
-    { title: "ORDER ID", dataIndex: "_id", key: "_id" },
+    // { title: "ORDER ID", dataIndex: "_id", key: "_id" },
+    {
+      title: "INVOICE NUMBER",
+      dataIndex: "invoice_number",
+      key: "invoice_number",
+      render: (invoice_number) => invoice_number || "N/A",
+    },
     {
       title: "USER",
       dataIndex: "user_id",
@@ -229,6 +248,14 @@ const OrderPage = () => {
                   <Option value="รออนุมัติ">รออนุมัติ</Option>
                   <Option value="อนุมัติ">อนุมัติ</Option>
                 </Select>
+                <div className="mt-2">
+                  <Input
+                    value={newInvoice}
+                    onChange={(e) => setNewInvoice(e.target.value)}
+                    style={{ marginBottom: "10px" }}
+                    placeholder="Enter new status"
+                  />
+                </div>
               </div>
             )}
           </Modal>

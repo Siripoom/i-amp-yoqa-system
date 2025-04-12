@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AdminRoute, MemberRoute } from "./ProtectedRoute";
 import DashboardPage from "./pages/admin/Dashboard";
 import UserPage from "./pages/admin/Users";
 import ProductPage from "./pages/admin/ProductManage";
@@ -25,36 +26,152 @@ import Booking from "./pages/Booking";
 import Class from "./pages/Class";
 import ImageSetup from "./pages/admin/ImageSetup";
 import Line from "./pages/Line";
+import InstructorReport from "./pages/admin/InstructorReport";
+
 const AppRouter = () => (
   <Router>
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<HomePage />} />
-
-      <Route path="/admin/dashboard" element={<DashboardPage />} />
-      <Route path="/admin/users" element={<UserPage />} />
-      <Route path="/admin/productManage" element={<ProductPage />} />
-      <Route path="/admin/courses" element={<CoursesPage />} />
-      <Route path="/admin/orders" element={<OrderPage />} />
-      <Route path="/admin/schedule" element={<Schedule />} />
-      <Route path="/admin/imageSetup" element={<ImageSetup />} />
-      <Route path="/teacher/schedule" element={<ScheduleTeacher />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/auth/line" element={<Line />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/class" element={<Class />} />
-      <Route path="/my-plane" element={<Myplane />} />
-      <Route path="/booking" element={<Booking />} />
-      <Route path="/my-orders" element={<MyOrders />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/cartSuccess" element={<CartSuccess />} />
-      <Route path="/checkout" element={<CheckOut />} />
       <Route path="/course" element={<Course />} />
-      {/* <Route path="/course/:id" element={<CourseDetail />} /> */}
       <Route path="/course/id" element={<CourseDetail />} />
       <Route path="/product" element={<Product />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/booking" element={<Booking />} />
+      <Route path="/class" element={<Class />} />
+
+      {/* Admin routes */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <AdminRoute>
+            <DashboardPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/master-report"
+        element={
+          <AdminRoute>
+            <InstructorReport />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <UserPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/productManage"
+        element={
+          <AdminRoute>
+            <ProductPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/courses"
+        element={
+          <AdminRoute>
+            <CoursesPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <AdminRoute>
+            <OrderPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/schedule"
+        element={
+          <AdminRoute>
+            <Schedule />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/imageSetup"
+        element={
+          <AdminRoute>
+            <ImageSetup />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/teacher/schedule"
+        element={
+          <AdminRoute>
+            <ScheduleTeacher />
+          </AdminRoute>
+        }
+      />
+
+      {/* Member routes (accessible by Member and Admin) */}
+      <Route
+        path="/profile"
+        element={
+          <MemberRoute>
+            <Profile />
+          </MemberRoute>
+        }
+      />
+
+      <Route
+        path="/my-plane"
+        element={
+          <MemberRoute>
+            <Myplane />
+          </MemberRoute>
+        }
+      />
+
+      <Route
+        path="/my-orders"
+        element={
+          <MemberRoute>
+            <MyOrders />
+          </MemberRoute>
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          <MemberRoute>
+            <Cart />
+          </MemberRoute>
+        }
+      />
+      <Route
+        path="/cartSuccess"
+        element={
+          <MemberRoute>
+            <CartSuccess />
+          </MemberRoute>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <MemberRoute>
+            <CheckOut />
+          </MemberRoute>
+        }
+      />
+
+      {/* 404 route */}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   </Router>

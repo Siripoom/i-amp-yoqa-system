@@ -2,39 +2,80 @@ const Reservation = require("../models/reservation");
 const Class = require("../models/class");
 const User = require("../models/user");
 const jwtDecode = require("jwt-decode");
+const Order = require("../models/order");
 // จองคลาส
+// back-end/controllers/reservationController.js
 exports.createReservation = async (req, res) => {
   try {
     const { class_id, user_id } = req.body;
 
-    // ตรวจสอบว่ามีคลาสนี้อยู่หรือไม่
+    // Check if class exists
     const yogaClass = await Class.findById(class_id);
     if (!yogaClass) return res.status(404).json({ message: "Class not found" });
-    // update จำนวนผู้เรียน และผูเข้าร่วมคลาส
+
+    // Get user
     const user = await User.findById(user_id);
-    // ตรวจสอบว่าผู้ใช้มี session != 0 หรือไม่
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Check if user has sessions
     if (user.remaining_session === 0) {
-      // "ไม่สามารถจองได้เนื่องจากไม่มี session กรุณาซ้อ promotion"
       return res.status(400).json({
         message: "Cannot reserve class, please buy a promotion",
       });
     }
-    // ลดจำนวน session ของผู้ใช้ลง 1
-    user.remaining_session -= 1;
-    await user.save();
-    yogaClass.participants.push(user.first_name + " " + user.last_name);
-    yogaClass.amount += 1;
-    await yogaClass.save();
-    // ตรวจสอบความจุของคลาส
-    const reservationsCount = await Reservation.countDocuments({
-      class_id,
-      status: "Reserved",
-    });
-    if (reservationsCount >= yogaClass.capacity) {
-      return res.status(400).json({ message: "Class is full" });
+
+    // Check expiration date
+    const today = new Date();
+    if (user.sessions_expiry_date && user.sessions_expiry_date < today) {
+      return res.status(400).json({
+        message: "Your sessions have expired. Please purchase a new promotion.",
+      });
     }
 
-    // สร้างการจอง
+    // If this is the first time using sessions
+    if (!user.first_used_date) {
+      // Set first used date
+      user.first_used_date = today;
+
+      console.log("test log");
+      // Find the most recent approved order for this user
+      const latestOrder = await Order.findOne({
+        user_id: user_id,
+        status: "อนุมัติ",
+      })
+        .sort({ approval_date: -1 })
+        .populate("product_id");
+
+      // If we have an order with a duration, calculate new expiry based on product duration
+      if (
+        latestOrder &&
+        latestOrder.product_id &&
+        latestOrder.product_id.duration
+      ) {
+        const newExpiryDate = new Date();
+        newExpiryDate.setDate(
+          newExpiryDate.getDate() + latestOrder.product_id.duration
+        );
+        user.sessions_expiry_date = newExpiryDate;
+      }
+
+      // Update the order's first used date
+      if (latestOrder) {
+        latestOrder.first_used_date = today;
+        await latestOrder.save();
+      }
+    }
+
+    // Decrement user's session count & save user
+    user.remaining_session -= 1;
+    await user.save();
+
+    // Update class participants
+    yogaClass.participants.push(user.first_name);
+    yogaClass.amount += 1;
+    await yogaClass.save();
+
+    // Create the reservation
     const newReservation = new Reservation({ class_id, user_id });
     await newReservation.save();
 
@@ -83,8 +124,7 @@ exports.cancelReservation = async (req, res) => {
     yogaClass.amount = Math.max(0, yogaClass.amount - 1);
 
     // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
-    const fullName =
-      reservation.user_id.first_name + " " + reservation.user_id.last_name;
+    const fullName = reservation.user_id.first_name;
 
     yogaClass.participants = yogaClass.participants.filter(
       (participant) => participant !== fullName

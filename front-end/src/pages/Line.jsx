@@ -23,6 +23,7 @@ const Line = () => {
   const handleLiffLogin = async () => {
     try {
       const profile = await liff.getProfile();
+      console.log("LIFF Profile:", profile);
       await lineLogin(profile)
         .then((response) => {
           // Store Token and User Data

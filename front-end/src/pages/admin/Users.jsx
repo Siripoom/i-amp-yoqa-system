@@ -10,6 +10,8 @@ import {
   message,
   Upload,
   Tag,
+  Tooltip,
+  InputNumber,
 } from "antd";
 import {
   SearchOutlined,
@@ -17,6 +19,7 @@ import {
   PlusOutlined,
   DeleteOutlined,
   UploadOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -27,6 +30,7 @@ import {
   updateUser,
   deleteUser,
 } from "../../services/userService";
+import moment from "moment";
 
 const { Sider, Content } = Layout;
 const { Option } = Select;
@@ -37,10 +41,12 @@ const UserPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [form] = Form.useForm();
+  const [expiryDays, setExpiryDays] = useState(0);
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
   const handleSearch = (e) => {
     setSearchText(e.target.value.toLowerCase());
   };
@@ -61,12 +67,30 @@ const UserPage = () => {
   const showCreateModal = () => {
     setEditingUser(null);
     form.resetFields();
+    setExpiryDays(90); // Default to 90 days for new users
+    form.setFieldsValue({ expiry_days: 90 });
     setIsModalVisible(true);
   };
 
   const showEditModal = (record) => {
     setEditingUser(record);
-    form.setFieldsValue(record);
+
+    // Calculate days left if expiry date exists
+    let daysLeft = 0;
+    if (record.sessions_expiry_date) {
+      const expiryDate = moment(record.sessions_expiry_date);
+      const now = moment();
+      daysLeft = Math.max(0, expiryDate.diff(now, "days"));
+    }
+
+    setExpiryDays(daysLeft);
+
+    // Set initial form values
+    form.setFieldsValue({
+      ...record,
+      expiry_days: daysLeft,
+    });
+
     setIsModalVisible(true);
   };
 
@@ -77,6 +101,11 @@ const UserPage = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+
+      // Calculate new expiry date based on days input
+      const newExpiryDate = moment().add(values.expiry_days, "days").toDate();
+
+      // Format dates properly for API
       const userPayload = {
         email: values.email,
         password: values.password,
@@ -91,6 +120,7 @@ const UserPage = () => {
         referrer_id: values.referrer_id || null, // Default to null if not provided
         total_classes: values.total_classes || 0, // Default to 0 if not provided
         remaining_session: values.remaining_session || 0, // Default to 0 if not provided
+        sessions_expiry_date: values.expiry_days > 0 ? newExpiryDate : null,
         special_rights: values.special_rights,
       };
 
@@ -119,6 +149,25 @@ const UserPage = () => {
     }
   };
 
+  // Function to format expiry date and calculate days left
+  const formatExpiryInfo = (date) => {
+    if (!date) return { text: "Not set", daysLeft: null };
+
+    const expiryDate = moment(date);
+    const now = moment();
+
+    if (expiryDate.isBefore(now)) {
+      return { text: "Expired", daysLeft: 0, status: "error" };
+    }
+
+    const daysLeft = expiryDate.diff(now, "days");
+    return {
+      text: expiryDate.format("YYYY-MM-DD"),
+      daysLeft,
+      status: daysLeft <= 7 ? "warning" : "success",
+    };
+  };
+
   const columns = [
     { title: "Code", dataIndex: "code", key: "code" },
     { title: "First Name", dataIndex: "first_name", key: "first_name" },
@@ -128,6 +177,25 @@ const UserPage = () => {
       title: "Remaining Session",
       dataIndex: "remaining_session",
       key: "remaining_session",
+      render: (sessions) => (
+        <Tag color={sessions > 0 ? "green" : "red"}>{sessions || 0}</Tag>
+      ),
+    },
+    {
+      title: "Expiration Date",
+      dataIndex: "sessions_expiry_date",
+      key: "sessions_expiry_date",
+      render: (date) => {
+        const { text, daysLeft, status } = formatExpiryInfo(date);
+        return (
+          <Tooltip title={daysLeft !== null ? `${daysLeft} days left` : ""}>
+            <Tag icon={date ? <CalendarOutlined /> : null} color={status}>
+              {text}
+              {daysLeft !== null && daysLeft > 0 ? ` (${daysLeft} days)` : ""}
+            </Tag>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Role",
@@ -271,15 +339,6 @@ const UserPage = () => {
               >
                 <Input type="date" />
               </Form.Item>
-              {/* <Form.Item
-                name="address"
-                label="Address"
-                rules={[
-                  { required: true, message: "Please enter the address" },
-                ]}
-              >
-                <Input.TextArea rows={2} />
-              </Form.Item> */}
               <Form.Item
                 name="role_id"
                 label="Role"
@@ -315,6 +374,33 @@ const UserPage = () => {
               >
                 <Input type="number" />
               </Form.Item>
+
+              {/* Changed to Days Until Expiration field */}
+              <Form.Item
+                name="expiry_days"
+                label="Days Until Expiration"
+                rules={[
+                  {
+                    required: false,
+                    message: "Please enter number of days until expiration",
+                  },
+                ]}
+                extra={
+                  editingUser && editingUser.sessions_expiry_date
+                    ? `Current expiry date: ${moment(
+                        editingUser.sessions_expiry_date
+                      ).format("YYYY-MM-DD")}`
+                    : "Enter number of days until sessions expire"
+                }
+              >
+                <InputNumber
+                  style={{ width: "100%" }}
+                  min={0}
+                  placeholder="Enter days (e.g., 90)"
+                  onChange={(value) => setExpiryDays(value)}
+                />
+              </Form.Item>
+
               <Form.Item
                 name="special_rights"
                 label="Special Rights"

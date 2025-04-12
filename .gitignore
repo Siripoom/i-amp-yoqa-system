@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 *.env
 *adminsdk.json
+# ignore node_modules all the time
+*node_modules

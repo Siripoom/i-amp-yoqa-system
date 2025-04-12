@@ -129,6 +129,59 @@ exports.deleteClass = async (req, res) => {
   }
 };
 
+// Duplicate a class
+exports.duplicateClass = async (req, res) => {
+  try {
+    // Find the class to duplicate
+    const originalClass = await Class.findById(req.params.id);
+
+    if (!originalClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    // Create a new class object with the data from the original
+    const duplicatedClass = new Class({
+      title: originalClass.title,
+      instructor: originalClass.instructor,
+      description: originalClass.description,
+      room_number: originalClass.room_number,
+      passcode: originalClass.passcode,
+      zoom_link: originalClass.zoom_link,
+
+      // Adjust times as needed (default: same times, one week later)
+      start_time:
+        req.body.start_time ||
+        new Date(
+          new Date(originalClass.start_time).getTime() + 7 * 24 * 60 * 60 * 1000
+        ),
+      end_time:
+        req.body.end_time ||
+        new Date(
+          new Date(originalClass.end_time).getTime() + 7 * 24 * 60 * 60 * 1000
+        ),
+
+      difficulty: originalClass.difficulty,
+      color: originalClass.color,
+      amount: 0, // Reset participant count
+      participants: [], // Reset participants
+    });
+
+    // Save the duplicated class
+    const savedClass = await duplicatedClass.save();
+
+    res.status(201).json({
+      message: "Class duplicated successfully",
+      data: savedClass,
+    });
+  } catch (error) {
+    console.error("Error duplicating class:", error);
+    res.status(500).json({
+      message: "Error duplicating class",
+      error: error.message || "Unknown error occurred",
+    });
+  }
+};
+
 //! =================== Class Catalog show in คลาสโยคะ ===================
 exports.createClassCatalog = async (req, res) => {
   // console.log(req.body.classname);

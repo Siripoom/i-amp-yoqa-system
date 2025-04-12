@@ -16,6 +16,7 @@ const masterRoutes = require("./routes/masterRoutes");
 const heroImageRoutes = require("./routes/heroImageRoute");
 const bodyParser = require("body-parser");
 const qrCodeRoutes = require("./routes/paymentQRCodeRoutes.js");
+const instructorReportRoutes = require("./routes/instructorReportRoutes");
 
 require("dotenv").config();
 const path = require("path");
@@ -45,6 +46,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api", classRoutes);
 app.use("/api", reservationRoutes);
 app.use("/api/qrCodes", qrCodeRoutes);
+app.use("/api/instructorReports", instructorReportRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

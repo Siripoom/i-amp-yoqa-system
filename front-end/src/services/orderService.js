@@ -5,7 +5,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 const orderService = {
   // ✅ สร้างคำสั่งซื้อใหม่
   createOrder: async (formData) => {
-   
     try {
       const response = await axios.post(`${API_URL}/api/orders`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -56,11 +55,11 @@ const orderService = {
       throw error.response ? error.response.data : error.message;
     }
   },
-  updateOrderStatus: async (orderId, status) => {
+  updateOrderStatus: async (orderId, status, invoice) => {
     try {
       const response = await axios.put(
         `${API_URL}/api/orders/${orderId}/status`,
-        { status }
+        { status, invoice }
       );
       return response.data;
     } catch (error) {
