@@ -37,7 +37,6 @@ exports.createReservation = async (req, res) => {
       // Set first used date
       user.first_used_date = today;
 
-      console.log("test log");
       // Find the most recent approved order for this user
       const latestOrder = await Order.findOne({
         user_id: user_id,
