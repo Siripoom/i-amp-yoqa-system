@@ -26,6 +26,7 @@ import Booking from "./pages/Booking";
 import Class from "./pages/Class";
 import ImageSetup from "./pages/admin/ImageSetup";
 import Line from "./pages/Line";
+import InstructorReport from "./pages/admin/InstructorReport";
 
 const AppRouter = () => (
   <Router>
@@ -52,6 +53,15 @@ const AppRouter = () => (
           </AdminRoute>
         }
       />
+      <Route
+        path="/admin/master-report"
+        element={
+          <AdminRoute>
+            <InstructorReport />
+          </AdminRoute>
+        }
+      />
+
       <Route
         path="/admin/users"
         element={
