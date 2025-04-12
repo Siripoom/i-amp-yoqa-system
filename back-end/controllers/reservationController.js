@@ -2,6 +2,7 @@ const Reservation = require("../models/reservation");
 const Class = require("../models/class");
 const User = require("../models/user");
 const jwtDecode = require("jwt-decode");
+const Order = require("../models/order");
 // จองคลาส
 // back-end/controllers/reservationController.js
 exports.createReservation = async (req, res) => {
@@ -36,6 +37,7 @@ exports.createReservation = async (req, res) => {
       // Set first used date
       user.first_used_date = today;
 
+      console.log("test log");
       // Find the most recent approved order for this user
       const latestOrder = await Order.findOne({
         user_id: user_id,

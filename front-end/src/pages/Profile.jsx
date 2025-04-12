@@ -163,7 +163,7 @@ const Profile = () => {
                 <Row gutter={24}>
                   <Col xs={24} md={12}>
                     <Statistic
-                      title="Remaining Sessions"
+                      title="จำนวนครั้งคงเหลือ (Remaining Session)"
                       value={user.remaining_session || 0}
                       prefix={<HourglassOutlined />}
                       valueStyle={{
@@ -174,7 +174,7 @@ const Profile = () => {
                   </Col>
                   <Col xs={24} md={12}>
                     <Statistic
-                      title="Expiration"
+                      title="วันหมดอายุ (Expiry Date)"
                       value={formatExpiryDate(user.sessions_expiry_date)}
                       prefix={<CalendarOutlined />}
                       valueStyle={{
@@ -225,7 +225,7 @@ const Profile = () => {
                 {/* Explanation of expiry rules */}
                 <Divider />
                 <div className="bg-white p-3 rounded-lg text-sm text-gray-600">
-                  <p>
+                  {/* <p>
                     <strong>How sessions expiration works:</strong>
                   </p>
                   <ul className="list-disc ml-5">
@@ -240,7 +240,7 @@ const Profile = () => {
                     <li>
                       You cannot book classes after your sessions have expired.
                     </li>
-                  </ul>
+                  </ul> */}
                   <div className="mt-3 text-right">
                     <Link to="/course">
                       <Button type="primary" className="bg-purple-600">
