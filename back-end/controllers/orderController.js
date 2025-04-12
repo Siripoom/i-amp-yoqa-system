@@ -300,7 +300,7 @@ exports.getOrdersByUserId = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, invoice } = req.body;
 
     // Validate status
     if (!["รออนุมัติ", "อนุมัติ", "ยกเลิก"].includes(status)) {
@@ -316,7 +316,7 @@ exports.updateOrderStatus = async (req, res) => {
     const previousStatus = existingOrder.status;
 
     // Update order with new status and approval date if being approved
-    const updateData = { status };
+    const updateData = { status, invoice_number: invoice };
     if (previousStatus === "รออนุมัติ" && status === "อนุมัติ") {
       updateData.approval_date = new Date();
     }
