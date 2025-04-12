@@ -296,50 +296,63 @@ exports.getOrdersByUserId = async (req, res) => {
 };
 
 // อัปเดตสถานะคำสั่งซื้อ
+// in back-end/controllers/orderController.js in the updateOrderStatus function
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    // ตรวจสอบว่าค่าสถานะถูกต้อง
-    if (!["รออนุมัติ", "อนุมัติ"].includes(status)) {
+    // Validate status
+    if (!["รออนุมัติ", "อนุมัติ", "ยกเลิก"].includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
     }
 
-    // ดึงข้อมูล order เดิมก่อนอัปเดต
+    // Get existing order
     const existingOrder = await Order.findById(id);
     if (!existingOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // เก็บสถานะเดิมไว้เพื่อตรวจสอบการเปลี่ยนแปลง
     const previousStatus = existingOrder.status;
 
-    // อัปเดตสถานะของ order
-    const order = await Order.findByIdAndUpdate(id, { status }, { new: true })
+    // Update order with new status and approval date if being approved
+    const updateData = { status };
+    if (previousStatus === "รออนุมัติ" && status === "อนุมัติ") {
+      updateData.approval_date = new Date();
+    }
+
+    // Update the order
+    const order = await Order.findByIdAndUpdate(id, updateData, { new: true })
       .populate("user_id")
       .populate("product_id");
 
-    // ตรวจสอบว่าสถานะเปลี่ยนจาก "รออนุมัติ" เป็น "อนุมัติ" หรือไม่
+    // Handle status change from pending to approved
     if (
       previousStatus === "รออนุมัติ" &&
       status === "อนุมัติ" &&
       order.user_id &&
       order.product_id
     ) {
-      // ค้นหา user และ product
       const user = order.user_id;
       const product = order.product_id;
 
-      if (!product.sessions) {
-        console.warn(`Product ${product._id} does not have sessions defined`);
-      } else {
-        // อัปเดต remaining_session ของ user
-        await User.findByIdAndUpdate(
-          user._id,
-          { $inc: { remaining_session: product.sessions } }, // ใช้ $inc เพื่อเพิ่มค่า
-          { new: true }
-        );
+      if (product.sessions) {
+        // Calculate initial expiry date (90 days from approval)
+        const initialExpiryDate = new Date();
+        initialExpiryDate.setDate(initialExpiryDate.getDate() + 90);
+
+        // Update user with sessions and expiry date
+        await User.findByIdAndUpdate(user._id, {
+          $inc: { remaining_session: product.sessions },
+          // Set initial expiry date only if not already set or current one is in the past
+          $set: {
+            sessions_expiry_date:
+              user.sessions_expiry_date &&
+              user.sessions_expiry_date > new Date()
+                ? user.sessions_expiry_date
+                : initialExpiryDate,
+          },
+        });
       }
     }
 
