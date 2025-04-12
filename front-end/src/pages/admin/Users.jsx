@@ -75,17 +75,17 @@ const UserPage = () => {
   const showEditModal = (record) => {
     setEditingUser(record);
 
-    // Calculate days left if expiry date exists
+    // คำนวณวันที่เหลือถ้ามีวันหมดอายุ
     let daysLeft = 0;
     if (record.sessions_expiry_date) {
-      const expiryDate = moment(record.sessions_expiry_date);
-      const now = moment();
+      const expiryDate = moment(record.sessions_expiry_date).endOf("day");
+      const now = moment().startOf("day");
       daysLeft = Math.max(0, expiryDate.diff(now, "days"));
     }
 
     setExpiryDays(daysLeft);
 
-    // Set initial form values
+    // ตั้งค่าฟอร์มเริ่มต้น
     form.setFieldsValue({
       ...record,
       expiry_days: daysLeft,
@@ -102,10 +102,16 @@ const UserPage = () => {
     try {
       const values = await form.validateFields();
 
-      // Calculate new expiry date based on days input
-      const newExpiryDate = moment().add(values.expiry_days, "days").toDate();
+      // คำนวณวันหมดอายุใหม่จากการใส่จำนวนวัน
+      // ใช้ startOf('day') เพื่อให้เวลาเริ่มที่ 00:00:00
+      // และ endOf('day') เพื่อให้เวลาสิ้นสุดที่ 23:59:59
+      const newExpiryDate = moment()
+        .startOf("day")
+        .add(values.expiry_days, "days")
+        .endOf("day")
+        .toDate();
 
-      // Format dates properly for API
+      // จัดเตรียมข้อมูลสำหรับส่งไป API
       const userPayload = {
         email: values.email,
         password: values.password,
@@ -117,9 +123,9 @@ const UserPage = () => {
         address: values.address,
         registration_date: values.registration_date || new Date().toISOString(),
         role_name: values.role_id,
-        referrer_id: values.referrer_id || null, // Default to null if not provided
-        total_classes: values.total_classes || 0, // Default to 0 if not provided
-        remaining_session: values.remaining_session || 0, // Default to 0 if not provided
+        referrer_id: values.referrer_id || null,
+        total_classes: values.total_classes || 0,
+        remaining_session: values.remaining_session || 0,
         sessions_expiry_date: values.expiry_days > 0 ? newExpiryDate : null,
         special_rights: values.special_rights,
       };
@@ -131,7 +137,7 @@ const UserPage = () => {
         await createUser(userPayload);
         message.success("User created successfully");
       }
-      fetchUsers(); // Refresh the user list
+      fetchUsers();
       setIsModalVisible(false);
     } catch (error) {
       message.error(`Failed to save user: ${error.message}`);
@@ -153,8 +159,8 @@ const UserPage = () => {
   const formatExpiryInfo = (date) => {
     if (!date) return { text: "Not set", daysLeft: null };
 
-    const expiryDate = moment(date);
-    const now = moment();
+    const expiryDate = moment(date).endOf("day");
+    const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
       return { text: "Expired", daysLeft: 0, status: "error" };

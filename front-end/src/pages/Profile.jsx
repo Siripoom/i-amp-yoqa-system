@@ -135,9 +135,7 @@ const Profile = () => {
               >
                 My Profile
               </Link>
-              <Link to="/my-plane" className="text-gray-400 block">
-                My Plane
-              </Link>
+
               <Link to="/my-orders" className="text-gray-400 block">
                 My Orders
               </Link>
