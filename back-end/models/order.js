@@ -33,6 +33,10 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    invoice_number: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );
