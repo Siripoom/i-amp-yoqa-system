@@ -400,16 +400,6 @@ const Booking = () => {
             <Title level={3} className="text-purple-700 mb-0">
               Class Booking
             </Title>
-
-            {userId && (
-              <Button
-                type="link"
-                icon={<InfoCircleOutlined />}
-                onClick={showSessionsInfo}
-              >
-                Session Info
-              </Button>
-            )}
           </div>
 
           {/* Expiration Status Banner */}
