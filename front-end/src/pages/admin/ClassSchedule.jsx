@@ -12,7 +12,10 @@ import {
   Typography,
   Tag,
   Tooltip,
+  Table,
+  Popconfirm,
 } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import { useState, useEffect } from "react";
 import moment from "moment";
@@ -27,12 +30,16 @@ import "../../styles/Course.css";
 import "../../styles/Calendar.css";
 import { getCourses } from "../../services/courseService";
 import classService from "../../services/classService";
+import reservationService from "../../services/reservationService";
 import { getUsers } from "../../services/userService";
 import {
   CalendarOutlined,
   CopyOutlined,
   DeleteOutlined,
   PlusOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 
 const { Sider, Content } = Layout;
@@ -50,14 +57,13 @@ const Schedule = () => {
   const [currentEvent, setCurrentEvent] = useState(null);
   const [form] = Form.useForm();
   const [isDuplicating, setIsDuplicating] = useState(false);
-
-  // เก็บข้อมูลวันที่ที่ต้องการทำซ้ำ
-  const [duplicateDates, setDuplicateDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
-
+  const [reservations, setReservations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
   // 📌 โหลดข้อมูลคอร์สและคลาสทั้งหมด
   useEffect(() => {
     fetchData();
+    fetchReservations();
   }, []);
 
   const fetchData = async () => {
@@ -81,11 +87,44 @@ const Schedule = () => {
         color: cls.color,
         start: new Date(cls.start_time),
         end: new Date(cls.end_time),
+        participants: cls.participants || [],
       }));
 
       setEvents(formattedEvents);
     } catch (error) {
       console.error("Error fetching data:", error);
+    }
+  };
+
+  // Fetch all reservations
+  const fetchReservations = async () => {
+    try {
+      setLoading(true);
+      const response = await reservationService.getAllReservations();
+      if (response && response.reservations) {
+        setReservations(response.reservations);
+      }
+    } catch (error) {
+      console.error("Error fetching reservations:", error);
+      message.error("Failed to load reservations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle reservation cancellation using the admin endpoint
+  const handleCancelReservation = async (reservationId) => {
+    try {
+      await reservationService.adminCancelReservation(reservationId);
+      message.success("Reservation cancelled successfully");
+      // Refresh data
+      fetchReservations();
+      fetchData();
+    } catch (error) {
+      console.error("Error cancelling reservation:", error);
+      message.error(
+        "Failed to cancel reservation: " + (error.message || "Unknown error")
+      );
     }
   };
 
@@ -205,6 +244,10 @@ const Schedule = () => {
     }
   };
 
+  // เก็บข้อมูลวันที่ที่ต้องการทำซ้ำ
+  const [duplicateDates, setDuplicateDates] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(null);
+
   // 📌 เพิ่มวันที่ที่ต้องการทำซ้ำ
   const addDuplicateDate = () => {
     if (!selectedDate) {
@@ -311,6 +354,114 @@ const Schedule = () => {
     }
   };
 
+  // Generate data source for reservations table
+  const getReservationsDataSource = () => {
+    if (!reservations || reservations.length === 0) return [];
+
+    return reservations
+      .filter((r) => r.status === "Reserved") // Only show active reservations
+      .filter((r) => {
+        // If there's search text, filter by name
+        if (searchText && r.user_id && r.user_id.first_name) {
+          return r.user_id.first_name
+            .toLowerCase()
+            .includes(searchText.toLowerCase());
+        }
+        return true;
+      })
+      .map((reservation, index) => {
+        const classInfo = reservation.class_id;
+        const userData = reservation.user_id || {};
+
+        return {
+          key: index,
+          id: reservation._id,
+          className: classInfo?.title || "N/A",
+          date: classInfo
+            ? moment(classInfo.start_time || classInfo.start_date).format(
+                "YYYY-MM-DD"
+              )
+            : "N/A",
+          startTime: classInfo
+            ? moment(classInfo.start_time || classInfo.start_date).format(
+                "HH:mm"
+              )
+            : "N/A",
+          endTime: classInfo
+            ? moment(classInfo.end_time || classInfo.end_date).format("HH:mm")
+            : "N/A",
+          instructor: classInfo?.instructor || "N/A",
+          userName: userData?.first_name || "Unknown",
+          userId: userData?._id,
+          reservationId: reservation._id,
+          status: reservation.status,
+        };
+      });
+  };
+
+  const reservationsColumns = [
+    {
+      title: "Class",
+      dataIndex: "className",
+      key: "className",
+      sorter: (a, b) => a.className.localeCompare(b.className),
+    },
+    {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      sorter: (a, b) => moment(a.date).diff(moment(b.date)),
+    },
+    {
+      title: "Time",
+      key: "time",
+      render: (_, record) => `${record.startTime} - ${record.endTime}`,
+    },
+    {
+      title: "Instructor",
+      dataIndex: "instructor",
+      key: "instructor",
+      sorter: (a, b) => a.instructor.localeCompare(b.instructor),
+    },
+    {
+      title: "Member",
+      dataIndex: "userName",
+      key: "userName",
+      sorter: (a, b) => a.userName.localeCompare(b.userName),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={status === "Reserved" ? "green" : "red"}>{status}</Tag>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Popconfirm
+          title="Cancel this reservation?"
+          description="Are you sure you want to cancel this reservation? This will return the session to the member."
+          icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
+          onConfirm={() => handleCancelReservation(record.reservationId)}
+          okText="Yes"
+          cancelText="No"
+        >
+          <Button
+            type="text"
+            danger
+            icon={<CloseCircleOutlined />}
+            disabled={record.status !== "Reserved"}
+          >
+            Cancel
+          </Button>
+        </Popconfirm>
+      ),
+    },
+  ];
+
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
       <Sider width={220} className="lg:block hidden">
@@ -343,6 +494,43 @@ const Schedule = () => {
                   backgroundColor: event.color ? `#${event.color}` : "#789DBC",
                 },
               })}
+            />
+          </div>
+
+          {/* Reservations List */}
+          <div style={{ padding: "16px", marginTop: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "16px",
+              }}
+            >
+              <Title level={4}>Reservation Management</Title>
+              <Input
+                placeholder="Search by member name"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 300 }}
+                allowClear
+                prefix={<SearchOutlined />}
+              />
+              <Button
+                onClick={fetchReservations}
+                type="primary"
+                icon={<ReloadOutlined />}
+              >
+                Refresh Reservations
+              </Button>
+            </div>
+            <Table
+              columns={reservationsColumns}
+              dataSource={getReservationsDataSource()}
+              loading={loading}
+              pagination={{ pageSize: 10 }}
+              size="middle"
+              scroll={{ x: "max-content" }}
             />
           </div>
         </Content>
@@ -433,14 +621,6 @@ const Schedule = () => {
                     เพิ่ม
                   </Button>
                 </div>
-
-                {/* <Text type="secondary">หรือเลือกช่วงวันที่</Text>
-
-                <RangePicker
-                  onChange={handleMultipleDates}
-                  locale={locale}
-                  format="DD/MM/YYYY"
-                /> */}
               </Space>
 
               {duplicateDates.length > 0 && (
@@ -607,5 +787,4 @@ const Schedule = () => {
     </Layout>
   );
 };
-
 export default Schedule;

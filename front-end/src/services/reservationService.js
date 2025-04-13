@@ -44,6 +44,25 @@ const reservationService = {
       throw error.response ? error.response.data : error;
     }
   },
+  getAllReservations: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/reserve`);
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
+  // 📌 ยกเลิกการจองคลาส (สำหรับผู้ดูแลระบบ)
+  adminCancelReservation: async (reservationId) => {
+    try {
+      const response = await axios.delete(
+        `${API_URL}/api/admin/cancel/${reservationId}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
 };
 
 export default reservationService;
