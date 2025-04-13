@@ -169,7 +169,7 @@ exports.updateOrder = async (req, res) => {
     // อัปเดต remaining_session ของ user หลังการสั่งซื้อ
     const updatedUser = await User.findByIdAndUpdate(
       user_id,
-      { remaining_session: product.sessions + user.remaining_session },
+      { remaining_session: order.total_sessions },
       { new: true }
     );
 
@@ -343,7 +343,7 @@ exports.updateOrderStatus = async (req, res) => {
 
         // Update user with sessions and expiry date
         await User.findByIdAndUpdate(user._id, {
-          $inc: { remaining_session: product.sessions },
+          $inc: { remaining_session: order.total_sessions },
           // Set initial expiry date only if not already set or current one is in the past
           $set: {
             sessions_expiry_date:

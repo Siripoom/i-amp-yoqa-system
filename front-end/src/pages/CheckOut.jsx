@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Button, Upload, Form, Typography, message } from "antd";
+import {
+  Button,
+  Upload,
+  Form,
+  Typography,
+  message,
+  InputNumber,
+  Divider,
+} from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import orderService from "../services/orderService";
@@ -16,6 +24,12 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState(null);
   const [qr, setQr] = useState(null); // State for QR code image
+  const [quantity, setQuantity] = useState(1); // State for quantity
+
+  // Calculate total price and duration based on quantity
+  const totalPrice = product ? product.price * quantity : 0;
+  const totalDuration = product ? product.duration * quantity : 0;
+  const totalSessions = product ? product.sessions * quantity : 0;
 
   useEffect(() => {
     if (location.state?.product) {
@@ -43,6 +57,13 @@ const Checkout = () => {
     }
   }, [location, navigate]);
 
+  // Handle quantity change
+  const handleQuantityChange = (value) => {
+    // Make sure value is a number and at least 1
+    const newQuantity = Math.max(1, Number(value) || 1);
+    setQuantity(newQuantity);
+  };
+
   const handleFormSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -54,10 +75,16 @@ const Checkout = () => {
       if (values.paymentSlip?.length > 0) {
         formData.append("image", values.paymentSlip[0].originFileObj);
       }
-   
-      await orderService.createOrder(formData);
+
+      // Add quantity and calculated totals to the form data
+      formData.append("quantity", quantity);
+      formData.append("total_price", totalPrice);
+      formData.append("total_duration", totalDuration);
+      formData.append("total_sessions", totalSessions);
+
+      const response = await orderService.createOrder(formData);
       message.success("Order placed successfully!");
-      navigate("/cartSuccess");
+      navigate("/cartSuccess", { state: { orderData: response.data } });
     } catch (error) {
       message.error(error.message || "Order failed. Please try again.");
     } finally {
@@ -96,11 +123,13 @@ const Checkout = () => {
               </div>
               {/* show qwr code picture */}
               <div className="bg-gray-100 p-4 rounded-md mb-6 ">
-                <img
-                  src={qr}
-                  alt="QR Code"
-                  className="w-64 h-auto rounded-md"
-                />
+                {qr && (
+                  <img
+                    src={qr}
+                    alt="QR Code"
+                    className="w-64 h-auto rounded-md"
+                  />
+                )}
               </div>
 
               {/* Upload Payment Slip */}
@@ -147,7 +176,7 @@ const Checkout = () => {
               </Title>
               <div className="flex items-center gap-4 mb-4">
                 <img
-                  src={image}
+                  src={product.image || image}
                   alt="Product"
                   className="w-24 h-24 rounded-md"
                 />
@@ -158,6 +187,68 @@ const Checkout = () => {
                   <Text className="block text-red-600 font-semibold">
                     {product.price} THB
                   </Text>
+                </div>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-2">
+                  <Text strong>จำนวน:</Text>
+                  <InputNumber
+                    min={1}
+                    max={10}
+                    value={quantity}
+                    onChange={handleQuantityChange}
+                    style={{ width: "120px" }}
+                  />
+                </div>
+                <Text type="secondary" className="block mb-4 text-xs">
+                  * การซื้อจำนวนมากกว่า 1 รายการ จะรวมระยะเวลาใช้งานเข้าด้วยกัน
+                </Text>
+              </div>
+
+              <Divider className="my-4" />
+
+              {/* Order Details */}
+              <div className="bg-gray-50 p-4 rounded-md">
+                <div className="flex justify-between mb-2">
+                  <Text>ราคาต่อชิ้น:</Text>
+                  <Text>{product.price} THB</Text>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <Text>จำนวนคลาสต่อชิ้น:</Text>
+                  <Text>{product.sessions} sessions</Text>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <Text>ระยะเวลาต่อชิ้น:</Text>
+                  <Text>{product.duration} วัน</Text>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <Text>จำนวน:</Text>
+                  <Text>{quantity} ชิ้น</Text>
+                </div>
+
+                <Divider className="my-2" />
+
+                <div className="flex justify-between mb-2">
+                  <Text strong>รวมจำนวนคลาส:</Text>
+                  <Text strong>{totalSessions} sessions</Text>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <Text strong>รวมระยะเวลา:</Text>
+                  <Text strong>{totalDuration} วัน</Text>
+                </div>
+                <div className="flex justify-between mt-4 bg-pink-50 p-2 rounded-md">
+                  <Text strong className="text-red-600">
+                    ราคาสุทธิ:
+                  </Text>
+                  <Text strong className="text-red-600 text-xl">
+                    {totalPrice} THB
+                  </Text>
+                </div>
+
+                <div className="mt-4 text-xs text-gray-500">
+                  * ระยะเวลาการใช้งานจะเริ่มนับหลังจากการใช้งานครั้งแรก
                 </div>
               </div>
             </div>
