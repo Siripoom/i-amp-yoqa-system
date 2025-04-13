@@ -37,6 +37,27 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    quantity: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    unit_price: {
+      type: Number,
+      required: false,
+    },
+    total_price: {
+      type: Number,
+      required: false,
+    },
+    total_sessions: {
+      type: Number,
+      required: false,
+    },
+    total_duration: {
+      type: Number,
+      required: false,
+    },
   },
   { timestamps: true }
 );
