@@ -1,226 +1,172 @@
 import { useState, useEffect } from "react";
+import { Button, Upload, Form, Typography, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  Button,
-  InputNumber,
-  Card,
-  Form,
-  Input,
-  message,
-  Spin,
-  Typography,
-} from "antd";
-import { QrcodePayment } from "../services/imageService";
 import orderService from "../services/orderService";
-import Navbar from "../components/Navbar";
+import { QrcodePayment } from "../services/imageService";
 import Footer from "../components/Footer";
-
+import Navbar from "../components/Navbar";
 const { Title, Text } = Typography;
+import image from "../assets/images/imageC1.png";
 
-const CheckOut = () => {
+const Checkout = () => {
+  const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
-  const [qrCode, setQrCode] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [form] = Form.useForm();
-
-  // Use location state to get product data passed from the previous page
-  const product = location.state?.product;
-
-  // Calculate total price and duration based on quantity
-  const totalPrice = product ? product.price * quantity : 0;
-  const totalDuration = product ? product.duration * quantity : 0;
+  const [product, setProduct] = useState(null);
+  const [qr, setQr] = useState(null); // State for QR code image
 
   useEffect(() => {
-    if (!product) {
-      message.error("No product selected. Redirecting to products page...");
-      navigate("/product");
-      return;
-    }
-
-    // Fetch QR code for payment
-    const fetchQrCode = async () => {
-      try {
-        const response = await QrcodePayment.getQrcodePayment();
-        if (response.data && response.data.length > 0) {
-          setQrCode(response.data[0]);
+    if (location.state?.product) {
+      setProduct(location.state.product);
+      // Create an async function inside the useEffect
+      const fetchQrCode = async () => {
+        try {
+          const response = await QrcodePayment.getQrcodePayment();
+          // Check if response.data is an array and get the first item's image URL
+          if (Array.isArray(response.data) && response.data.length > 0) {
+            setQr(response.data[0].image);
+          } else {
+            message.error("QR code data not found");
+          }
+        } catch (error) {
+          message.error("Failed to load QR code");
+          console.error(error);
         }
-      } catch (error) {
-        console.error("Error fetching QR code:", error);
-        message.error("Could not load payment QR code");
-      }
-    };
+      };
 
-    fetchQrCode();
-  }, [navigate, product]);
-
-  const handleQuantityChange = (value) => {
-    setQuantity(value);
-  };
-
-  const onFinish = async (values) => {
-    if (!product) {
-      message.error("No product selected");
-      return;
+      fetchQrCode();
+    } else {
+      message.error("No product selected. Redirecting...");
+      navigate("/course"); // กลับไปหน้า Course ถ้าไม่มีสินค้า
     }
+  }, [location, navigate]);
 
+  const handleFormSubmit = async () => {
     try {
+      const values = await form.validateFields();
       setLoading(true);
 
-      // Create FormData for file upload
       const formData = new FormData();
-      formData.append("user_id", localStorage.getItem("user_id"));
+      formData.append("user_id", localStorage.getItem("user_id")); // ใส่ User ID จริงจาก Auth
       formData.append("product_id", product._id);
-
-      if (
-        values.image &&
-        values.image.fileList &&
-        values.image.fileList.length > 0
-      ) {
-        formData.append("image", values.image.fileList[0].originFileObj);
+      if (values.paymentSlip?.length > 0) {
+        formData.append("image", values.paymentSlip[0].originFileObj);
       }
-
-      // Add quantity information to be used in the backend
-      formData.append("quantity", quantity);
-
-      const response = await orderService.createOrder(formData);
-
-      if (response.status === "success") {
-        message.success("Order created successfully!");
-        navigate("/cartSuccess", { state: { orderData: response.data } });
-      }
+   
+      await orderService.createOrder(formData);
+      message.success("Order placed successfully!");
+      navigate("/cartSuccess");
     } catch (error) {
-      console.error("Order creation error:", error);
-      message.error("Failed to create order. Please try again.");
+      message.error(error.message || "Order failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle image upload
-  const normFile = (e) => {
-    if (Array.isArray(e)) {
-      return e;
-    }
-    return e?.fileList;
-  };
-
-  if (!product) {
-    return <Spin tip="Loading..." />;
-  }
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div
+      className="min-h-screen"
+      style={{
+        background:
+          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+      }}
+    >
       <Navbar />
-
-      <div className="py-8 flex-grow">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <Title level={2} className="text-center mb-8">
-              Checkout
-            </Title>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <Card title="Order Summary" className="mb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <Text strong>Product:</Text>
-                      <Text className="block">{product.sessions} Sessions</Text>
-                    </div>
-                    <div>
-                      <Text strong>Price:</Text>
-                      <Text className="block">{product.price} THB</Text>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <Text strong>Quantity:</Text>
-                    <InputNumber
-                      min={1}
-                      max={10}
-                      defaultValue={1}
-                      onChange={handleQuantityChange}
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <Text>Price per item:</Text>
-                      <Text>{product.price} THB</Text>
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Text>Quantity:</Text>
-                      <Text>{quantity}</Text>
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Text strong>Total Price:</Text>
-                      <Text strong>{totalPrice} THB</Text>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Text strong>Total Duration:</Text>
-                      <Text strong>{totalDuration} days</Text>
-                    </div>
-                  </div>
-                </Card>
-
-                {qrCode && (
-                  <Card title="Payment QR Code">
-                    <div className="flex justify-center mb-4">
-                      <img
-                        src={qrCode.image}
-                        alt="Payment QR Code"
-                        className="max-w-full h-auto"
-                      />
-                    </div>
-                    <Text className="block text-center text-red-500">
-                      Please scan this QR code to make your payment
-                    </Text>
-                  </Card>
-                )}
+      <div className="container mx-auto py-12 px-6">
+        <Title level={3} className="mb-6">
+          Billing details
+        </Title>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Section: Form */}
+          <div className="flex-1 bg-white p-6 rounded-md shadow-md">
+            <Form form={form} layout="vertical">
+              {/* Payment Section */}
+              <div className="bg-gray-100 p-4 rounded-md mb-6">
+                <Title level={4}>Payment Details</Title>
+                <Text>ชำระค่าบริการช่องทางอื่นๆติดต่อได้ที่ไลน์ @iampyoqa</Text>
+                {/* <br />
+                <Text>Bank : กสิกรไทย</Text>
+                <br />
+                <Text>180-820-700-8</Text>
+                <br />
+                <Text>Account : น.ส. อริจรา แท่นประเสริฐกุล</Text>
+                <br /> */}
+              </div>
+              {/* show qwr code picture */}
+              <div className="bg-gray-100 p-4 rounded-md mb-6 ">
+                <img
+                  src={qr}
+                  alt="QR Code"
+                  className="w-64 h-auto rounded-md"
+                />
               </div>
 
-              <div>
-                <Card title="Upload Payment Proof">
-                  <Form form={form} layout="vertical" onFinish={onFinish}>
-                    <Form.Item
-                      name="image"
-                      label="Payment Receipt"
-                      valuePropName="file"
-                      getValueFromEvent={normFile}
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please upload your payment receipt",
-                        },
-                      ]}
-                    >
-                      <Input type="file" accept="image/*" />
-                    </Form.Item>
+              {/* Upload Payment Slip */}
+              <Form.Item
+                name="paymentSlip"
+                label="Upload Payment Slip"
+                valuePropName="fileList"
+                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please upload your payment slip",
+                  },
+                ]}
+              >
+                <Upload
+                  name="paymentSlip"
+                  listType="picture"
+                  beforeUpload={() => false}
+                >
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </Upload>
+              </Form.Item>
 
-                    <Form.Item>
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        loading={loading}
-                        className="w-full bg-gradient-to-r from-pink-500 to-red-400"
-                      >
-                        Submit Order
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Card>
+              {/* Submit Button */}
+              <Form.Item>
+                <Button
+                  type="primary"
+                  className="bg-pink-400 text-white w-full"
+                  onClick={handleFormSubmit}
+                  loading={loading}
+                >
+                  Buy
+                </Button>
+              </Form.Item>
+            </Form>
+          </div>
+
+          {/* Right Section: Product Details */}
+          {product && (
+            <div className="flex-1 lg:w-1/3 bg-white p-6 rounded-md shadow-md">
+              <Title level={4} className="mb-4">
+                Order Summary
+              </Title>
+              <div className="flex items-center gap-4 mb-4">
+                <img
+                  src={image}
+                  alt="Product"
+                  className="w-24 h-24 rounded-md"
+                />
+                <div>
+                  <Text className="block font-semibold">
+                    Session: {product.sessions}
+                  </Text>
+                  <Text className="block text-red-600 font-semibold">
+                    {product.price} THB
+                  </Text>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
-
       <Footer />
     </div>
   );
 };
 
-export default CheckOut;
+export default Checkout;
