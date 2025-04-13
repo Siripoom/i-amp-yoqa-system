@@ -1,207 +1,246 @@
-import { Button, Card, Typography, message, Modal } from "antd";
 import { useState, useEffect } from "react";
-import moment from "moment";
-import "../styles/Home.css";
-import Footer from "../components/Footer";
+import {
+  Table,
+  Tag,
+  Card,
+  Typography,
+  Image,
+  Descriptions,
+  Empty,
+  Spin,
+} from "antd";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import orderService from "../services/orderService";
-import { Link } from "react-router-dom";
-const { Title } = Typography;
+
+const { Title, Text } = Typography;
 
 const MyOrders = () => {
-  const [orders, setOrders] = useState([]); // เก็บรายการ Order จริง
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [error, setError] = useState(null);
+  const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchOrders();
-  }, []);
+    const fetchOrders = async () => {
+      try {
+        if (!userId) {
+          throw new Error("User ID not found. Please log in again.");
+        }
 
-  const fetchOrders = async () => {
-    try {
-      const userId = localStorage.getItem("user_id");
-      if (!userId) {
-        message.error("Please log in to view your orders.");
-        return;
-      }
-
-      const response = await orderService.getOrdersByUserId(userId);
-     
-
-      if (response.data && Array.isArray(response.data)) {
+        setLoading(true);
+        const response = await orderService.getOrdersByUserId(userId);
         setOrders(response.data);
-      } else {
-        setOrders([]);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        setError(err.message || "Failed to fetch orders");
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Fetch orders error:", error);
-      message.error("Failed to load orders.");
-    } finally {
-      setLoading(false);
+    };
+
+    fetchOrders();
+  }, [userId]);
+
+  // Status color mapping
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "อนุมัติ":
+        return "success";
+      case "รออนุมัติ":
+        return "warning";
+      case "ยกเลิก":
+        return "error";
+      default:
+        return "default";
     }
   };
 
-  // เปิด Modal และตั้งค่าข้อมูลที่จะแสดง
-  const showModal = (order) => {
-    setSelectedOrder(order);
-    setIsModalVisible(true);
-  };
+  const columns = [
+    {
+      title: "Order Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => new Date(date).toLocaleDateString(),
+    },
+    {
+      title: "Product",
+      dataIndex: "product_id",
+      key: "product",
+      render: (product) => (
+        <div>
+          <Text strong>{product?.sessions} Sessions</Text>
+          <p>{product?.duration} days</p>
+        </div>
+      ),
+    },
+    {
+      title: "Quantity",
+      dataIndex: "quantity",
+      key: "quantity",
+      render: (quantity) => quantity || 1,
+    },
+    {
+      title: "Total Sessions",
+      key: "totalSessions",
+      render: (record) => {
+        // Calculate from order data if available, otherwise calculate from product
+        const totalSessions =
+          record.total_sessions ||
+          record.product_id?.sessions * (record.quantity || 1);
+        return totalSessions;
+      },
+    },
+    {
+      title: "Total Duration",
+      key: "totalDuration",
+      render: (record) => {
+        // Calculate from order data if available, otherwise calculate from product
+        const totalDuration =
+          record.total_duration ||
+          record.product_id?.duration * (record.quantity || 1);
+        return `${totalDuration} days`;
+      },
+    },
+    {
+      title: "Price",
+      dataIndex: "total_price",
+      key: "price",
+      render: (price, record) => {
+        // Use total_price if available, otherwise calculate from product
+        const totalPrice =
+          price || record.product_id?.price * (record.quantity || 1);
+        return `${totalPrice} THB`;
+      },
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+    },
+  ];
 
-  // ปิด Modal
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex justify-center items-center">
+          <Spin size="large" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex justify-center items-center">
+          <Card className="w-full max-w-md">
+            <Title level={4} className="text-red-500">
+              Error
+            </Title>
+            <Text>{error}</Text>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-gradient-to-b"
-      style={{
-        background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
-      }}
-    >
+    <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <div className="flex-grow flex items-center justify-center mt-4 mb-4">
-        <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
-          {/* Sidebar */}
-          <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
-            <Title level={4} className="text-black font-semibold">
-              Manage My Account
-            </Title>
-            <div className="mt-4 space-y-3 flex flex-col">
-              <Link
-                to="/profile"
-                className="text-gray-400 cursor-pointer block"
-              >
-                My Profile
-              </Link>
-              {/* <a
-                href="/my-plane"
-                className="text-gray-400 cursor-pointer block"
-              >
-                My Plane
-              </a> */}
-              <Link
-                to="/my-orders"
-                className="text-purple-600 font-semibold cursor-pointer block"
-              >
-                My Orders
-              </Link>
-            </div>
-          </Card>
+      <div className="py-8 flex-grow">
+        <div className="container mx-auto px-4">
+          <Title level={2} className="mb-6">
+            My Orders
+          </Title>
 
-          {/* ประวัติการซื้อ Session */}
-          <div className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md bg-white">
-            <Title level={3} className="text-purple-700">
-              My Purchased Sessions
-            </Title>
+          {orders.length > 0 ? (
+            <Table
+              dataSource={orders}
+              columns={columns}
+              rowKey="_id"
+              expandable={{
+                expandedRowRender: (record) => (
+                  <div className="p-4">
+                    <Descriptions title="Order Details" bordered column={1}>
+                      <Descriptions.Item label="Order ID">
+                        {record._id}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Invoice Number">
+                        {record.invoice_number || "Not available yet"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Approval Date">
+                        {record.approval_date
+                          ? new Date(record.approval_date).toLocaleString()
+                          : "Not approved yet"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="First Used Date">
+                        {record.first_used_date
+                          ? new Date(record.first_used_date).toLocaleString()
+                          : "Not used yet"}
+                      </Descriptions.Item>
 
-            {/* แสดง Loading */}
-            {loading ? (
-              <div className="text-center text-blue-500 font-semibold">
-                Loading orders...
-              </div>
-            ) : orders.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                {orders.map((order) => (
-                  <Card key={order._id} className="p-4 rounded-lg shadow-md">
-                    <p>
-                      <strong>Order ID:</strong> {order._id}
-                    </p>
-                    <p>
-                      <strong>Session:</strong>{" "}
-                      {order.product_id?.sessions || "N/A"} ครั้ง
-                    </p>
-                    <p>
-                      <strong>Price:</strong> {order.product_id?.price || "N/A"}{" "}
-                      THB
-                    </p>
-                    <p>
-                      <strong>Order Date:</strong>{" "}
-                      {moment(order.order_date).format("DD MMM YYYY")}
-                    </p>
-                    <p>
-                      <strong>Status:</strong> {order.status || "N/A"}
-                    </p>
+                      {/* Additional quantity information */}
+                      <Descriptions.Item label="Quantity">
+                        {record.quantity || 1}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Unit Price">
+                        {record.unit_price
+                          ? `${record.unit_price} THB`
+                          : record.product_id
+                          ? `${record.product_id.price} THB`
+                          : "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Total Price">
+                        {record.total_price
+                          ? `${record.total_price} THB`
+                          : record.product_id
+                          ? `${
+                              record.product_id.price * (record.quantity || 1)
+                            } THB`
+                          : "N/A"}
+                      </Descriptions.Item>
 
-                    {/* ปุ่มดูรายละเอียด */}
-                    <Button className="mt-2" onClick={() => showModal(order)}>
-                      ดูรายละเอียด
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center text-gray-500">No orders found.</div>
-            )}
-          </div>
+                      <Descriptions.Item label="Usage Notes">
+                        <Text type="secondary">
+                          This promotion provides a total of{" "}
+                          {record.total_sessions ||
+                            record.product_id?.sessions *
+                              (record.quantity || 1)}
+                          sessions valid for{" "}
+                          {record.total_duration ||
+                            record.product_id?.duration *
+                              (record.quantity || 1)}{" "}
+                          days from your first use.
+                        </Text>
+                      </Descriptions.Item>
+                    </Descriptions>
+
+                    {record.image && (
+                      <div className="mt-4">
+                        <Title level={5}>Payment Receipt</Title>
+                        <Image
+                          src={record.image}
+                          alt="Payment receipt"
+                          style={{ maxWidth: "300px" }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ),
+              }}
+            />
+          ) : (
+            <Empty description="No orders found" />
+          )}
         </div>
       </div>
-
-      {/* Modal สำหรับแสดงรายละเอียดคำสั่งซื้อ */}
-      {/* Modal สำหรับแสดงรายละเอียดคำสั่งซื้อ */}
-      <Modal
-        title="รายละเอียดคำสั่งซื้อ"
-        visible={isModalVisible}
-        onCancel={handleCancel}
-        footer={[
-          <Button key="close" onClick={handleCancel}>
-            ปิด
-          </Button>,
-        ]}
-      >
-        {selectedOrder && (
-          <div className="space-y-3">
-            <p>
-              <strong>Order ID:</strong> {selectedOrder._id}
-            </p>
-            <p>
-              <strong>Product Name:</strong>{" "}
-              {selectedOrder?.product_id?._id || "N/A"}
-            </p>
-            <p>
-              <strong>Sessions:</strong>{" "}
-              {selectedOrder?.product_id?.sessions || "N/A"} ครั้ง
-            </p>
-            <p>
-              <strong>Price:</strong>{" "}
-              {selectedOrder?.product_id?.price || "N/A"} THB
-            </p>
-            <p>
-              <strong>Order Date:</strong>{" "}
-              {moment(selectedOrder?.order_date).format("DD MMM YYYY")}
-            </p>
-            <p>
-              <strong>Status:</strong> {selectedOrder?.status || "N/A"}
-            </p>
-
-            {/* ✅ แสดงภาพใบเสร็จถ้ามี */}
-            {selectedOrder?.image ? (
-              <div style={{ textAlign: "center", marginBottom: "10px" }}>
-                <p>
-                  <strong>Payment Slip:</strong>
-                </p>
-                <img
-                  src={selectedOrder.image}
-                  alt="Payment Slip"
-                  style={{
-                    maxWidth: "100%",
-                    height: "auto",
-                    borderRadius: "8px",
-                  }}
-                />
-              </div>
-            ) : (
-              <p style={{ color: "gray", textAlign: "center" }}>
-                No payment slip uploaded
-              </p>
-            )}
-          </div>
-        )}
-      </Modal>
 
       <Footer />
     </div>
