@@ -120,7 +120,7 @@ exports.cancelReservation = async (req, res) => {
     if (!yogaClass) return res.status(404).json({ message: "Class not found" });
 
     // ✅ ป้องกัน amount ติดลบ
-    yogaClass.amount = Math.max(0, yogaClass.amount - 1);
+    yogaClass.amount = Math.max(0, (yogaClass.amount || 0) - 1);
 
     // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
     const fullName = reservation.user_id.first_name;
@@ -153,9 +153,79 @@ exports.getAllReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find()
       .populate("class_id", "title start_date end_date instructor")
-      .populate("user_id", "fist_name last_name");
+      .populate("user_id", "first_name")
+      .sort({ createdAt: -1 }); // Sort by createdAt in descending order
     res.status(200).json({ reservations });
   } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Add this new function to your reservationController.js file
+
+// ยกเลิกการจองโดยใช้ ID โดยตรง (สำหรับการดูแลระบบ)
+exports.cancelReservationById = async (req, res) => {
+  try {
+    const { reservation_id } = req.params;
+
+    // 🔍 ดึงข้อมูลการจอง พร้อมข้อมูล user และ class
+    const reservation = await Reservation.findById(reservation_id)
+      .populate("user_id")
+      .populate("class_id");
+
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
+
+    // 🔍 ตรวจสอบว่าคลาสยังมีอยู่หรือไม่
+    const yogaClass = await Class.findById(reservation.class_id._id);
+    if (!yogaClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    // ✅ ลดจำนวนผู้เข้าร่วมในคลาส
+    // ป้องกันการเกิด NaN โดยใช้การตรวจสอบค่า
+    let currentAmount = yogaClass.amount || 0;
+    yogaClass.amount = Math.max(0, currentAmount - 1);
+
+    // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
+    const userName = reservation.user_id.first_name;
+
+    // ป้องกันกรณี participants ไม่ใช่ array
+    if (!Array.isArray(yogaClass.participants)) {
+      yogaClass.participants = [];
+    } else {
+      yogaClass.participants = yogaClass.participants.filter(
+        (participant) => participant !== userName
+      );
+    }
+
+    // บันทึกการเปลี่ยนแปลงของคลาส
+    await yogaClass.save();
+
+    // ✅ เพิ่ม session ให้ user
+    const user = await User.findById(reservation.user_id._id);
+    if (user) {
+      // เพิ่มจำนวนคลาสที่ยังเหลืออยู่
+      const currentRemaining = user.remaining_session || 0;
+      user.remaining_session = currentRemaining + 1;
+      await user.save();
+    }
+
+    // ✅ เปลี่ยนสถานะการจอง
+    reservation.status = "Cancelled";
+    await reservation.save();
+
+    res.status(200).json({
+      message: "Reservation cancelled successfully",
+      data: {
+        reservation: reservation,
+        class: yogaClass,
+        user: user,
+      },
+    });
+  } catch (error) {
+    console.error("Error cancelling reservation:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

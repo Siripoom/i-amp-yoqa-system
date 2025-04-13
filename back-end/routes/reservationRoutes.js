@@ -16,6 +16,12 @@ router.delete(
   reservationController.cancelReservation
 );
 
+// DELETE: ยกเลิกการจองคลาส (สำหรับผู้ดูแลระบบ)
+router.delete(
+  "/admin/cancel/:reservation_id",
+  reservationController.cancelReservationById
+);
+
 //get all
 router.get("/reserve", reservationController.getAllReservations);
 module.exports = router;

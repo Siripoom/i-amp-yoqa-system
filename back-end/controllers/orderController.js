@@ -14,12 +14,19 @@ const upload = multer({ storage: storage });
 // สร้างคำสั่งซื้อใหม่พร้อมอัปโหลดรูปภาพไปยัง Supabase
 exports.createOrder = async (req, res) => {
   try {
-    const { user_id, product_id } = req.body;
+    const { user_id, product_id, quantity } = req.body;
 
+    // Validate required fields
     if (!user_id || !product_id) {
       return res
         .status(400)
         .json({ message: "User ID and Product ID are required." });
+    }
+
+    // Parse quantity (default to 1 if not provided)
+    const orderQuantity = parseInt(quantity) || 1;
+    if (orderQuantity <= 0) {
+      return res.status(400).json({ message: "Quantity must be at least 1." });
     }
 
     let imageUrl = null;
@@ -46,34 +53,27 @@ exports.createOrder = async (req, res) => {
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
-    // สร้างข้อมูลคำสั่งซื้อ
-    const order = new Order({
-      user_id,
-      product_id,
-      image: imageUrl,
-      status: "รออนุมัติ", // ตั้งค่าเริ่มต้นเป็น "รออนุมัติ"
-    });
-
-    await order.save();
-
-    // ค้นหา product
+    // Find the product to get details
     const product = await Product.findById(product_id);
     if (!product) {
       return res.status(404).json({ message: "Product not found." });
     }
 
-    // // ค้นหา user
-    // const user = await User.findById(user_id);
-    // if (!user) {
-    //   return res.status(404).json({ message: "User not found" });
-    // }
+    // Store the original product values and quantity info in the order
+    const order = new Order({
+      user_id,
+      product_id,
+      image: imageUrl,
+      status: "รออนุมัติ", // ตั้งค่าเริ่มต้นเป็น "รออนุมัติ"
+      quantity: orderQuantity, // Store the quantity in the order
+      // Store the calculated total values based on quantity
+      total_sessions: product.sessions * orderQuantity,
+      total_duration: product.duration * orderQuantity,
+      unit_price: product.price,
+      total_price: product.price * orderQuantity,
+    });
 
-    // // อัปเดต remaining_session ของ user หลังการสั่งซื้อ
-    // const updatedUser = await User.findByIdAndUpdate(
-    //   user_id,
-    //   { remaining_session: product.sessions + user.remaining_session },
-    //   { new: true }
-    // );
+    await order.save();
 
     res.status(201).json({
       status: "success",
