@@ -254,7 +254,7 @@ const UserPage = () => {
 
           <div className="user-filters mb-4">
             <Select
-              defaultValue="User ID"
+              defaultValue="User Name"
               style={{ width: 150, marginRight: 10 }}
             >
               <Option value="User Name">User Name</Option>
@@ -272,7 +272,7 @@ const UserPage = () => {
             dataSource={users.filter((user) =>
               user.first_name?.toLowerCase().includes(searchText)
             )}
-            pagination={{ position: ["bottomCenter"], pageSize: 5 }}
+            pagination={{ position: ["bottomCenter"], pageSize: 10 }}
             rowKey="_id"
           />
 

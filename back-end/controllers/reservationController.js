@@ -53,7 +53,7 @@ exports.createReservation = async (req, res) => {
       ) {
         const newExpiryDate = new Date();
         newExpiryDate.setDate(
-          newExpiryDate.getDate() + latestOrder.product_id.duration
+          newExpiryDate.getDate() + latestOrder.total_duration
         );
         user.sessions_expiry_date = newExpiryDate;
       }

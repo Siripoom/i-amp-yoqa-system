@@ -39,6 +39,7 @@ const OrderPage = () => {
         setOrders(response); // ✅ ใช้ response เฉพาะกรณีเป็น Array
       } else if (response.data && Array.isArray(response.data)) {
         setOrders(response.data); // ✅ ดึง `orders` จาก Response
+        console.log(response.data); // ✅ แสดงข้อมูลใน Console
       } else {
         setOrders([]); // ✅ ป้องกัน `undefined`
       }
@@ -122,7 +123,7 @@ const OrderPage = () => {
       title: "USER",
       dataIndex: "user_id",
       key: "user_id",
-      render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+      render: (user) => (user ? `${user.first_name} ` : "N/A"),
     },
     {
       title: "PRODUCT",
@@ -135,6 +136,25 @@ const OrderPage = () => {
       dataIndex: "product_id",
       key: "price",
       render: (product) => (product ? `${product.price} THB` : "N/A"),
+    },
+    {
+      title: "QUANTITY",
+      dataIndex: "quantity",
+      key: "quantity",
+      render: (quantity) => quantity || 1,
+    },
+    {
+      title: "TOTAL PRICE (THB)",
+      key: "total_price",
+      render: (record) => {
+        // ใช้ total_price จาก order ถ้ามี หรือคำนวณจาก product.price × quantity
+        const totalPrice =
+          record.total_price ||
+          (record.product_id &&
+            (record.quantity || 1) * record.product_id.price);
+
+        return totalPrice ? `${totalPrice} THB` : "N/A";
+      },
     },
     {
       title: "STATUS",
@@ -181,7 +201,7 @@ const OrderPage = () => {
           <Table
             columns={columns}
             dataSource={orders || []} // ✅ ป้องกันกรณี `orders` เป็น `undefined`
-            pagination={{ position: ["bottomCenter"], pageSize: 5 }}
+            pagination={{ position: ["bottomCenter"], pageSize: 10 }}
             rowKey="_id"
             loading={loading}
           />

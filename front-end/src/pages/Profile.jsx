@@ -53,8 +53,8 @@ const Profile = () => {
   const formatExpiryDate = (date) => {
     if (!date) return "Not set";
 
-    const expiryDate = moment(date);
-    const now = moment();
+    const expiryDate = moment(date).endOf("day");
+    const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
       return "Expired";
@@ -67,8 +67,8 @@ const Profile = () => {
   const getDaysLeft = (date) => {
     if (!date) return null;
 
-    const expiryDate = moment(date);
-    const now = moment();
+    const expiryDate = moment(date).endOf("day");
+    const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
       return 0;
@@ -102,8 +102,8 @@ const Profile = () => {
       return <Tag color="green">Active</Tag>;
     }
 
-    const expiryDate = moment(sessions_expiry_date);
-    const now = moment();
+    const expiryDate = moment(sessions_expiry_date).endOf("day");
+    const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
       return <Tag color="red">Expired</Tag>;
@@ -135,7 +135,9 @@ const Profile = () => {
               >
                 My Profile
               </Link>
-
+              <Link to="/my-plane" className="text-gray-400 block">
+                My Plane
+              </Link>
               <Link to="/my-orders" className="text-gray-400 block">
                 My Orders
               </Link>
@@ -161,7 +163,7 @@ const Profile = () => {
                 <Row gutter={24}>
                   <Col xs={24} md={12}>
                     <Statistic
-                      title="จำนวนครั้งคงเหลือ (Remaining Session)"
+                      title="Remaining Sessions"
                       value={user.remaining_session || 0}
                       prefix={<HourglassOutlined />}
                       valueStyle={{
@@ -172,7 +174,7 @@ const Profile = () => {
                   </Col>
                   <Col xs={24} md={12}>
                     <Statistic
-                      title="วันหมดอายุ (Expiry Date)"
+                      title="Expiration"
                       value={formatExpiryDate(user.sessions_expiry_date)}
                       prefix={<CalendarOutlined />}
                       valueStyle={{
@@ -196,10 +198,12 @@ const Profile = () => {
 
                 {/* Display expiration alerts */}
                 {user.sessions_expiry_date &&
-                  moment(user.sessions_expiry_date).diff(moment(), "days") <=
-                    7 &&
-                  moment(user.sessions_expiry_date).diff(moment(), "days") >
-                    0 && (
+                  moment(user.sessions_expiry_date)
+                    .endOf("day")
+                    .diff(moment().startOf("day"), "days") <= 7 &&
+                  moment(user.sessions_expiry_date)
+                    .endOf("day")
+                    .diff(moment().startOf("day"), "days") > 0 && (
                     <Alert
                       message="Expiration Warning"
                       description="Your sessions will expire soon. Please consider purchasing a new package."
@@ -210,7 +214,9 @@ const Profile = () => {
                   )}
 
                 {user.sessions_expiry_date &&
-                  moment(user.sessions_expiry_date).isBefore(moment()) && (
+                  moment(user.sessions_expiry_date)
+                    .endOf("day")
+                    .isBefore(moment().startOf("day")) && (
                     <Alert
                       message="Sessions Expired"
                       description="Your sessions have expired. Please purchase a new package to continue booking classes."
