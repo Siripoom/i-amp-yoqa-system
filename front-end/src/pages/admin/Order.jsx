@@ -8,11 +8,23 @@ import {
   Select,
   message,
   Input,
+  Form,
+  Row,
+  Col,
+  Upload,
+  Divider,
 } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import orderService from "../../services/orderService";
+import { getUsers } from "../../services/userService";
+import { getProducts } from "../../services/productService";
 import "../../styles/Order.css";
 
 const { Sider, Content } = Layout;
@@ -25,9 +37,16 @@ const OrderPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null); // คำสั่งซื้อที่เลือก
   const [newStatus, setNewStatus] = useState(""); // สถานะใหม่ที่เลือก
   const [newInvoice, setNewInvoice] = useState(""); // สถานะใหม่ที่เลือก
+  const [createOrderModalVisible, setCreateOrderModalVisible] = useState(false);
+  const [createOrderForm] = Form.useForm();
+  const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [createOrderLoading, setCreateOrderLoading] = useState(false);
 
   useEffect(() => {
     fetchOrders();
+    fetchUsers();
+    fetchProducts();
   }, []);
 
   const fetchOrders = async () => {
@@ -48,6 +67,28 @@ const OrderPage = () => {
       setOrders([]); // ✅ ป้องกันข้อผิดพลาด
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getUsers();
+      if (response.status === "success") {
+        setUsers(response.users);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const response = await getProducts();
+      if (response.status === "success") {
+        setProducts(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
     }
   };
 
@@ -108,6 +149,37 @@ const OrderPage = () => {
         {correctedStatus}
       </Tag>
     );
+  };
+
+  // Handle opening create order modal
+  const showCreateOrderModal = () => {
+    createOrderForm.resetFields();
+    setCreateOrderModalVisible(true);
+  };
+
+  // Handle creating a new order
+  const handleCreateOrder = async (values) => {
+    setCreateOrderLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("user_id", values.user_id);
+      formData.append("product_id", values.product_id);
+      formData.append("quantity", values.quantity || 1);
+
+      if (values.image && values.image.file) {
+        formData.append("image", values.image.file.originFileObj);
+      }
+
+      await orderService.createOrder(formData);
+      message.success("Order created successfully");
+      fetchOrders();
+      setCreateOrderModalVisible(false);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      message.error("Failed to create order");
+    } finally {
+      setCreateOrderLoading(false);
+    }
   };
 
   // ✅ คอลัมน์ของตาราง
@@ -195,6 +267,14 @@ const OrderPage = () => {
         <Content className="order-container">
           <div className="order-header">
             <h2>Orders</h2>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={showCreateOrderModal}
+              className="create-order-button"
+            >
+              Create Order
+            </Button>
           </div>
 
           {/* ตารางแสดงคำสั่งซื้อ */}
@@ -278,6 +358,94 @@ const OrderPage = () => {
                 </div>
               </div>
             )}
+          </Modal>
+
+          {/* Modal สร้างคำสั่งซื้อใหม่ */}
+          <Modal
+            title="Create New Order"
+            visible={createOrderModalVisible}
+            onCancel={() => setCreateOrderModalVisible(false)}
+            footer={null}
+            width={700}
+          >
+            <Form
+              form={createOrderForm}
+              layout="vertical"
+              onFinish={handleCreateOrder}
+            >
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="user_id"
+                    label="Select User"
+                    rules={[
+                      { required: true, message: "Please select a user" },
+                    ]}
+                  >
+                    <Select placeholder="Select a user">
+                      {users.map((user) => (
+                        <Option key={user._id} value={user._id}>
+                          {user.first_name} {user.last_name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="product_id"
+                    label="Select Product"
+                    rules={[
+                      { required: true, message: "Please select a product" },
+                    ]}
+                  >
+                    <Select placeholder="Select a product">
+                      {products.map((product) => (
+                        <Option key={product._id} value={product._id}>
+                          {product.sessions} Sessions - {product.price} THB
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item name="quantity" label="Quantity" initialValue={1}>
+                <Input type="number" min={1} />
+              </Form.Item>
+
+              <Form.Item
+                name="image"
+                label="Payment Slip (Optional)"
+                valuePropName="file"
+              >
+                <Upload
+                  listType="picture"
+                  maxCount={1}
+                  beforeUpload={() => false}
+                >
+                  <Button icon={<UploadOutlined />}>Upload Payment Slip</Button>
+                </Upload>
+              </Form.Item>
+
+              <Divider />
+
+              <div style={{ textAlign: "right" }}>
+                <Button
+                  style={{ marginRight: 8 }}
+                  onClick={() => setCreateOrderModalVisible(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={createOrderLoading}
+                >
+                  Create Order
+                </Button>
+              </div>
+            </Form>
           </Modal>
         </Content>
       </Layout>
