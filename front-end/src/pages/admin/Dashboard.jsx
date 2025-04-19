@@ -5,6 +5,8 @@ import {
   ShoppingCartOutlined,
   CheckOutlined,
   UserOutlined,
+  DownloadOutlined,
+  ExportOutlined,
 } from "@ant-design/icons";
 import { Bar } from "react-chartjs-2";
 import Sidebar from "../../components/Sidebar";
@@ -41,24 +43,27 @@ const Dashboard = () => {
   const [totalSales, setTotalSales] = useState(0); // เก็บยอดขายรวมทั้งหมด
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
     fetchOrders();
     fetchCourses();
   }, []);
+
   const fetchCourses = async () => {
     try {
       const response = await getCourses();
       if (response.status === "success") {
         setCourses(response.courses);
       } else {
-        message.error("Failed to fetch users.");
+        message.error("Failed to fetch courses.");
       }
     } catch (error) {
-      message.error(`Failed to fetch users: ${error.message}`);
+      message.error(`Failed to fetch courses: ${error.message}`);
     }
   };
+
   const fetchUsers = async () => {
     try {
       const response = await getUsers();
@@ -71,13 +76,14 @@ const Dashboard = () => {
       message.error(`Failed to fetch users: ${error.message}`);
     }
   };
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const response = await orderService.getAllOrders();
 
       if (response.status === "success") {
-        setOrders(response); // ✅ ดึงคำสั่งซื้อ
+        setOrders(response.data); // ✅ ดึงคำสั่งซื้อ
 
         // ✅ คำนวณผลรวมของราคาสินค้าทั้งหมด
         const total = response.data.reduce((sum, order) => {
@@ -94,17 +100,94 @@ const Dashboard = () => {
     }
   };
 
-  const productsData = [
-    { name: "Home Decor", popularity: 45, sales: 45, color: "#3b82f6" },
-    {
-      name: "Disney Princess Pink",
-      popularity: 29,
-      sales: 29,
-      color: "#10b981",
-    },
-    { name: "Bathroom", popularity: 18, sales: 18, color: "#a855f7" },
-    { name: "Apple", popularity: 25, sales: 25, color: "#f97316" },
-  ];
+  // ฟังก์ชันสำหรับส่งออกข้อมูลเป็น CSV
+  const exportDashboardToCSV = () => {
+    try {
+      setExportLoading(true);
+
+      // สร้างข้อมูลสำหรับส่งออก
+      const dashboardData = {
+        totalSales,
+        orders,
+        courses,
+        users,
+      };
+
+      if (!dashboardData.orders || dashboardData.orders.length === 0) {
+        message.error("ไม่มีข้อมูลที่จะส่งออก");
+        return;
+      }
+
+      // ข้อมูลสรุปยอดขาย
+      const summary = {
+        totalSales: dashboardData.totalSales || 0,
+        totalOrders: dashboardData.orders.length || 0,
+        totalProducts: dashboardData.courses?.length || 0,
+        totalUsers: dashboardData.users?.length || 0,
+      };
+
+      // สร้างเนื้อหา CSV
+      let csvContent = "DASHBOARD SUMMARY\n";
+      csvContent +=
+        "Total Sales (THB),Total Orders,Total Products,Total Users\n";
+      csvContent += `${summary.totalSales},${summary.totalOrders},${summary.totalProducts},${summary.totalUsers}\n\n`;
+
+      // เพิ่มข้อมูลคำสั่งซื้อ
+      csvContent += "ORDER DETAILS\n";
+      csvContent += "Order ID,User,Product,Price,Status,Order Date\n";
+
+      dashboardData.orders.forEach((order) => {
+        const orderId = order._id || "N/A";
+        const user = order.user_id
+          ? `${order.user_id.first_name || ""} ${
+              order.user_id.last_name || ""
+            }`.trim()
+          : "N/A";
+        const product = order.product_id
+          ? `Session: ${order.product_id.sessions || "N/A"}`
+          : "N/A";
+        const price = order.product_id ? order.product_id.price || 0 : 0;
+        const status = order.status || "N/A";
+        const orderDate = order.order_date
+          ? new Date(order.order_date).toLocaleDateString()
+          : "N/A";
+
+        csvContent += `${orderId},${user.replace(/,/g, ";")},${product.replace(
+          /,/g,
+          ";"
+        )},${price},${status.replace(/,/g, ";")},${orderDate}\n`;
+      });
+
+      // สร้าง blob สำหรับไฟล์ CSV
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+      // สร้าง URL สำหรับดาวน์โหลด
+      const url = window.URL.createObjectURL(blob);
+
+      // สร้าง element a สำหรับดาวน์โหลด
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `dashboard_report_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      document.body.appendChild(link);
+
+      // คลิกลิงก์เพื่อดาวน์โหลด
+      link.click();
+
+      // ลบลิงก์ออกจาก DOM
+      document.body.removeChild(link);
+
+      // แสดงข้อความสำเร็จ
+      message.success("ส่งออกข้อมูลแดชบอร์ดเรียบร้อยแล้ว");
+    } catch (error) {
+      console.error("Error exporting dashboard data:", error);
+      message.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const revenueDataOptions = {
     weekly: {
@@ -181,22 +264,6 @@ const Dashboard = () => {
     },
   };
 
-  const coursesData = [
-    { name: "UI Design", popularity: 50, sales: 50, color: "#3498db" },
-    { name: "React Basics", popularity: 30, sales: 30, color: "#2ecc71" },
-    {
-      name: "Advanced JavaScript",
-      popularity: 20,
-      sales: 20,
-      color: "#9b59b6",
-    },
-    {
-      name: "Python for Data Science",
-      popularity: 15,
-      sales: 15,
-      color: "#e67e22",
-    },
-  ];
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
       {/* Sidebar */}
@@ -216,7 +283,16 @@ const Dashboard = () => {
                 </h3>
                 <p className="text-gray-500">Sales Summary</p>
               </div>
-              <Button className="export-button">Export</Button>
+              <div>
+                <Button
+                  className="export-button mr-2"
+                  icon={<DownloadOutlined />}
+                  onClick={exportDashboardToCSV}
+                  loading={exportLoading}
+                >
+                  Export CSV
+                </Button>
+              </div>
             </div>
 
             <Row gutter={[16, 16]} className="w-full" justify="space-around">

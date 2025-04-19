@@ -20,6 +20,7 @@ import {
   Empty,
   DatePicker,
   Select,
+  message,
 } from "antd";
 import {
   SearchOutlined,
@@ -30,6 +31,8 @@ import {
   ClockCircleOutlined,
   EnvironmentOutlined,
   FilterOutlined,
+  DownloadOutlined,
+  FileExcelOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -168,6 +171,101 @@ const InstructorReport = () => {
     });
   };
 
+  // ฟังก์ชันสำหรับส่งออกข้อมูลเป็นไฟล์ CSV
+  const exportToCSV = (data, filename) => {
+    // กรณีไม่มีข้อมูล
+    if (!data || data.length === 0) {
+      message.error("ไม่มีข้อมูลที่จะส่งออก");
+      return;
+    }
+
+    // สร้างหัวข้อคอลัมน์ CSV
+    let csvContent = "ชื่อผู้สอน,จำนวนคลาส,จำนวนผู้เรียนทั้งหมด\n";
+
+    // เพิ่มข้อมูลแต่ละแถว
+    data.forEach((instructor) => {
+      // แทนที่ comma ใน string ด้วย semicolon เพื่อป้องกันปัญหา CSV format
+      const sanitizedName = instructor.name.replace(/,/g, ";");
+      csvContent += `${sanitizedName},${instructor.totalClasses},${instructor.totalStudents}\n`;
+    });
+
+    // สร้าง blob สำหรับไฟล์ CSV
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+    // สร้าง URL สำหรับดาวน์โหลด
+    const url = window.URL.createObjectURL(blob);
+
+    // สร้าง element a สำหรับดาวน์โหลด
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename || "instructor_report.csv");
+    document.body.appendChild(link);
+
+    // คลิกลิงก์เพื่อดาวน์โหลด
+    link.click();
+
+    // ลบลิงก์ออกจาก DOM
+    document.body.removeChild(link);
+
+    // แสดงข้อความสำเร็จ
+    message.success("ส่งออกข้อมูลเรียบร้อยแล้ว");
+  };
+
+  // ฟังก์ชันสำหรับส่งออกข้อมูลรายละเอียดของผู้สอนรายบุคคล
+  const exportInstructorDetailToCSV = (instructor, filename) => {
+    if (!instructor || !instructor.classes || instructor.classes.length === 0) {
+      message.error("ไม่มีข้อมูลที่จะส่งออก");
+      return;
+    }
+
+    // ใช้ filtered classes ถ้ามีการกรองตามเดือน
+    const classesToExport =
+      filteredClasses.length > 0 ? filteredClasses : instructor.classes;
+
+    // สร้างหัวข้อคอลัมน์ CSV
+    let csvContent =
+      "ชื่อผู้สอน,ชื่อคลาส,วันที่,เวลาเริ่ม,เวลาสิ้นสุด,จำนวนผู้เรียน,ห้องเรียน\n";
+
+    // เพิ่มข้อมูลแต่ละคลาส
+    classesToExport.forEach((classItem) => {
+      const sanitizedName = instructor.name.replace(/,/g, ";");
+      const sanitizedTitle = classItem.title.replace(/,/g, ";");
+      const date = moment(classItem.date).format("YYYY-MM-DD");
+      const startTime = moment(classItem.startTime).format("HH:mm");
+      const endTime = moment(classItem.endTime).format("HH:mm");
+      const roomNumber = classItem.roomNumber
+        ? classItem.roomNumber.replace(/,/g, ";")
+        : "N/A";
+
+      csvContent += `${sanitizedName},${sanitizedTitle},${date},${startTime},${endTime},${classItem.studentCount},${roomNumber}\n`;
+    });
+
+    // สร้าง blob สำหรับไฟล์ CSV
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+    // สร้าง URL สำหรับดาวน์โหลด
+    const url = window.URL.createObjectURL(blob);
+
+    // สร้าง element a สำหรับดาวน์โหลด
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      filename ||
+        `instructor_detail_${instructor.name.replace(/\s+/g, "_")}.csv`
+    );
+    document.body.appendChild(link);
+
+    // คลิกลิงก์เพื่อดาวน์โหลด
+    link.click();
+
+    // ลบลิงก์ออกจาก DOM
+    document.body.removeChild(link);
+
+    // แสดงข้อความสำเร็จ
+    message.success(`ส่งออกข้อมูลของ ${instructor.name} เรียบร้อยแล้ว`);
+  };
+
   const columns = [
     {
       title: "ชื่อผู้สอน",
@@ -261,13 +359,25 @@ const InstructorReport = () => {
               </Space>
             }
             extra={
-              <Input
-                placeholder="ค้นหาตามชื่อผู้สอน"
-                prefix={<SearchOutlined />}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 250 }}
-                allowClear
-              />
+              <Space>
+                <Input
+                  placeholder="ค้นหาตามชื่อผู้สอน"
+                  prefix={<SearchOutlined />}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  style={{ width: 250 }}
+                  allowClear
+                />
+                <Button
+                  type="primary"
+                  icon={<DownloadOutlined />}
+                  onClick={() =>
+                    exportToCSV(filteredData, "instructor_report.csv")
+                  }
+                  disabled={filteredData.length === 0}
+                >
+                  ส่งออก CSV
+                </Button>
+              </Space>
             }
           >
             {error ? (
@@ -339,6 +449,26 @@ const InstructorReport = () => {
                   type="default"
                 >
                   รีเซ็ตตัวกรอง
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<FileExcelOutlined />}
+                  onClick={() =>
+                    exportInstructorDetailToCSV(
+                      selectedInstructor,
+                      `instructor_detail_${selectedInstructor?.name.replace(
+                        /\s+/g,
+                        "_"
+                      )}${
+                        selectedMonth
+                          ? "_" + moment(selectedMonth).format("YYYY-MM")
+                          : ""
+                      }.csv`
+                    )
+                  }
+                  disabled={!selectedInstructor || filteredClasses.length === 0}
+                >
+                  ส่งออก CSV
                 </Button>
               </Space>
             }

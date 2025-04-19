@@ -59,6 +59,7 @@ const Home = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
+        className="w-full px-4 sm:px-6 lg:px-8"
       >
         <HeroSection />
       </motion.div>
@@ -69,11 +70,11 @@ const Home = () => {
         whileInView="visible"
         viewport={{ once: true }}
         variants={staggerVariant}
-        className="explore-more-section py-8"
+        className="explore-more-section py-8 px-4 sm:px-6 lg:px-8"
       >
         <motion.h2
           variants={fadeInVariant}
-          className="text-2xl font-bold text-center text-blue-900 mb-2"
+          className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-900 mb-2"
         >
           EXPLORE OUR PRODUCT
         </motion.h2>
@@ -83,21 +84,21 @@ const Home = () => {
         >
           Yoga
         </motion.p>
-        <div className="flex justify-center gap-6 flex-wrap px-4">
+        <div className="flex justify-center flex-wrap gap-3 sm:gap-4 md:gap-6">
           {loading ? (
             <p className="text-center text-gray-500">Loading products...</p>
           ) : products.length > 0 ? (
             products.map((product, index) => (
               <div
                 key={index}
-                className="w-40 h-52 bg-white rounded-lg shadow-md flex flex-col items-center justify-center p-4"
+                className="w-32 sm:w-36 md:w-40 h-40 sm:h-48 md:h-52 bg-white rounded-lg shadow-md flex flex-col items-center justify-center p-3 md:p-4 hover:shadow-lg transition-shadow duration-300"
               >
                 <img
                   src={product.image || image1}
                   alt="Product"
-                  className="w-full h-32 object-cover rounded-t-lg"
+                  className="w-full h-24 sm:h-28 md:h-32 object-cover rounded-t-lg"
                 />
-                <p className="mt-2 text-gray-700 font-semibold text-center">
+                <p className="mt-2 text-gray-700 font-semibold text-center text-xs sm:text-sm">
                   {product.sessions
                     ? `${product.sessions} sessions`
                     : "No session data"}
@@ -112,7 +113,7 @@ const Home = () => {
           <Link to="/course">
             <Button
               type="primary"
-              className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-300 px-6"
+              className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-2xl hover:bg-pink-300 text-sm sm:text-base"
             >
               View All Courses
             </Button>
@@ -126,34 +127,33 @@ const Home = () => {
         whileInView="visible"
         viewport={{ once: true }}
         variants={staggerVariant}
-        className="courses-section py-8"
+        className="courses-section py-8 px-4 sm:px-6 lg:px-8"
       >
         <motion.h2
           variants={fadeInVariant}
-          className="text-2xl font-bold text-center text-blue-900"
+          className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-900 mb-6"
         >
           COURSE
         </motion.h2>
         <motion.div
           variants={staggerVariant}
-          className="flex justify-center gap-4 px-4 mt-6"
+          className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6"
         >
           <motion.div
             variants={fadeInVariant}
-            className="w-2/3 h-auto rounded-lg shadow-md"
+            className="w-full md:w-2/3 h-auto rounded-lg shadow-md mb-4 md:mb-0"
           >
             <img
               src={courseShow}
               alt="courseShow"
-              className="rounded-lg shadow-lg"
+              className="rounded-lg shadow-lg w-full h-auto"
             />
           </motion.div>
           <motion.div
             variants={fadeInVariant}
-            className="w-1/4 h-auto bg-white rounded-lg shadow-md p-6"
+            className="w-full md:w-1/3 lg:w-1/4 h-auto bg-white rounded-lg shadow-md p-4 md:p-6"
           >
             {/* Benefits Section */}
-
             <h3 className="text-lg font-bold text-blue-900 mb-4">
               Why Learn Yoga?
             </h3>
@@ -168,7 +168,7 @@ const Home = () => {
               <Link to="/course">
                 <Button
                   type="primary"
-                  className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold py-2 rounded-full hover:bg-pink-300 px-6"
+                  className="bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full hover:bg-pink-300 text-sm sm:text-base"
                 >
                   Join Now
                 </Button>
