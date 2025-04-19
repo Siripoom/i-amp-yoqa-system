@@ -10,6 +10,7 @@ import {
 } from "antd";
 import { useState, useEffect } from "react";
 import moment from "moment";
+import "moment/locale/th"; // Import Thai locale
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
@@ -123,22 +124,30 @@ const Booking = () => {
     return true;
   };
 
-  // Format expiration date
+  // Format expiration date with Thai language and date format
   const formatExpiryDate = (date) => {
     if (!date) return null;
 
-    const expiryDate = moment(date);
-    const now = moment();
+    // Set moment to use Thai locale
+    moment.locale("th");
+
+    const expiryDate = moment(date).endOf("day");
+    const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
-      return <Tag color="red">Expired</Tag>;
+      return <Tag color="red">หมดอายุแล้ว</Tag>;
     }
 
     const daysLeft = expiryDate.diff(now, "days");
+
+    // Use Buddhist year (พ.ศ.) by adding 543 to the Christian year
+    const thaiDate =
+      moment(date).format("D MMMM") +
+      " " +
+      (parseInt(moment(date).format("YYYY")) + 543);
+
     const text =
-      daysLeft <= 7
-        ? `Expires in ${daysLeft} days`
-        : `Expires on ${expiryDate.format("DD MMM YYYY")}`;
+      daysLeft <= 7 ? `หมดอายุใน ${daysLeft} วัน` : `หมดอายุวันที่ ${thaiDate}`;
 
     return <Tag color={daysLeft <= 7 ? "warning" : "success"}>{text}</Tag>;
   };
@@ -398,7 +407,7 @@ const Booking = () => {
         <div className="w-full max-w-5xl p-8 rounded-2xl shadow-md bg-white">
           <div className="flex justify-between items-center mb-4">
             <Title level={3} className="text-purple-700 mb-0">
-              Class Booking
+              จองคลาสเรียน
             </Title>
           </div>
 
@@ -407,7 +416,7 @@ const Booking = () => {
             <div className="mb-6">
               <div className="flex items-center mb-2">
                 <Text>
-                  Sessions remaining:{" "}
+                  คลาสคงเหลือ:{" "}
                   <strong>{userInfo.remaining_session || 0}</strong>
                 </Text>
                 {userInfo.sessions_expiry_date && (
@@ -421,8 +430,8 @@ const Booking = () => {
                 moment(userInfo.sessions_expiry_date).isBefore(moment()) && (
                   <Alert
                     type="error"
-                    message="Your sessions have expired"
-                    description="You cannot book new classes until you purchase a new package."
+                    message="คลาสของคุณหมดอายุแล้ว"
+                    description="คุณไม่สามารถจองคลาสใหม่ได้จนกว่าจะซื้อแพ็คเกจใหม่"
                     showIcon
                   />
                 )}
@@ -433,10 +442,15 @@ const Booking = () => {
                   7 && (
                   <Alert
                     type="warning"
-                    message="Your sessions will expire soon"
-                    description={`Your sessions will expire on ${moment(
-                      userInfo.sessions_expiry_date
-                    ).format("MMMM Do YYYY")}.`}
+                    message="คลาสของคุณใกล้หมดอายุ"
+                    description={`คลาสของคุณจะหมดอายุในวันที่ ${
+                      moment(userInfo.sessions_expiry_date).format("D MMMM") +
+                      " " +
+                      (parseInt(
+                        moment(userInfo.sessions_expiry_date).format("YYYY")
+                      ) +
+                        543)
+                    }`}
                     showIcon
                   />
                 )}
@@ -444,8 +458,8 @@ const Booking = () => {
               {userInfo.remaining_session <= 0 && (
                 <Alert
                   type="warning"
-                  message="No remaining sessions"
-                  description="You have no sessions left. Please purchase a new package."
+                  message="ไม่มีคลาสเหลือ"
+                  description="คุณไม่มีคลาสคงเหลือ กรุณาซื้อแพ็คเกจใหม่"
                   showIcon
                 />
               )}
@@ -477,18 +491,25 @@ const Booking = () => {
                   <p>
                     <strong>ครูผู้สอน:</strong> {event.instructor}
                   </p>
-                  <p>
-                    <strong>🕒 เวลาเริ่มเรียน:</strong>{" "}
-                    {moment(event.date)
-                      .locale("th")
-                      .format("DD MMMM YYYY, HH:mm")}
-                  </p>
-                  <p>
-                    <strong>⏳ เวลาสิ้นสุด:</strong>{" "}
-                    {moment(event.endDate)
-                      .locale("th")
-                      .format("DD MMMM YYYY, HH:mm")}
-                  </p>
+                  <div className="mb-4 mt-4">
+                    <div className="bg-pink-100 p-4 rounded-lg shadow-sm">
+                      {/* แสดงเวลาในรูปแบบ เวลาเริ่ม - เวลาจบ */}
+                      <p className="text-xl font-bold text-purple-800 flex items-center justify-center mb-2">
+                        <span className="text-2xl mr-2">🕒</span>
+                        <span>
+                          {moment(event.date).format("HH:mm")} -{" "}
+                          {moment(event.endDate).format("HH:mm")} น.
+                        </span>
+                      </p>
+
+                      {/* แสดงวันที่ในรูปแบบไทย */}
+                      <p className="text-center text-pink-600 font-medium">
+                        วันที่{" "}
+                        {moment(event.date).locale("th").format("D MMMM ") +
+                          (parseInt(moment(event.date).format("YYYY")) + 543)}
+                      </p>
+                    </div>
+                  </div>
                   <p>
                     <strong>รายละเอียด:</strong> {event.description}
                   </p>
@@ -517,26 +538,26 @@ const Booking = () => {
                   {shouldShowDetails(event) && (
                     <>
                       <p>
-                        <strong>📌 Room Number:</strong>{" "}
+                        <strong>📌 ห้องเรียน:</strong>{" "}
                         <span className="text-purple-600">
                           {event.roomNumber}
                         </span>
                       </p>
                       <p>
-                        <strong>🔑 Passcode:</strong>{" "}
+                        <strong>🔑 รหัสผ่าน:</strong>{" "}
                         <span className="text-purple-600">
                           {event.passcode}
                         </span>
                       </p>
                       <p>
-                        <strong>🔗 Zoom Link:</strong>{" "}
+                        <strong>🔗 ลิงก์ Zoom:</strong>{" "}
                         <a
                           href={event.zoomLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 underline"
                         >
-                          Join Zoom Class
+                          เข้าร่วมคลาสผ่าน Zoom
                         </a>
                       </p>
                     </>
@@ -585,7 +606,7 @@ const Booking = () => {
                           onClick={() => handleReserveCourse(event.id)}
                           disabled={!canBookClasses()}
                         >
-                          Book now
+                          จองคลาสนี้
                         </Button>
                       </Tooltip>
                     ) : (

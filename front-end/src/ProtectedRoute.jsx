@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import PropTypes from "prop-types";
+import { message } from "antd";
 
 // Role-based protected route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -23,14 +24,25 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         if (tokenPayload.exp && tokenPayload.exp < currentTime) {
           // Token expired
           localStorage.removeItem("token");
+          localStorage.removeItem("username");
+          localStorage.removeItem("user_id");
+          localStorage.removeItem("role");
           setIsAuthenticated(false);
+          message.error("Your session has expired. Please log in again.");
         } else {
           setIsAuthenticated(true);
-          setUserRole(tokenPayload.role);
+          // Store the role in localStorage if not already there
+          if (tokenPayload.role && !localStorage.getItem("role")) {
+            localStorage.setItem("role", tokenPayload.role);
+          }
+          setUserRole(tokenPayload.role || localStorage.getItem("role"));
         }
       } catch (error) {
         console.error("Invalid token:", error);
         localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("role");
         setIsAuthenticated(false);
       }
     }
@@ -65,6 +77,7 @@ const AdminRoute = ({ children }) => (
 const MemberRoute = ({ children }) => (
   <ProtectedRoute allowedRoles={["Member", "Admin"]}>{children}</ProtectedRoute>
 );
+
 ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
   allowedRoles: PropTypes.arrayOf(PropTypes.string),
