@@ -34,86 +34,86 @@ const Booking = () => {
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("user_id");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [classResponse, reservationResponse, userResponse] =
-          await Promise.all([
-            classService.getAllClasses(),
-            userId
-              ? reservationService.getUserReservations(userId)
-              : Promise.resolve({ data: [] }),
-            userId ? getUserById(userId) : Promise.resolve(null),
-          ]);
+  // ฟังก์ชันสำหรับดึงข้อมูลคลาสและการจอง
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // ดึงข้อมูลคลาส การจอง และข้อมูลผู้ใช้พร้อมกัน
+      const [classResponse, reservationResponse, userResponse] =
+        await Promise.all([
+          classService.getAllClasses(),
+          userId
+            ? reservationService.getUserReservations(userId)
+            : Promise.resolve({ data: [] }),
+          userId ? getUserById(userId) : Promise.resolve(null),
+        ]);
 
-        if (userResponse && userResponse.user) {
-          setUserInfo(userResponse.user);
-        }
-
-        if (
-          !classResponse ||
-          !classResponse.data ||
-          !Array.isArray(classResponse.data)
-        ) {
-          console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้อง:", classResponse);
-          message.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส ❌");
-          return;
-        }
-
-        // Store all reservations
-        if (reservationResponse && reservationResponse.data) {
-          setReservations(reservationResponse.data);
-        }
-
-        // Create a Set of reserved class IDs
-        const reservedClassIds = new Set(
-          reservationResponse.data?.map((res) => res.class_id) || []
-        );
-
-        // Load reservations from LocalStorage
-        const reservedClassesInLocalStorage =
-          JSON.parse(localStorage.getItem("reservedClasses")) || [];
-
-        // Combine class_ids from API and LocalStorage
-        reservedClassesInLocalStorage.forEach((id) => reservedClassIds.add(id));
-
-        setEvents(
-          classResponse.data.map((event) => ({
-            id: event._id,
-            title: event.title,
-            date: new Date(event.start_time),
-            endDate: new Date(event.end_time),
-            instructor: event.instructor,
-            description: event.description,
-            difficulty: event.difficulty,
-            reserved: reservedClassIds.has(event._id),
-            zoomLink: event.zoom_link,
-            roomNumber: event.room_number,
-            passcode: event.passcode,
-            amount: event.amount,
-            color: event.color,
-            participants: event.participants,
-          }))
-        );
-      } catch (error) {
-        console.error("❌ Error fetching classes:", error);
-        message.error("ไม่สามารถโหลดข้อมูลคอร์สได้ ❌");
-      } finally {
-        setLoading(false);
+      if (userResponse && userResponse.user) {
+        setUserInfo(userResponse.user);
       }
-    };
 
+      if (
+        !classResponse ||
+        !classResponse.data ||
+        !Array.isArray(classResponse.data)
+      ) {
+        console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้อง:", classResponse);
+        message.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส ❌");
+        setLoading(false);
+        return;
+      }
+
+      // เก็บข้อมูลการจองทั้งหมด
+      if (reservationResponse && reservationResponse.data) {
+        setReservations(reservationResponse.data);
+      }
+
+      // สร้าง Set ของรหัสคลาสที่จองแล้ว (ใช้ข้อมูลจาก API เท่านั้น ไม่ใช้ LocalStorage)
+      const reservedClassIds = new Set(
+        reservationResponse.data?.map((res) => res.class_id) || []
+      );
+
+      // สร้างข้อมูลคลาสที่พร้อมแสดงผล
+      setEvents(
+        classResponse.data.map((event) => ({
+          id: event._id,
+          title: event.title,
+          date: new Date(event.start_time),
+          endDate: new Date(event.end_time),
+          instructor: event.instructor,
+          description: event.description,
+          difficulty: event.difficulty,
+          reserved: reservedClassIds.has(event._id), // ใช้ข้อมูลจาก API เท่านั้น
+          zoomLink: event.zoom_link,
+          roomNumber: event.room_number,
+          passcode: event.passcode,
+          amount: event.amount,
+          color: event.color,
+          participants: event.participants,
+        }))
+      );
+    } catch (error) {
+      console.error("❌ Error fetching classes:", error);
+      message.error("ไม่สามารถโหลดข้อมูลคอร์สได้ ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [userId]);
 
-  // Check if user can book classes
+  // ตรวจสอบว่าผู้ใช้สามารถจองคลาสได้หรือไม่
   const canBookClasses = () => {
     if (!userInfo) return false;
 
     const { remaining_session, sessions_expiry_date } = userInfo;
 
+    // ตรวจสอบจำนวนการใช้งานที่เหลือ
     if (remaining_session <= 0) return false;
 
+    // ตรวจสอบวันหมดอายุ
     if (
       sessions_expiry_date &&
       moment(sessions_expiry_date).isBefore(moment())
@@ -124,11 +124,11 @@ const Booking = () => {
     return true;
   };
 
-  // Format expiration date with Thai language and date format
+  // แสดงวันหมดอายุแบบภาษาไทย
   const formatExpiryDate = (date) => {
     if (!date) return null;
 
-    // Set moment to use Thai locale
+    // ตั้งค่า moment ให้ใช้ภาษาไทย
     moment.locale("th");
 
     const expiryDate = moment(date).endOf("day");
@@ -140,7 +140,7 @@ const Booking = () => {
 
     const daysLeft = expiryDate.diff(now, "days");
 
-    // Use Buddhist year (พ.ศ.) by adding 543 to the Christian year
+    // ใช้ปี พ.ศ. โดยเพิ่ม 543 เข้าไปในปี ค.ศ.
     const thaiDate =
       moment(date).format("D MMMM") +
       " " +
@@ -152,7 +152,7 @@ const Booking = () => {
     return <Tag color={daysLeft <= 7 ? "warning" : "success"}>{text}</Tag>;
   };
 
-  // Show restrictions info
+  // แสดงข้อมูลคลาสที่เหลืออยู่
   const showSessionsInfo = () => {
     if (!userInfo) return null;
 
@@ -199,14 +199,14 @@ const Booking = () => {
     });
   };
 
-  // Handle reserve course
+  // จองคอร์ส
   const handleReserveCourse = async (classId) => {
     if (!userId) {
       message.error("กรุณาเข้าสู่ระบบก่อนทำการจอง ❌");
       return;
     }
 
-    // Check if user can book
+    // ตรวจสอบว่าสามารถจองได้หรือไม่
     if (!canBookClasses()) {
       if (
         userInfo?.sessions_expiry_date &&
@@ -232,7 +232,7 @@ const Booking = () => {
       );
 
       if (response) {
-        // Update events
+        // อัปเดตสถานะคลาส
         setEvents((prevEvents) =>
           prevEvents.map((event) =>
             event.id === classId
@@ -246,15 +246,7 @@ const Booking = () => {
           )
         );
 
-        // Update localStorage
-        const reservedClassIds =
-          JSON.parse(localStorage.getItem("reservedClasses")) || [];
-        localStorage.setItem(
-          "reservedClasses",
-          JSON.stringify([...reservedClassIds, classId])
-        );
-
-        // Update reservations state
+        // อัปเดตสถานะการจอง
         setReservations((prev) => [
           ...prev,
           {
@@ -264,7 +256,7 @@ const Booking = () => {
           },
         ]);
 
-        // Refresh user info to get updated session count and expiry date
+        // รีเฟรชข้อมูลผู้ใช้เพื่อปรับปรุงจำนวนคลาสที่เหลือและวันหมดอายุ
         const userResponse = await getUserById(userId);
         if (userResponse && userResponse.user) {
           setUserInfo(userResponse.user);
@@ -278,7 +270,7 @@ const Booking = () => {
     } catch (error) {
       console.error("Error reserving class:", error);
 
-      // More specific error messages
+      // แสดงข้อความแจ้งเตือนที่เฉพาะเจาะจง
       if (error.message && error.message.includes("expired")) {
         message.error("❌ คลาสของคุณหมดอายุแล้ว กรุณาซื้อโปรโมชั่นใหม่");
       } else if (error.message && error.message.includes("session")) {
@@ -289,13 +281,14 @@ const Booking = () => {
     }
   };
 
-  // ✅ Handle cancel reservation
+  // ยกเลิกการจอง
   const handleCancelReservation = async (classStartTime, classId) => {
     const token = localStorage.getItem("token");
     const decoded = jwtDecode(token);
     const fullName = `${decoded.first_name} ${decoded.last_name}`;
 
     try {
+      // ดึงข้อมูลการจองจาก API
       const response = await reservationService.getUserReservations(
         decoded.userId
       );
@@ -307,6 +300,7 @@ const Booking = () => {
         fiveMinutesBeforeClass.getMinutes() - 5
       );
 
+      // ตรวจสอบว่าสามารถยกเลิกการจองได้หรือไม่ (ก่อนเวลาเริ่มคลาส 5 นาที)
       if (now >= fiveMinutesBeforeClass) {
         Modal.error({
           title: "จองคลาสได้ตลอด",
@@ -316,6 +310,7 @@ const Booking = () => {
         return;
       }
 
+      // หา reservation ที่ต้องการยกเลิก
       const reservation = reservations.find(
         (res) =>
           res.class_id &&
@@ -328,9 +323,10 @@ const Booking = () => {
         return;
       }
 
+      // ส่งคำขอยกเลิกการจองไปยัง API
       await reservationService.cancelReservation(reservation._id);
 
-      // Update events state
+      // อัปเดตสถานะคลาส
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
           event.id === classId
@@ -346,23 +342,15 @@ const Booking = () => {
         )
       );
 
-      // Update localStorage
-      const reservedClassIds =
-        JSON.parse(localStorage.getItem("reservedClasses")) || [];
-      localStorage.setItem(
-        "reservedClasses",
-        JSON.stringify(reservedClassIds.filter((id) => id !== classId))
-      );
-
-      // Update reservations state
+      // อัปเดตสถานะการจอง
       setReservations((prev) =>
         prev.filter((res) => res.class_id && res.class_id._id !== classId)
       );
 
-      // Remove class from detailed view
+      // ปิดรายละเอียดคลาสที่ถูกยกเลิก
       setShowDetails((prev) => prev.filter((id) => id !== classId));
 
-      // Refresh user info to get updated session count and expiry date
+      // รีเฟรชข้อมูลผู้ใช้
       const userResponse = await getUserById(userId);
       if (userResponse && userResponse.user) {
         setUserInfo(userResponse.user);
@@ -375,7 +363,7 @@ const Booking = () => {
     }
   };
 
-  // ✅ Check if cancellation is allowed (more than 5 minutes before class starts)
+  // ตรวจสอบว่าสามารถยกเลิกการจองได้หรือไม่
   const canCancelReservation = (classStartTime) => {
     const now = new Date();
     const fiveMinutesBeforeClass = new Date(classStartTime);
@@ -383,14 +371,14 @@ const Booking = () => {
     return now < fiveMinutesBeforeClass;
   };
 
-  // ✅ Show details when "Book now" is clicked
+  // แสดงรายละเอียดเมื่อคลิก "จองคลาสนี้"
   const handleShowDetails = (classId) => {
     setShowDetails((prev) =>
       prev.includes(classId) ? prev : [...prev, classId]
     );
   };
 
-  // ✅ Check if details should be shown
+  // ตรวจสอบว่าควรแสดงรายละเอียดหรือไม่
   const shouldShowDetails = (event) => {
     return event.reserved || showDetails.includes(event.id);
   };
@@ -412,7 +400,7 @@ const Booking = () => {
             </Title>
           </div>
 
-          {/* Expiration Status Banner */}
+          {/* แบนเนอร์แสดงสถานะการหมดอายุ */}
           {userInfo && (
             <div className="mb-6">
               <div className="flex items-center mb-2">
@@ -535,7 +523,7 @@ const Booking = () => {
                     </span>
                   </p>
 
-                  {/* Show details when booked or after clicking "Book now" */}
+                  {/* แสดงรายละเอียดเมื่อจองแล้วหรือหลังจากคลิก "จองคลาสนี้" */}
                   {shouldShowDetails(event) && (
                     <>
                       <p>
