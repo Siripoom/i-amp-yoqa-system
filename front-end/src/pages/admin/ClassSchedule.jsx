@@ -372,7 +372,7 @@ const Schedule = () => {
       .map((reservation, index) => {
         const classInfo = reservation.class_id;
         const userData = reservation.user_id || {};
-
+        
         // Use optional chaining to safely access properties
         // Format dates only if the data exists
         const date =
@@ -422,7 +422,7 @@ const Schedule = () => {
     {
       title: "Time",
       key: "time",
-      render: (_, record) => `${record.startTime} - ${record.endTime}`,
+      render: (_, record) => `${record.start_time} - ${record.end_time}`,
     },
     {
       title: "Instructor",
