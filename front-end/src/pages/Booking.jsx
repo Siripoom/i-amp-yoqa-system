@@ -7,6 +7,7 @@ import {
   Tag,
   Tooltip,
   Alert,
+  Spin,
 } from "antd";
 import { useState, useEffect } from "react";
 import moment from "moment";
@@ -18,11 +19,13 @@ import reservationService from "../services/reservationService";
 import classService from "../services/classService";
 import { getUserById } from "../services/userService";
 import { jwtDecode } from "jwt-decode";
-import { InfoCircleOutlined } from "@ant-design/icons";
+import { InfoCircleOutlined, LoadingOutlined, LoginOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const Booking = () => {
+  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -35,21 +38,42 @@ const Booking = () => {
   const userId = localStorage.getItem("user_id");
 
   // ฟังก์ชันสำหรับดึงข้อมูลคลาสและการจอง
+  // ฟังก์ชันสำหรับดึงข้อมูลคลาสและการจอง
   const fetchData = async () => {
     try {
+      // ตรวจสอบว่ามี token หรือไม่
+      const token = localStorage.getItem("token");
+      if (!token || !userId) {
+        setEvents([]);
+        setReservations([]);
+        setUserInfo(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      
       // ดึงข้อมูลคลาส การจอง และข้อมูลผู้ใช้พร้อมกัน
       const [classResponse, reservationResponse, userResponse] =
         await Promise.all([
           classService.getAllClasses(),
-          userId
-            ? reservationService.getUserReservations(userId)
-            : Promise.resolve({ data: [] }),
-          userId ? getUserById(userId) : Promise.resolve(null),
+          reservationService.getUserReservations(userId),
+          getUserById(userId),
         ]);
+
+      // ตรวจสอบว่ายังมีการล็อกอินอยู่หรือไม่ (อาจมีการล็อกเอาท์ระหว่างรอ API)
+      if (!localStorage.getItem("token")) {
+        setEvents([]);
+        setReservations([]);
+        setUserInfo(null);
+        setLoading(false);
+        return;
+      }
 
       if (userResponse && userResponse.user) {
         setUserInfo(userResponse.user);
+      } else {
+        setUserInfo(null);
       }
 
       if (
@@ -64,13 +88,12 @@ const Booking = () => {
       }
 
       // เก็บข้อมูลการจองทั้งหมด
-      if (reservationResponse && reservationResponse.data) {
-        setReservations(reservationResponse.data);
-      }
+      const userReservations = reservationResponse?.data || [];
+      setReservations(userReservations);
 
-      // สร้าง Set ของรหัสคลาสที่จองแล้ว (ใช้ข้อมูลจาก API เท่านั้น ไม่ใช้ LocalStorage)
+      // สร้าง Set ของรหัสคลาสที่จองแล้ว (ใช้ข้อมูลจาก API เท่านั้น)
       const reservedClassIds = new Set(
-        reservationResponse.data?.map((res) => res.class_id) || []
+        userReservations.map((res) => res.class_id) || []
       );
 
       // สร้างข้อมูลคลาสที่พร้อมแสดงผล
@@ -100,8 +123,18 @@ const Booking = () => {
     }
   };
 
+  // ดึงข้อมูลเมื่อ component โหลดหรือ userId เปลี่ยน
   useEffect(() => {
-    fetchData();
+    if (userId) {
+      fetchData();
+    } else {
+      // เมื่อไม่มี userId (ล็อกเอาท์แล้ว) ให้รีเซ็ตข้อมูลทั้งหมด
+      setEvents([]);
+      setReservations([]);
+      setUserInfo(null);
+      setShowDetails([]);
+      setLoading(false);
+    }
   }, [userId]);
 
   // ตรวจสอบว่าผู้ใช้สามารถจองคลาสได้หรือไม่
@@ -461,9 +494,19 @@ const Booking = () => {
           </Text>
 
           {loading ? (
-            <p className="text-center text-gray-500">กำลังโหลดข้อมูลคอร์ส...</p>
+            <div className="text-center py-8">
+              <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
+              <p className="mt-2 text-gray-500">กำลังโหลดข้อมูลคอร์ส...</p>
+            </div>
+          ) : !userId ? (
+            <div className="text-center py-8 bg-gray-50 rounded-lg mt-4">
+              <p className="text-gray-500 mb-4">กรุณาเข้าสู่ระบบเพื่อดูและจองคลาส</p>
+              <Button type="primary" onClick={() => navigate("/auth/signin")}>
+                เข้าสู่ระบบ
+              </Button>
+            </div>
           ) : events.length === 0 ? (
-            <p className="text-center text-gray-500">
+            <p className="text-center text-gray-500 py-8">
               ไม่มีคอร์สที่สามารถจองได้
             </p>
           ) : (
