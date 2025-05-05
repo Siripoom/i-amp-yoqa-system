@@ -152,7 +152,7 @@ exports.cancelReservation = async (req, res) => {
 exports.getAllReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find()
-      .populate("class_id", "title start_date end_date instructor")
+      .populate("class_id", "title start_time end_time instructor")
       .populate("user_id", "first_name")
       .sort({ createdAt: -1 }); // Sort by createdAt in descending order
     res.status(200).json({ reservations });

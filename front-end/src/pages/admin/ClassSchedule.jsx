@@ -372,34 +372,31 @@ const Schedule = () => {
       .map((reservation, index) => {
         const classInfo = reservation.class_id;
         const userData = reservation.user_id || {};
-        
-        // Use optional chaining to safely access properties
-        // Format dates only if the data exists
-        const date =
-          classInfo && classInfo.start_time
-            ? moment(classInfo.start_time).format("YYYY-MM-DD")
-            : "N/A";
 
-        const startTime =
-          classInfo && classInfo.start_time
-            ? moment(classInfo.start_time).format("HH:mm")
-            : "N/A";
+        // Format date and time if class info exists
+        let date = "N/A";
+        let startTime = "N/A";
+        let endTime = "N/A";
 
-        const endTime =
-          classInfo && classInfo.end_time
-            ? moment(classInfo.end_time).format("HH:mm")
-            : "N/A";
+        if (classInfo && classInfo.start_time) {
+          date = moment(classInfo.start_time).format("YYYY-MM-DD");
+          startTime = moment(classInfo.start_time).format("HH:mm");
+        }
+
+        if (classInfo && classInfo.end_time) {
+          endTime = moment(classInfo.end_time).format("HH:mm");
+        }
 
         return {
           key: index,
           id: reservation._id,
-          className: classInfo?.title || "N/A",
+          className: classInfo ? classInfo.title : "N/A",
           date: date,
           startTime: startTime,
           endTime: endTime,
-          instructor: classInfo?.instructor || "N/A",
-          userName: userData?.first_name || "Unknown",
-          userId: userData?._id,
+          instructor: classInfo ? classInfo.instructor : "N/A",
+          userName: userData.first_name || "Unknown",
+          userId: userData._id,
           reservationId: reservation._id,
           status: reservation.status,
         };
@@ -417,12 +414,15 @@ const Schedule = () => {
       title: "Date",
       dataIndex: "date",
       key: "date",
-      sorter: (a, b) => moment(a.date).diff(moment(b.date)),
+      sorter: (a, b) => {
+        if (a.date === "N/A" || b.date === "N/A") return 0;
+        return moment(a.date).diff(moment(b.date));
+      },
     },
     {
       title: "Time",
       key: "time",
-      render: (_, record) => `${record.start_time} - ${record.end_time}`,
+      render: (_, record) => `${record.startTime} - ${record.endTime}`,
     },
     {
       title: "Instructor",
