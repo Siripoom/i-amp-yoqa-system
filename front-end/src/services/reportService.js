@@ -14,12 +14,5 @@ export const MasterReport = {
     return response.data;
   },
 
-  getUserReservationHistory: async (userId) => {
-    try {
-      const response = await axios.get(`${API_URL}/api/user/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response ? error.response.data : error;
-    }
-  },
+  
 };
