@@ -138,4 +138,33 @@ exports.getInstructorDetailReport = async (req, res) => {
       error: error.message,
     });
   }
+
+  // ฟังก์ชันสำหรับลบรายงานผู้สอน
+};
+exports.deleteInstructorReport = async (req, res) => {
+  try {
+    const instructorName = req.params.instructorName;
+
+    if (!instructorName) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุชื่อผู้สอน",
+      });
+    }
+
+    // ลบข้อมูลคลาสของผู้สอนที่ระบุ
+    await Class.deleteMany({ instructor: instructorName });
+
+    res.status(200).json({
+      success: true,
+      message: `ลบข้อมูลรายงานผู้สอน ${instructorName} สำเร็จ`,
+    });
+  } catch (error) {
+    console.error("Error deleting instructor report:", error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการลบรายงานผู้สอน",
+      error: error.message,
+    });
+  }
 };

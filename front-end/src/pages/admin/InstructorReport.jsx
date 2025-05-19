@@ -21,6 +21,7 @@ import {
   DatePicker,
   Select,
   message,
+  Popconfirm,
 } from "antd";
 import {
   SearchOutlined,
@@ -33,6 +34,7 @@ import {
   FilterOutlined,
   DownloadOutlined,
   FileExcelOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -55,6 +57,7 @@ const InstructorReport = () => {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [allClassesOfInstructor, setAllClassesOfInstructor] = useState([]);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchInstructorReport();
@@ -107,6 +110,30 @@ const InstructorReport = () => {
       setAllClassesOfInstructor([]);
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  // Function to delete instructor report
+  const handleDeleteInstructor = async (instructorName) => {
+    setDeleteLoading(true);
+    try {
+      const response = await MasterReport.deleteMasterReport(instructorName);
+      if (response.success) {
+        message.success(`ลบข้อมูลผู้สอน ${instructorName} สำเร็จ`);
+        fetchInstructorReport(); // Refresh the list
+        if (selectedInstructor && selectedInstructor.name === instructorName) {
+          setDrawerVisible(false); // Close drawer if currently viewing the deleted instructor
+        }
+      } else {
+        message.error(response.message || "ไม่สามารถลบข้อมูลผู้สอนได้");
+      }
+    } catch (err) {
+      console.error("Error deleting instructor:", err);
+      message.error(
+        "เกิดข้อผิดพลาดในการลบข้อมูลผู้สอน: " + (err.message || "Unknown error")
+      );
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -311,12 +338,26 @@ const InstructorReport = () => {
       ),
     },
     {
-      title: "ดูรายละเอียด",
+      title: "การดำเนินการ",
       key: "action",
       render: (_, record) => (
-        <Button type="primary" onClick={() => handleViewDetail(record)}>
-          ดูรายละเอียด
-        </Button>
+        <Space>
+          <Button type="primary" onClick={() => handleViewDetail(record)}>
+            ดูรายละเอียด
+          </Button>
+          <Popconfirm
+            title="ลบข้อมูลผู้สอน"
+            description={`คุณต้องการลบข้อมูลของ "${record.name}" ใช่หรือไม่? การดำเนินการนี้จะลบข้อมูลผู้สอนออกจากคลาสทั้งหมด`}
+            onConfirm={() => handleDeleteInstructor(record.name)}
+            okText="ใช่"
+            cancelText="ไม่"
+            okButtonProps={{ loading: deleteLoading }}
+          >
+            <Button type="primary" danger icon={<DeleteOutlined />}>
+              ลบข้อมูล
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -415,6 +456,20 @@ const InstructorReport = () => {
               <Space>
                 <UserOutlined />
                 <span>{selectedInstructor?.name}</span>
+                {selectedInstructor && (
+                  <Popconfirm
+                    title="ลบข้อมูลผู้สอน"
+                    description={`คุณต้องการลบข้อมูลของ "${selectedInstructor.name}" ใช่หรือไม่? การดำเนินการนี้จะลบข้อมูลผู้สอนออกจากคลาสทั้งหมด`}
+                    onConfirm={() => handleDeleteInstructor(selectedInstructor.name)}
+                    okText="ใช่"
+                    cancelText="ไม่"
+                    okButtonProps={{ loading: deleteLoading }}
+                  >
+                    <Button type="primary" danger icon={<DeleteOutlined />}>
+                      ลบข้อมูล
+                    </Button>
+                  </Popconfirm>
+                )}
               </Space>
             }
             placement="right"

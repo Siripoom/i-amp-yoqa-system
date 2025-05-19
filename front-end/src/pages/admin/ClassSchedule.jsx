@@ -74,7 +74,10 @@ const Schedule = () => {
       const classData = await classService.getAllClasses();
 
       const userData = await getUsers();
-      setUsers(userData.users);
+      const instructors = userData.users.filter(
+        (user) => user.role_id === "Instructor"
+      );
+      setUsers(instructors);
 
       const formattedEvents = classData.data.map((cls) => ({
         id: cls._id,

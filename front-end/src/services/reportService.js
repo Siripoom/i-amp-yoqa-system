@@ -13,6 +13,10 @@ export const MasterReport = {
     );
     return response.data;
   },
-
-  
+  deleteMasterReport: async (name) => {
+    const response = await axios.delete(
+      `${API_URL}/api/instructorReports/${name}`
+    );
+    return response.data;
+  },
 };

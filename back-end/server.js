@@ -48,5 +48,5 @@ app.use("/api", reservationRoutes);
 app.use("/api/qrCodes", qrCodeRoutes);
 app.use("/api/instructorReports", instructorReportRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

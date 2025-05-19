@@ -11,4 +11,10 @@ router.get(
   instructorReportController.getInstructorDetailReport
 );
 
+// Route สำหรับดลบรายงานผู้สอนตามชื่อ
+router.delete(
+  "/:instructorName",
+  instructorReportController.deleteInstructorReport
+);
+
 module.exports = router;

@@ -9,12 +9,19 @@ import {
   Modal,
   Input,
   Form,
+  Tabs,
+  Space,
+  Divider,
+  Typography,
+  Tooltip
 } from "antd";
 import {
   UploadOutlined,
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
+  VideoCameraOutlined,
+  InfoCircleOutlined
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -28,18 +35,29 @@ import {
 
 const { Sider, Content } = Layout;
 const { TextArea } = Input;
+const { TabPane } = Tabs;
+const { Title, Text } = Typography;
 
 const ImageSetup = () => {
   const [heroImages, setHeroImages] = useState([]);
   const [masterImages, setMasterImages] = useState([]);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingMaster, setUploadingMaster] = useState(false);
-  const [isHeroUpdateModalVisible, setIsHeroUpdateModalVisible] =
-    useState(false);
+  const [isHeroUpdateModalVisible, setIsHeroUpdateModalVisible] = useState(false);
   const [selectedHeroImage, setSelectedHeroImage] = useState(null);
 
-  const [masterName, setMasterName] = useState("");
+  const [masterFormData, setMasterFormData] = useState({
+    mastername: "",
+    bio: "",
+    specialization: "",
+    image: null,
+    video: null
+  });
+  
   const [selectedMasterImage, setSelectedMasterImage] = useState(null);
+  const [isMasterModalVisible, setIsMasterModalVisible] = useState(false);
+  const [isEditingMaster, setIsEditingMaster] = useState(false);
+  
   const [qrcodes, setQrcodes] = useState([]);
   const [uploadingQrcode, setUploadingQrcode] = useState(false);
   const [selectedQrcodeImage, setSelectedQrcodeImage] = useState(null);
@@ -57,10 +75,9 @@ const ImageSetup = () => {
     fetchHeroImages();
     fetchMasterImages();
     fetchQrcodeImages();
-    fetchClassCatalogs(); // Fetch class catalogs on component mount
+    fetchClassCatalogs();
   }, []);
 
-  // Fetch Class Catalogs from the API
   const fetchClassCatalogs = async () => {
     try {
       const response = await ImageCatalog.getImageCatalog();
@@ -119,8 +136,83 @@ const ImageSetup = () => {
     }
   };
 
-  // Handle Class Catalog Form Submit (Create/Update)
+  // Handle Master Form Submit (Create/Update)
+  const handleMasterFormSubmit = async () => {
+    setUploadingMaster(true);
+    const formData = new FormData();
+    
+    // Append form values to FormData
+    formData.append("mastername", masterFormData.mastername);
+    formData.append("bio", masterFormData.bio || "");
+    formData.append("specialization", masterFormData.specialization || "");
+    
+    // Append files if they exist
+    if (masterFormData.image) {
+      formData.append("image", masterFormData.image);
+    }
+    
+    if (masterFormData.video) {
+      formData.append("video", masterFormData.video);
+    }
+    
+    try {
+      if (isEditingMaster) {
+        // Update existing master
+        await MasterImage.updateMasterImage(selectedMasterImage._id, formData);
+        message.success("Master updated successfully");
+      } else {
+        // Create new master
+        await MasterImage.createMasterImage(formData);
+        message.success("Master created successfully");
+      }
+      
+      // Reset form and fetch updated data
+      setMasterFormData({
+        mastername: "",
+        bio: "",
+        specialization: "",
+        image: null,
+        video: null
+      });
+      fetchMasterImages();
+      setIsMasterModalVisible(false);
+    } catch (err) {
+      console.error("Error with master operation:", err);
+      message.error("Operation failed. Please check if all required fields are filled.");
+    } finally {
+      setUploadingMaster(false);
+    }
+  };
+  
+  // Open modal for creating a new master
+  const createMaster = () => {
+    setIsEditingMaster(false);
+    setSelectedMasterImage(null);
+    setMasterFormData({
+      mastername: "",
+      bio: "",
+      specialization: "",
+      image: null,
+      video: null
+    });
+    setIsMasterModalVisible(true);
+  };
+  
+  // Open modal for updating an existing master
+  const updateMaster = (record) => {
+    setIsEditingMaster(true);
+    setSelectedMasterImage(record);
+    setMasterFormData({
+      mastername: record.mastername || "",
+      bio: record.bio || "",
+      specialization: record.specialization || "",
+      image: null,
+      video: null
+    });
+    setIsMasterModalVisible(true);
+  };
 
+  // Handle Class Catalog Form Submit (Create/Update)
   const handleClassFormSubmit = async (values) => {
     setUploadingClass(true);
     const formData = new FormData();
@@ -153,14 +245,7 @@ const ImageSetup = () => {
       setIsClassModalVisible(false);
     } catch (err) {
       console.error("Error with class catalog operation:", err);
-      // Log more detailed error information
-      if (err.response) {
-        console.error("Response data:", err.response.data);
-        console.error("Response status:", err.response.status);
-      }
-      message.error(
-        "Operation failed. Please check if all required fields are filled."
-      );
+      message.error("Operation failed. Please check if all required fields are filled.");
     } finally {
       setUploadingClass(false);
     }
@@ -259,31 +344,35 @@ const ImageSetup = () => {
     }
   };
 
-  // Handle Master Image Upload (with mastername)
-  const handleMasterUpload = async (info) => {
-    setUploadingMaster(true);
-    const formData = new FormData();
-    formData.append("image", info.file);
-    formData.append("mastername", masterName);
-
+  // Delete Hero Image
+  const deleteHeroImage = async (id) => {
     try {
-      if (selectedMasterImage) {
-        await MasterImage.updateMasterImage(selectedMasterImage._id, formData);
-        message.success("Master image updated successfully");
-      } else {
-        await MasterImage.createMasterImage(formData);
-        message.success("Master image uploaded successfully");
-      }
-      fetchMasterImages();
-      setMasterName("");
+      await HeroImage.deleteHeroImage(id);
+      message.success("Hero image deleted");
+      fetchHeroImages();
     } catch (err) {
-      message.error("Master image upload failed");
-    } finally {
-      setUploadingMaster(false);
+      message.error("Delete failed");
     }
   };
 
-  // Columns for Class Catalog table
+  // Delete Master Image
+  const deleteMasterImage = async (id) => {
+    try {
+      await MasterImage.deleteMasterImage(id);
+      message.success("Master deleted successfully");
+      fetchMasterImages();
+    } catch (err) {
+      message.error("Delete failed");
+    }
+  };
+
+  // Update Hero Image (opens the modal)
+  const updateHeroImage = (record) => {
+    setSelectedHeroImage(record);
+    setIsHeroUpdateModalVisible(true);
+  };
+
+  // Columns for displaying images in the table
   const classCatalogColumns = [
     {
       title: "Class Name",
@@ -346,7 +435,7 @@ const ImageSetup = () => {
             Update
           </Button>
           <Button
-            type="danger"
+            danger
             icon={<DeleteOutlined />}
             onClick={() => onDelete(record._id)}
           >
@@ -357,7 +446,7 @@ const ImageSetup = () => {
     },
   ];
 
-  // Columns for displaying images in the table
+  // Columns for displaying hero images in the table
   const heroImageColumns = (onDelete, onUpdate) => [
     {
       title: "Preview",
@@ -378,7 +467,7 @@ const ImageSetup = () => {
             Update
           </Button>
           <Button
-            type="danger"
+            danger
             icon={<DeleteOutlined />}
             onClick={() => onDelete(record._id)}
           >
@@ -389,7 +478,8 @@ const ImageSetup = () => {
     },
   ];
 
-  const masterImageColumns = (onDelete, onUpdate) => [
+  // Columns for displaying master images in the table
+  const masterImageColumns = [
     {
       title: "Master Name",
       dataIndex: "mastername",
@@ -402,62 +492,53 @@ const ImageSetup = () => {
       render: (url) => <Image width={100} src={url} />,
     },
     {
+      title: "Video",
+      dataIndex: "video",
+      key: "video",
+      render: (url) => url ? (
+        <Button 
+          type="link" 
+          icon={<VideoCameraOutlined />}
+          onClick={() => window.open(url, '_blank')}
+        >
+          View Video
+        </Button>
+      ) : "No video",
+    },
+    {
+      title: "Biography",
+      dataIndex: "bio",
+      key: "bio",
+      ellipsis: true,
+    },
+    {
+      title: "Specialization",
+      dataIndex: "specialization",
+      key: "specialization",
+      ellipsis: true,
+    },
+    {
       title: "Action",
       key: "action",
       render: (record) => (
-        <>
+        <Space>
           <Button
             icon={<EditOutlined />}
-            onClick={() => onUpdate(record)}
-            style={{ marginRight: 8 }}
+            onClick={() => updateMaster(record)}
           >
-            Update
+            Edit
           </Button>
           <Button
             type="danger"
             icon={<DeleteOutlined />}
-            onClick={() => onDelete(record._id)}
+            onClick={() => deleteMasterImage(record._id)}
           >
             Delete
           </Button>
-        </>
+        </Space>
       ),
     },
   ];
-
-  // Delete Hero Image
-  const deleteHeroImage = async (id) => {
-    try {
-      await HeroImage.deleteHeroImage(id);
-      message.success("Hero image deleted");
-      fetchHeroImages();
-    } catch (err) {
-      message.error("Delete failed");
-    }
-  };
-
-  // Delete Master Image
-  const deleteMasterImage = async (id) => {
-    try {
-      await MasterImage.deleteMasterImage(id);
-      message.success("Master image deleted");
-      fetchMasterImages();
-    } catch (err) {
-      message.error("Delete failed");
-    }
-  };
-
-  // Update Hero Image (opens the modal)
-  const updateHeroImage = (record) => {
-    setSelectedHeroImage(record);
-    setIsHeroUpdateModalVisible(true);
-  };
-
-  // Update Master Image (opens the modal)
-  const updateMasterImage = (record) => {
-    setSelectedMasterImage(record);
-    setMasterName(record.mastername);
-  };
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
@@ -469,94 +550,99 @@ const ImageSetup = () => {
         <Header title="Image Setup" />
 
         <Content className="user-container">
-          {/* Hero Image Section */}
-          <div className="mb-6">
-            <h2>Hero Images</h2>
-            <Upload
-              customRequest={handleHeroUpload}
-              showUploadList={false}
-              accept="image/*"
-            >
-              <Button icon={<UploadOutlined />} loading={uploadingHero}>
-                Upload Hero Image
-              </Button>
-            </Upload>
+          <Tabs defaultActiveKey="1">
+            <TabPane tab="Hero Images" key="1">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2>Hero Images</h2>
+                  <Upload
+                    customRequest={handleHeroUpload}
+                    showUploadList={false}
+                    accept="image/*"
+                  >
+                    <Button icon={<UploadOutlined />} loading={uploadingHero}>
+                      Upload Hero Image
+                    </Button>
+                  </Upload>
+                </div>
 
-            <Table
-              dataSource={heroImages}
-              columns={heroImageColumns(deleteHeroImage, updateHeroImage)}
-              rowKey="_id"
-              style={{ marginTop: 16 }}
-            />
-          </div>
+                <Table
+                  dataSource={heroImages}
+                  columns={heroImageColumns(deleteHeroImage, updateHeroImage)}
+                  rowKey="_id"
+                  style={{ marginTop: 16 }}
+                />
+              </div>
+            </TabPane>
 
-          {/* Master Image Section */}
-          <div className="mb-6">
-            <h2>Master Images</h2>
-            <Input
-              value={masterName}
-              onChange={(e) => setMasterName(e.target.value)}
-              placeholder="Enter master name"
-              style={{ marginBottom: "10px" }}
-            />
-            <Upload
-              customRequest={handleMasterUpload}
-              showUploadList={false}
-              accept="image/*"
-            >
-              <Button icon={<UploadOutlined />} loading={uploadingMaster}>
-                Upload Master Image
-              </Button>
-            </Upload>
+            <TabPane tab="Master Profiles" key="2">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2>Master Profiles</h2>
+                  <Button 
+                    type="primary" 
+                    icon={<PlusOutlined />} 
+                    onClick={createMaster}
+                  >
+                    Add New Master
+                  </Button>
+                </div>
 
-            <Table
-              dataSource={masterImages}
-              columns={masterImageColumns(deleteMasterImage, updateMasterImage)}
-              rowKey="_id"
-              style={{ marginTop: 16 }}
-            />
-          </div>
+                <Table
+                  dataSource={masterImages}
+                  columns={masterImageColumns}
+                  rowKey="_id"
+                  style={{ marginTop: 16 }}
+                />
+              </div>
+            </TabPane>
 
-          {/* Qrcode Image Section */}
-          <div className="mb-6">
-            <h2>QR Code Payment</h2>
-            <Upload
-              customRequest={handleQrcodeUpload}
-              showUploadList={false}
-              accept="image/*"
-            >
-              <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
-                Upload QR Code
-              </Button>
-            </Upload>
+            <TabPane tab="QR Code Payment" key="3">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2>QR Code Payment</h2>
+                  <Upload
+                    customRequest={handleQrcodeUpload}
+                    showUploadList={false}
+                    accept="image/*"
+                  >
+                    <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
+                      Upload QR Code
+                    </Button>
+                  </Upload>
+                </div>
 
-            <Table
-              dataSource={qrcodes}
-              columns={qrcodeImageColumns(deleteQrcodeImage, updateQrcodeImage)}
-              rowKey="_id"
-              style={{ marginTop: 16 }}
-            />
-          </div>
+                <Table
+                  dataSource={qrcodes}
+                  columns={qrcodeImageColumns(deleteQrcodeImage, updateQrcodeImage)}
+                  rowKey="_id"
+                  style={{ marginTop: 16 }}
+                />
+              </div>
+            </TabPane>
 
-          {/* Class Catalog Section */}
-          <div className="mb-6">
-            <h2>Class Catalogs</h2>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={createClassCatalog}
-              style={{ marginBottom: 16 }}
-            >
-              Add New Class
-            </Button>
+            <TabPane tab="Class Catalogs" key="4">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2>Class Catalogs</h2>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={createClassCatalog}
+                  >
+                    Add New Class
+                  </Button>
+                </div>
 
-            <Table
-              dataSource={classCatalogs}
-              columns={classCatalogColumns}
-              rowKey="_id"
-              style={{ marginTop: 16 }}
-            />
-          </div>
+                <Table
+                  dataSource={classCatalogs}
+                  columns={classCatalogColumns}
+                  rowKey="_id"
+                  style={{ marginTop: 16 }}
+                />
+              </div>
+            </TabPane>
+          </Tabs>
         </Content>
       </Layout>
 
@@ -597,6 +683,147 @@ const ImageSetup = () => {
             Update Hero Image
           </Button>
         </Upload>
+      </Modal>
+
+      {/* Modal for Master Create/Update */}
+      <Modal
+        title={isEditingMaster ? "Edit Master Profile" : "Add New Master Profile"}
+        visible={isMasterModalVisible}
+        onCancel={() => setIsMasterModalVisible(false)}
+        footer={null}
+        width={700}
+      >
+        <div style={{ padding: "20px 0" }}>
+          <div style={{ marginBottom: "24px" }}>
+            <Title level={5}>Master Profile Information</Title>
+            {/* <Text type="secondary">
+              Add information about the yoga master including profile image, introduction video and biography.
+            </Text> */}
+          </div>
+
+          <Form layout="vertical">
+            <Form.Item 
+              label="Master Name" 
+              required 
+              tooltip="The name of the yoga master"
+            >
+              <Input
+                value={masterFormData.mastername}
+                onChange={(e) => setMasterFormData({...masterFormData, mastername: e.target.value})}
+                placeholder="Enter master's name"
+              />
+            </Form.Item>
+
+            {/* <Form.Item
+              label="Specialization"
+              tooltip="The yoga style or technique this master specializes in"
+            >
+              <Input
+                value={masterFormData.specialization}
+                onChange={(e) => setMasterFormData({...masterFormData, specialization: e.target.value})}
+                placeholder="Enter specialization (e.g., Hatha Yoga, Vinyasa, etc.)"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Biography"
+              tooltip="Short biography and qualifications of the master"
+            >
+              <TextArea
+                rows={4}
+                value={masterFormData.bio}
+                onChange={(e) => setMasterFormData({...masterFormData, bio: e.target.value})}
+                placeholder="Enter master's biography"
+              />
+            </Form.Item> */}
+
+            <Divider />
+
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
+              <div style={{ flex: 1 }}>
+                <Form.Item
+                  label={
+                    <Space>
+                      <span>Profile Image</span>
+                      <Tooltip title="Upload a professional photo of the yoga master">
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    </Space>
+                  }
+                >
+                  <Upload
+                    accept="image/*"
+                    showUploadList={!!masterFormData.image}
+                    beforeUpload={(file) => {
+                      setMasterFormData({...masterFormData, image: file});
+                      return false;
+                    }}
+                    onRemove={() => {
+                      setMasterFormData({...masterFormData, image: null});
+                    }}
+                    maxCount={1}
+                    listType="picture-card"
+                  >
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </div>
+                  </Upload>
+                </Form.Item>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <Form.Item
+                  label={
+                    <Space>
+                      <span>Introduction Video</span>
+                      <Tooltip title="Upload a short introduction video of the yoga master (MP4 format recommended)">
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    </Space>
+                  }
+                >
+                  <Upload
+                    accept="video/*"
+                    showUploadList={!!masterFormData.video}
+                    beforeUpload={(file) => {
+                      setMasterFormData({...masterFormData, video: file});
+                      return false;
+                    }}
+                    onRemove={() => {
+                      setMasterFormData({...masterFormData, video: null});
+                    }}
+                    maxCount={1}
+                  >
+                    <Button icon={<VideoCameraOutlined />}>
+                      Upload Video
+                    </Button>
+                  </Upload>
+                  <div style={{ marginTop: 8, fontSize: 12, color: "#999" }}>
+                    Max video size: 100MB, formats: MP4, MOV, WebM
+                  </div>
+                </Form.Item>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "24px" }}>
+              <Button 
+                onClick={() => setIsMasterModalVisible(false)} 
+                style={{ marginRight: 8 }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleMasterFormSubmit}
+                loading={uploadingMaster}
+                disabled={!masterFormData.mastername}
+              >
+                {isEditingMaster ? "Update Master" : "Add Master"}
+              </Button>
+            </div>
+          </Form>
+        </div>
       </Modal>
 
       {/* Modal for Class Catalog Create/Update */}

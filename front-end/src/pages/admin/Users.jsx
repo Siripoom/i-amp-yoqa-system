@@ -12,6 +12,13 @@ import {
   Tag,
   Tooltip,
   InputNumber,
+  Drawer,
+  Space,
+  List,
+  Avatar,
+  Empty,
+  Spin,
+  Divider,
 } from "antd";
 import {
   SearchOutlined,
@@ -20,6 +27,8 @@ import {
   DeleteOutlined,
   UploadOutlined,
   CalendarOutlined,
+  HistoryOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -30,6 +39,7 @@ import {
   updateUser,
   deleteUser,
 } from "../../services/userService";
+import reservationService from "../../services/reservationService";
 import moment from "moment";
 
 const { Sider, Content } = Layout;
@@ -42,6 +52,12 @@ const UserPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [form] = Form.useForm();
   const [expiryDays, setExpiryDays] = useState(0);
+
+  // ส่วนที่เพิ่มมาใหม่สำหรับแสดงประวัติการจองคลาส
+  const [historyDrawerVisible, setHistoryDrawerVisible] = useState(false);
+  const [selectedUserHistory, setSelectedUserHistory] = useState(null);
+  const [userReservations, setUserReservations] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -61,6 +77,28 @@ const UserPage = () => {
       }
     } catch (error) {
       message.error(`Failed to fetch users: ${error.message}`);
+    }
+  };
+
+  // ฟังก์ชันใหม่สำหรับดึงประวัติการจองของผู้ใช้
+  const fetchUserHistory = async (userId, userName) => {
+    setLoadingHistory(true);
+    setHistoryDrawerVisible(true);
+    setSelectedUserHistory(userName);
+    setUserReservations([]);
+
+    try {
+      const response = await reservationService.getUserReservations(userId);
+      if (response && response.reservations) {
+        setUserReservations(response.reservations);
+      } else {
+        message.info("No reservation history found for this user.");
+      }
+    } catch (error) {
+      console.error("Error fetching reservation history:", error);
+      message.error("Failed to fetch reservation history.");
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -221,14 +259,121 @@ const UserPage = () => {
       title: "Action",
       key: "action",
       render: (record) => (
-        <Button
-          icon={<EditOutlined />}
-          shape="circle"
-          onClick={() => showEditModal(record)}
-        />
+        <Space>
+          <Button
+            icon={<EditOutlined />}
+            shape="circle"
+            onClick={() => showEditModal(record)}
+          />
+          <Button
+            type="primary"
+            icon={<HistoryOutlined />}
+            onClick={() =>
+              fetchUserHistory(
+                record._id,
+                `${record.first_name} ${record.last_name}`
+              )
+            }
+            title="View Reservation History"
+          >
+            History
+          </Button>
+        </Space>
       ),
     },
   ];
+
+  // แสดงข้อมูลการจองคลาสในรูปแบบที่อ่านง่าย
+  const renderReservationList = () => {
+    if (loadingHistory) {
+      return (
+        <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16 }}>Loading reservation history...</div>
+        </div>
+      );
+    }
+
+    if (!userReservations || userReservations.length === 0) {
+      return <Empty description="No reservation history found" />;
+    }
+
+    return (
+      <List
+        itemLayout="horizontal"
+        dataSource={userReservations}
+        renderItem={(item) => {
+          const classInfo = item.class_id || {};
+
+          // Format class date and time
+          const classDate = classInfo.start_time
+            ? moment(classInfo.start_time).format("DD MMM YYYY")
+            : "N/A";
+
+          const classTime =
+            classInfo.start_time && classInfo.end_time
+              ? `${moment(classInfo.start_time).format("HH:mm")} - ${moment(
+                  classInfo.end_time
+                ).format("HH:mm")}`
+              : "N/A";
+
+          return (
+            <List.Item>
+              <List.Item.Meta
+                avatar={
+                  <Avatar
+                    icon={<CalendarOutlined />}
+                    style={{
+                      backgroundColor:
+                        item.status === "Reserved" ? "#52c41a" : "#f5222d",
+                    }}
+                  />
+                }
+                title={
+                  <Space>
+                    <span>{classInfo.title || "Unknown Class"}</span>
+                    <Tag color={item.status === "Reserved" ? "green" : "red"}>
+                      {item.status}
+                    </Tag>
+                  </Space>
+                }
+                description={
+                  <div>
+                    <p>
+                      <strong>Date:</strong> {classDate}
+                    </p>
+                    <p>
+                      <strong>Time:</strong> {classTime}
+                    </p>
+                    <p>
+                      <strong>Instructor:</strong>{" "}
+                      {classInfo.instructor || "N/A"}
+                    </p>
+                    {item.status === "Reserved" && classInfo.room_number && (
+                      <p>
+                        <strong>Room:</strong> {classInfo.room_number}
+                      </p>
+                    )}
+                    <p>
+                      <strong>Reservation Date:</strong>{" "}
+                      {moment(item.reservation_date).format(
+                        "DD MMM YYYY HH:mm"
+                      )}
+                    </p>
+                  </div>
+                }
+              />
+            </List.Item>
+          );
+        }}
+        pagination={{
+          pageSize: 5,
+          showSizeChanger: true,
+          pageSizeOptions: ["5", "10", "15", "20"],
+        }}
+      />
+    );
+  };
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
@@ -276,6 +421,7 @@ const UserPage = () => {
             rowKey="_id"
           />
 
+          {/* Modal สำหรับเพิ่ม/แก้ไขข้อมูลผู้ใช้ */}
           <Modal
             title={editingUser ? "Edit User" : "Create User"}
             visible={isModalVisible}
@@ -418,6 +564,67 @@ const UserPage = () => {
               </Form.Item>
             </Form>
           </Modal>
+
+          {/* Drawer สำหรับแสดงประวัติการจองคลาส */}
+          <Drawer
+            title={
+              <Space>
+                <UserOutlined />
+                <span>
+                  {selectedUserHistory
+                    ? `${selectedUserHistory}'s Reservation History`
+                    : "Reservation History"}
+                </span>
+              </Space>
+            }
+            placement="right"
+            width={600}
+            onClose={() => setHistoryDrawerVisible(false)}
+            visible={historyDrawerVisible}
+            extra={
+              <Button
+                type="primary"
+                onClick={() => setHistoryDrawerVisible(false)}
+              >
+                Close
+              </Button>
+            }
+          >
+            <div>
+              <div className="user-history-summary">
+                <h3>Reservation Summary</h3>
+                <div style={{ marginBottom: 16 }}>
+                  <p>
+                    <strong>Total Reservations: </strong>
+                    {userReservations.length}
+                  </p>
+                  {/* <p>
+                    <strong>Active Reservations: </strong>
+                    {
+                      userReservations.filter(
+                        (item) => item.status === "Reserved"
+                      ).length
+                    }
+                  </p>
+                  <p>
+                    <strong>Cancelled Reservations: </strong>
+                    {
+                      userReservations.filter(
+                        (item) => item.status === "Cancelled"
+                      ).length
+                    }
+                  </p> */}
+                </div>
+              </div>
+
+              <Divider />
+
+              <div className="user-history-list">
+                <h3>Reservation Details</h3>
+                {renderReservationList()}
+              </div>
+            </div>
+          </Drawer>
         </Content>
       </Layout>
     </Layout>

@@ -1,0 +1,152 @@
+/* Contact.css */
+.master-card {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.master-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.master-image-container {
+  position: relative;
+  overflow: hidden;
+  height: 250px;
+}
+
+.master-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.master-card:hover .master-image {
+  transform: scale(1.05);
+}
+
+.video-indicator {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(253, 91, 144, 0.8);
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.video-indicator:hover {
+  transform: scale(1.1);
+  background-color: rgba(253, 91, 144, 1);
+}
+
+.master-info {
+  padding: 15px;
+}
+
+.master-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #4a4a4a;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.master-specialization {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.master-bio {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.watch-button {
+  margin-top: 12px;
+  background-color: #fd5b90;
+  border-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.watch-button:hover {
+  background-color: #ff3a78;
+  border-color: transparent;
+}
+
+/* Video Modal Styles */
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  height: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.video-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Master Detail in Modal */
+.master-details {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.master-details h5 {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* Specialized for dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+  .master-details {
+    background-color: #2a2a2a;
+  }
+
+  .master-name {
+    color: #e0e0e0;
+  }
+
+  .master-bio {
+    color: #b0b0b0;
+  }
+}
+
+/* Loading Skeleton styles */
+.master-skeleton {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .master-image-container {
+    height: 200px;
+  }
+
+  .master-name {
+    font-size: 1.2rem;
+  }
+}

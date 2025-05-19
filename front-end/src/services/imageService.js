@@ -31,8 +31,8 @@ export const MasterImage = {
     const response = await axios.get(`${API_URL}/api/masters`);
     return response.data;
   },
-  updateMasterImage: async (id, image) => {
-    const response = await axios.put(`${API_URL}/api/masters/${id}`, image, {
+  updateMasterImage: async (id, formData) => {
+    const response = await axios.put(`${API_URL}/api/masters/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
@@ -41,10 +41,14 @@ export const MasterImage = {
     const response = await axios.delete(`${API_URL}/api/masters/${id}`);
     return response.data;
   },
-  createMasterImage: async (image) => {
-    const response = await axios.post(`${API_URL}/api/masters`, image, {
+  createMasterImage: async (formData) => {
+    const response = await axios.post(`${API_URL}/api/masters`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    return response.data;
+  },
+  getMasterById: async (id) => {
+    const response = await axios.get(`${API_URL}/api/masters/${id}`);
     return response.data;
   },
 };
