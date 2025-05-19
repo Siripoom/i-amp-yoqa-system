@@ -9,15 +9,48 @@ dotenv.config(); // Load environment variables
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// master creation (with Supabase file upload for image and video)
+// แปลง YouTube URL เป็น embed URL
+const getYoutubeEmbedUrl = (url) => {
+  if (!url) return null;
+
+  // ถ้าเป็น URL รูปแบบปกติ ให้แปลงเป็น embed URL
+  let videoId = null;
+
+  // รูปแบบ https://www.youtube.com/watch?v=VIDEO_ID
+  const regularMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/);
+  if (regularMatch) {
+    videoId = regularMatch[1];
+  }
+
+  // รูปแบบ https://youtu.be/VIDEO_ID
+  const shortMatch = url.match(/youtu\.be\/([^?]+)/);
+  if (shortMatch) {
+    videoId = shortMatch[1];
+  }
+
+  // รูปแบบ https://www.youtube.com/embed/VIDEO_ID
+  const embedMatch = url.match(/youtube\.com\/embed\/([^?]+)/);
+  if (embedMatch) {
+    videoId = embedMatch[1];
+  }
+
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+
+  // ถ้าไม่สามารถแปลงได้ ให้คืนค่า URL เดิม
+  return url;
+};
+
+// master creation (with Supabase file upload for image and YouTube URL for video)
 exports.createMaster = async (req, res) => {
   try {
     let imageUrl = req.body.image; // Default to the image URL from the request body
-    let videoUrl = req.body.video; // Default to the video URL from the request body
+    let videoUrl = req.body.videoUrl; // YouTube URL
 
-    // If image file is uploaded, upload it to Supabase Storage
-    if (req.files && req.files.image) {
-      const file = req.files.image[0];
+    // If a file is uploaded, upload it to Supabase Storage
+    if (req.file) {
+      const file = req.file;
       const ext = path.extname(file.originalname); // Get the file extension
       const fileName = `image_${Date.now()}${ext}`; // Unique file name
       const folderPath = "masters"; // The folder where files will be stored
@@ -37,35 +70,18 @@ exports.createMaster = async (req, res) => {
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
-    // If video file is uploaded, upload it to Supabase Storage
-    if (req.files && req.files.video) {
-      const file = req.files.video[0];
-      const ext = path.extname(file.originalname); // Get the file extension
-      const fileName = `video_${Date.now()}${ext}`; // Unique file name
-      const folderPath = "masters_videos"; // Separate folder for videos
-
-      // Upload the file to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from("store") // Replace with your Supabase bucket name
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      // Construct the public URL for the uploaded video
-      videoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+    // แปลง YouTube URL เป็น embed URL
+    if (videoUrl) {
+      videoUrl = getYoutubeEmbedUrl(videoUrl);
     }
 
     // Prepare master data
     const masterData = {
       mastername: req.body.mastername,
       image: imageUrl, // Store the public URL of the image
-      video: videoUrl, // Store the public URL of the video
-      // bio: req.body.bio,
-      // specialization: req.body.specialization,
+      videoUrl: videoUrl, // Store the YouTube embed URL
+      bio: req.body.bio,
+      specialization: req.body.specialization,
     };
 
     // Save master to the database
@@ -79,7 +95,7 @@ exports.createMaster = async (req, res) => {
   }
 };
 
-// master update (with Supabase file upload for image and video)
+// master update (with Supabase file upload for image and YouTube URL for video)
 exports.updateMaster = async (req, res) => {
   try {
     const master = await Master.findById(req.params.id);
@@ -88,10 +104,10 @@ exports.updateMaster = async (req, res) => {
     }
 
     let imageUrl = master.image; // Default to the existing image URL
-    let videoUrl = master.video; // Default to the existing video URL
+    let videoUrl = req.body.videoUrl || master.videoUrl; // YouTube URL
 
     // Handle image deletion and update
-    if (req.files && req.files.image) {
+    if (req.file) {
       // Delete existing image if present
       if (imageUrl && typeof imageUrl === "string") {
         try {
@@ -114,7 +130,7 @@ exports.updateMaster = async (req, res) => {
       }
 
       // Upload new image
-      const file = req.files.image[0];
+      const file = req.file;
       const ext = path.extname(file.originalname);
       const fileName = `image_${Date.now()}${ext}`;
       const folderPath = "masters";
@@ -132,54 +148,17 @@ exports.updateMaster = async (req, res) => {
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
-    // Handle video deletion and update
-    if (req.files && req.files.video) {
-      // Delete existing video if present
-      if (videoUrl && typeof videoUrl === "string") {
-        try {
-          const fileName = videoUrl.split("/").pop().split("?")[0];
-          if (fileName) {
-            const { error } = await supabase.storage
-              .from("store")
-              .remove([`masters_videos/${fileName}`]);
-
-            if (error) {
-              console.error(
-                "Error deleting video from Supabase:",
-                error.message
-              );
-            }
-          }
-        } catch (error) {
-          console.error("Error processing the video URL:", error.message);
-        }
-      }
-
-      // Upload new video
-      const file = req.files.video[0];
-      const ext = path.extname(file.originalname);
-      const fileName = `video_${Date.now()}${ext}`;
-      const folderPath = "masters_videos";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      videoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+    // แปลง YouTube URL เป็น embed URL
+    if (videoUrl) {
+      videoUrl = getYoutubeEmbedUrl(videoUrl);
     }
 
     // Update master data
     master.mastername = req.body.mastername || master.mastername;
     master.image = imageUrl;
-    master.video = videoUrl;
-    // master.bio = req.body.bio || master.bio;
-    // master.specialization = req.body.specialization || master.specialization;
+    master.videoUrl = videoUrl;
+    master.bio = req.body.bio || master.bio;
+    master.specialization = req.body.specialization || master.specialization;
 
     // Save updated master to the database
     await master.save();
@@ -246,24 +225,6 @@ exports.deleteMaster = async (req, res) => {
       }
     }
 
-    // Delete video if exists
-    if (master.video && typeof master.video === "string") {
-      try {
-        const fileName = master.video.split("/").pop().split("?")[0];
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`masters_videos/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting video from Supabase:", error.message);
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the video URL:", error.message);
-      }
-    }
-
     // Delete the master from the database
     await Master.findByIdAndDelete(req.params.id);
 
@@ -275,9 +236,3 @@ exports.deleteMaster = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-// Configuration for multer to handle multiple file types
-exports.uploadFields = [
-  { name: "image", maxCount: 1 },
-  { name: "video", maxCount: 1 },
-];
