@@ -6,12 +6,13 @@ const {
   getMasterById,
   updateMaster,
   deleteMaster,
-  uploadFields,
 } = require("../controllers/masterController");
 const multer = require("multer");
-const upload = multer({ storage: multer.memoryStorage() });
-// Route สำหรับสร้างคอร์ส
-router.post("/", upload.fields(uploadFields), createMaster);
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// Route สำหรับสร้างคอร์ส - now supports image upload
+router.post("/", upload.single("image"), createMaster);
 
 // Route สำหรับดึงข้อมูลคอร์สทั้งหมด
 router.get("/", getMasters);
@@ -19,8 +20,8 @@ router.get("/", getMasters);
 // Route สำหรับดึงข้อมูลคอร์สตาม ID
 router.get("/:id", getMasterById);
 
-// Route สำหรับอัปเดตคอร์ส
-router.put("/:id", upload.fields(uploadFields), updateMaster);
+// Route สำหรับอัปเดตคอร์ส - now supports image upload
+router.put("/:id", upload.single("image"), updateMaster);
 
 // Route สำหรับลบคอร์สแบบ Soft Delete
 router.delete("/:id", deleteMaster);
