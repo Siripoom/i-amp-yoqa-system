@@ -1,6 +1,6 @@
 import { Avatar, Dropdown, Menu } from "antd";
 import "./Header.css";
-import person from "../assets/person_mockup.jpg";
+
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";

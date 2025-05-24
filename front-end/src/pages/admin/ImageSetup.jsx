@@ -14,6 +14,9 @@ import {
   Divider,
   Typography,
   Tooltip,
+  Tag,
+  InputNumber,
+  Switch,
 } from "antd";
 import {
   UploadOutlined,
@@ -32,6 +35,7 @@ import {
   MasterImage,
   QrcodePayment,
   ImageCatalog,
+  SliderImage,
 } from "../../services/imageService";
 
 const { Sider, Content } = Layout;
@@ -74,6 +78,14 @@ const ImageSetup = () => {
   const [selectedClassCatalog, setSelectedClassCatalog] = useState(null);
   const [form] = Form.useForm();
 
+  // 2. เพิ่ม state สำหรับ slider images
+  const [sliderImages, setSliderImages] = useState([]);
+  const [uploadingSlider, setUploadingSlider] = useState(false);
+  const [isSliderModalVisible, setIsSliderModalVisible] = useState(false);
+  const [isSliderCreateMode, setIsSliderCreateMode] = useState(true);
+  const [selectedSliderImage, setSelectedSliderImage] = useState(null);
+  const [sliderForm] = Form.useForm();
+
   // YouTube URL แปลงเป็น embed URL สำหรับ Preview
   const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
@@ -103,8 +115,199 @@ const ImageSetup = () => {
     fetchMasterImages();
     fetchQrcodeImages();
     fetchClassCatalogs();
+    fetchSliderImages();
   }, []);
+  const fetchSliderImages = async () => {
+    try {
+      const response = await SliderImage.getAllSliderImages();
+      if (response.status === "success" && Array.isArray(response.data)) {
+        setSliderImages(response.data);
+      } else {
+        message.error("Failed to fetch slider images");
+      }
+    } catch (err) {
+      console.error("Error fetching slider images:", err);
+      message.error("Failed to fetch slider images");
+    }
+  };
+  const handleSliderFormSubmit = async (values) => {
+    console.log("Form values received:", values); // Debug log
 
+    setUploadingSlider(true);
+    const formData = new FormData();
+
+    // จัดการค่าต่างๆ ให้ถูกต้อง
+    const title = values.title || "";
+    const description = values.description || "";
+    const isActive = values.isActive !== undefined ? values.isActive : true;
+    const order = values.order !== undefined ? values.order : 0;
+
+    console.log("Processed values:", { title, description, isActive, order }); // Debug log
+
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("isActive", isActive);
+    formData.append("order", order);
+
+    // จัดการไฟล์
+    let hasFile = false;
+    if (
+      values.image &&
+      Array.isArray(values.image) &&
+      values.image.length > 0
+    ) {
+      const fileObj = values.image[0];
+      if (fileObj.originFileObj) {
+        console.log("File found:", fileObj.originFileObj); // Debug log
+        formData.append("image", fileObj.originFileObj);
+        hasFile = true;
+      }
+    }
+
+    if (!hasFile && isSliderCreateMode) {
+      message.error("Please select an image to upload");
+      setUploadingSlider(false);
+      return;
+    }
+
+    // Debug: แสดงข้อมูลใน FormData
+    console.log("FormData contents:");
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ": ", pair[1]);
+    }
+
+    try {
+      let response;
+      if (isSliderCreateMode) {
+        response = await SliderImage.createSliderImage(formData);
+        message.success("Slider image created successfully");
+      } else {
+        response = await SliderImage.updateSliderImage(
+          selectedSliderImage._id,
+          formData
+        );
+        message.success("Slider image updated successfully");
+      }
+
+      console.log("API Response:", response); // Debug log
+
+      sliderForm.resetFields();
+      fetchSliderImages();
+      setIsSliderModalVisible(false);
+    } catch (err) {
+      console.error("Error with slider image operation:", err);
+
+      // แสดงข้อความข้อผิดพลาดที่ชัดเจนขึ้น
+      const errorMessage =
+        err.response?.data?.message || err.message || "Operation failed";
+      message.error(`Operation failed: ${errorMessage}`);
+    } finally {
+      setUploadingSlider(false);
+    }
+  };
+
+  const deleteSliderImage = async (id) => {
+    try {
+      await SliderImage.deleteSliderImage(id);
+      message.success("Slider image deleted successfully");
+      fetchSliderImages();
+    } catch (err) {
+      message.error("Delete failed");
+    }
+  };
+
+  const createSliderImage = () => {
+    setIsSliderCreateMode(true);
+    setSelectedSliderImage(null);
+    sliderForm.resetFields();
+    // ตั้งค่าเริ่มต้น
+    sliderForm.setFieldsValue({
+      title: "",
+      description: "",
+      isActive: true,
+      order: 0,
+      image: [],
+    });
+    setIsSliderModalVisible(true);
+  };
+
+  const updateSliderImage = (record) => {
+    setIsSliderCreateMode(false);
+    setSelectedSliderImage(record);
+
+    // ตั้งค่าฟอร์มด้วยข้อมูลที่มีอยู่
+    sliderForm.setFieldsValue({
+      title: record.title || "",
+      description: record.description || "",
+      isActive: record.isActive !== undefined ? record.isActive : true,
+      order: record.order || 0,
+      image: [], // ไม่ต้องใส่รูปเก่า เพราะจะให้เลือกใหม่
+    });
+
+    setIsSliderModalVisible(true);
+  };
+
+  // 5. เพิ่ม columns สำหรับ slider table
+  const sliderImageColumns = [
+    {
+      title: "Order",
+      dataIndex: "order",
+      key: "order",
+      sorter: (a, b) => a.order - b.order,
+      width: 80,
+    },
+    // {
+    //   title: "Title",
+    //   dataIndex: "title",
+    //   key: "title",
+    //   render: (text) => text || "No Title",
+    // },
+    {
+      title: "Preview",
+      dataIndex: "image",
+      key: "image",
+      render: (url) => (url ? <Image width={100} src={url} /> : "No image"),
+    },
+    // {
+    //   title: "Description",
+    //   dataIndex: "description",
+    //   key: "description",
+    //   ellipsis: true,
+    //   render: (text) => text || "No Description",
+    // },
+    {
+      title: "Status",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (isActive) => (
+        <Tag color={isActive ? "green" : "red"}>
+          {isActive ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (record) => (
+        <>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => updateSliderImage(record)}
+            style={{ marginRight: 8 }}
+          >
+            Update
+          </Button>
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => deleteSliderImage(record._id)}
+          >
+            Delete
+          </Button>
+        </>
+      ),
+    },
+  ];
   const fetchClassCatalogs = async () => {
     try {
       const response = await ImageCatalog.getImageCatalog();
@@ -683,10 +886,139 @@ const ImageSetup = () => {
                 />
               </div>
             </TabPane>
+            <TabPane tab="Slider Images" key="5">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2>Slider Images</h2>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={createSliderImage}
+                  >
+                    Add New Slider Image
+                  </Button>
+                </div>
+
+                <Table
+                  dataSource={sliderImages}
+                  columns={sliderImageColumns}
+                  rowKey="_id"
+                  style={{ marginTop: 16 }}
+                />
+              </div>
+            </TabPane>
           </Tabs>
         </Content>
       </Layout>
+      <Modal
+        title={
+          isSliderCreateMode ? "Add New Slider Image" : "Update Slider Image"
+        }
+        visible={isSliderModalVisible}
+        onCancel={() => {
+          setIsSliderModalVisible(false);
+          sliderForm.resetFields();
+        }}
+        footer={null}
+      >
+        <Form
+          form={sliderForm}
+          layout="vertical"
+          onFinish={handleSliderFormSubmit}
+          initialValues={{
+            isActive: true,
+            order: 0,
+          }}
+        >
+          {/* <Form.Item name="title" label="Title">
+            <Input placeholder="Enter image title (optional)" />
+          </Form.Item> */}
 
+          {/* <Form.Item name="description" label="Description">
+            <Input.TextArea
+              rows={3}
+              placeholder="Enter image description (optional)"
+            />
+          </Form.Item> */}
+
+          <Form.Item name="order" label="เลขลำดับการแสดงผล">
+            <InputNumber
+              min={0}
+              placeholder="Enter display order (0 = first)"
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="isActive"
+            label="Active Status"
+            valuePropName="checked"
+          >
+            <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+          </Form.Item>
+
+          {/* แก้ไขส่วน Upload ให้ถูกต้อง */}
+          <Form.Item
+            name="image"
+            label="Slider Image"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => {
+              if (Array.isArray(e)) {
+                return e;
+              }
+              return e?.fileList;
+            }}
+            rules={
+              isSliderCreateMode
+                ? [{ required: true, message: "Please upload an image" }]
+                : []
+            }
+          >
+            <Upload
+              name="image"
+              listType="picture-card"
+              beforeUpload={(file) => {
+                // ตรวจสอบประเภทไฟล์
+                const isImage = file.type.startsWith("image/");
+                if (!isImage) {
+                  message.error("You can only upload image files!");
+                  return Upload.LIST_IGNORE;
+                }
+
+                // ตรวจสอบขนาดไฟล์ (5MB)
+                const isLt5M = file.size / 1024 / 1024 < 5;
+                if (!isLt5M) {
+                  message.error("Image must be smaller than 5MB!");
+                  return Upload.LIST_IGNORE;
+                }
+
+                return false; // ป้องกันการอัพโหลดอัตโนมัติ
+              }}
+              maxCount={1}
+              accept="image/*"
+            >
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>Upload</div>
+              </div>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={uploadingSlider}
+              style={{ marginRight: 8 }}
+            >
+              {isSliderCreateMode ? "Create" : "Update"}
+            </Button>
+            <Button onClick={() => setIsSliderModalVisible(false)}>
+              Cancel
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
       {/* Modal for QR Code Update */}
       <Modal
         title="Update QR Code"
@@ -762,10 +1094,6 @@ const ImageSetup = () => {
                 placeholder="Enter master's name"
               />
             </Form.Item>
-
-          
-
-            
 
             <Divider />
 

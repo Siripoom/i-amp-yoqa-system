@@ -104,3 +104,38 @@ export const ImageCatalog = {
     return response.data;
   },
 };
+
+export const SliderImage = {
+  getSliderImages: async () => {
+    const response = await axios.get(`${API_URL}/api/sliderImages`);
+    return response.data;
+  },
+  getAllSliderImages: async () => {
+    const response = await axios.get(`${API_URL}/api/sliderImages/all`);
+    return response.data;
+  },
+  getSliderImageById: async (id) => {
+    const response = await axios.get(`${API_URL}/api/sliderImages/${id}`);
+    return response.data;
+  },
+  updateSliderImage: async (id, formData) => {
+    const response = await axios.put(
+      `${API_URL}/api/sliderImages/${id}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return response.data;
+  },
+  deleteSliderImage: async (id) => {
+    const response = await axios.delete(`${API_URL}/api/sliderImages/${id}`);
+    return response.data;
+  },
+  createSliderImage: async (formData) => {
+    const response = await axios.post(`${API_URL}/api/sliderImages`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+};

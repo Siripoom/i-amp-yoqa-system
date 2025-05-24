@@ -2,6 +2,7 @@ import { Button, message } from "antd";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
+import SliderSection from "../components/SliderSection";
 import image1 from "../assets/images/iamge1.png";
 import courseShow from "../assets/images/courseshow.png";
 import { motion } from "framer-motion";
@@ -60,7 +61,7 @@ const Home = () => {
         transition={{ duration: 1 }}
         className="w-full px-4 sm:px-6 lg:px-8"
       >
-        <HeroSection />
+        <SliderSection />
       </motion.div>
       {/* Explore More Section */}
       <motion.section
