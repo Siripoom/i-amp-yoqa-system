@@ -84,7 +84,6 @@ export const ImageCatalog = {
     return response.data;
   },
   updateImageCatalog: async (id, data) => {
-    
     const response = await axios.put(
       `${API_URL}/api/class-catalog/${id}`,
       data,

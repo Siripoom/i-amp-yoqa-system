@@ -13,7 +13,7 @@ import {
   Space,
   Divider,
   Typography,
-  Tooltip
+  Tooltip,
 } from "antd";
 import {
   UploadOutlined,
@@ -21,7 +21,8 @@ import {
   EditOutlined,
   PlusOutlined,
   VideoCameraOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  YoutubeOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -43,7 +44,8 @@ const ImageSetup = () => {
   const [masterImages, setMasterImages] = useState([]);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingMaster, setUploadingMaster] = useState(false);
-  const [isHeroUpdateModalVisible, setIsHeroUpdateModalVisible] = useState(false);
+  const [isHeroUpdateModalVisible, setIsHeroUpdateModalVisible] =
+    useState(false);
   const [selectedHeroImage, setSelectedHeroImage] = useState(null);
 
   const [masterFormData, setMasterFormData] = useState({
@@ -51,13 +53,14 @@ const ImageSetup = () => {
     bio: "",
     specialization: "",
     image: null,
-    video: null
+    videoUrl: "",
   });
-  
+
   const [selectedMasterImage, setSelectedMasterImage] = useState(null);
   const [isMasterModalVisible, setIsMasterModalVisible] = useState(false);
   const [isEditingMaster, setIsEditingMaster] = useState(false);
-  
+  const [videoPreviewVisible, setVideoPreviewVisible] = useState(false);
+
   const [qrcodes, setQrcodes] = useState([]);
   const [uploadingQrcode, setUploadingQrcode] = useState(false);
   const [selectedQrcodeImage, setSelectedQrcodeImage] = useState(null);
@@ -70,6 +73,30 @@ const ImageSetup = () => {
   const [isClassCreateMode, setIsClassCreateMode] = useState(true);
   const [selectedClassCatalog, setSelectedClassCatalog] = useState(null);
   const [form] = Form.useForm();
+
+  // YouTube URL แปลงเป็น embed URL สำหรับ Preview
+  const getYoutubeEmbedUrl = (url) => {
+    if (!url) return null;
+
+    // Extract video ID
+    let videoId = "";
+
+    // Match YouTube URL patterns
+    const regularMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/);
+    if (regularMatch) videoId = regularMatch[1];
+
+    const shortMatch = url.match(/youtu\.be\/([^?]+)/);
+    if (shortMatch) videoId = shortMatch[1];
+
+    const embedMatch = url.match(/youtube\.com\/embed\/([^?]+)/);
+    if (embedMatch) videoId = embedMatch[1];
+
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     fetchHeroImages();
@@ -136,25 +163,32 @@ const ImageSetup = () => {
     }
   };
 
+  // Preview YouTube Video in Modal
+  const showVideoPreview = () => {
+    if (!masterFormData.videoUrl) {
+      message.warning("กรุณาใส่ลิงก์ YouTube ก่อน");
+      return;
+    }
+
+    setVideoPreviewVisible(true);
+  };
+
   // Handle Master Form Submit (Create/Update)
   const handleMasterFormSubmit = async () => {
     setUploadingMaster(true);
     const formData = new FormData();
-    
+
     // Append form values to FormData
     formData.append("mastername", masterFormData.mastername);
     formData.append("bio", masterFormData.bio || "");
     formData.append("specialization", masterFormData.specialization || "");
-    
+    formData.append("videoUrl", masterFormData.videoUrl || "");
+
     // Append files if they exist
     if (masterFormData.image) {
       formData.append("image", masterFormData.image);
     }
-    
-    if (masterFormData.video) {
-      formData.append("video", masterFormData.video);
-    }
-    
+
     try {
       if (isEditingMaster) {
         // Update existing master
@@ -165,25 +199,27 @@ const ImageSetup = () => {
         await MasterImage.createMasterImage(formData);
         message.success("Master created successfully");
       }
-      
+
       // Reset form and fetch updated data
       setMasterFormData({
         mastername: "",
         bio: "",
         specialization: "",
         image: null,
-        video: null
+        videoUrl: "",
       });
       fetchMasterImages();
       setIsMasterModalVisible(false);
     } catch (err) {
       console.error("Error with master operation:", err);
-      message.error("Operation failed. Please check if all required fields are filled.");
+      message.error(
+        "Operation failed. Please check if all required fields are filled."
+      );
     } finally {
       setUploadingMaster(false);
     }
   };
-  
+
   // Open modal for creating a new master
   const createMaster = () => {
     setIsEditingMaster(false);
@@ -193,11 +229,11 @@ const ImageSetup = () => {
       bio: "",
       specialization: "",
       image: null,
-      video: null
+      videoUrl: "",
     });
     setIsMasterModalVisible(true);
   };
-  
+
   // Open modal for updating an existing master
   const updateMaster = (record) => {
     setIsEditingMaster(true);
@@ -207,7 +243,7 @@ const ImageSetup = () => {
       bio: record.bio || "",
       specialization: record.specialization || "",
       image: null,
-      video: null
+      videoUrl: record.videoUrl || "",
     });
     setIsMasterModalVisible(true);
   };
@@ -216,7 +252,7 @@ const ImageSetup = () => {
   const handleClassFormSubmit = async (values) => {
     setUploadingClass(true);
     const formData = new FormData();
-   
+
     // Append form values to FormData - ensure classname is included
     formData.append("classname", values.classname);
 
@@ -245,7 +281,9 @@ const ImageSetup = () => {
       setIsClassModalVisible(false);
     } catch (err) {
       console.error("Error with class catalog operation:", err);
-      message.error("Operation failed. Please check if all required fields are filled.");
+      message.error(
+        "Operation failed. Please check if all required fields are filled."
+      );
     } finally {
       setUploadingClass(false);
     }
@@ -492,18 +530,21 @@ const ImageSetup = () => {
       render: (url) => <Image width={100} src={url} />,
     },
     {
-      title: "Video",
-      dataIndex: "video",
-      key: "video",
-      render: (url) => url ? (
-        <Button 
-          type="link" 
-          icon={<VideoCameraOutlined />}
-          onClick={() => window.open(url, '_blank')}
-        >
-          View Video
-        </Button>
-      ) : "No video",
+      title: "YouTube Video",
+      dataIndex: "videoUrl",
+      key: "videoUrl",
+      render: (url) =>
+        url ? (
+          <Button
+            type="link"
+            icon={<YoutubeOutlined />}
+            onClick={() => window.open(url, "_blank")}
+          >
+            View Video
+          </Button>
+        ) : (
+          "No video"
+        ),
     },
     {
       title: "Biography",
@@ -522,14 +563,11 @@ const ImageSetup = () => {
       key: "action",
       render: (record) => (
         <Space>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => updateMaster(record)}
-          >
+          <Button icon={<EditOutlined />} onClick={() => updateMaster(record)}>
             Edit
           </Button>
           <Button
-            type="danger"
+            danger
             icon={<DeleteOutlined />}
             onClick={() => deleteMasterImage(record._id)}
           >
@@ -579,9 +617,9 @@ const ImageSetup = () => {
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2>Master Profiles</h2>
-                  <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />} 
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
                     onClick={createMaster}
                   >
                     Add New Master
@@ -614,7 +652,10 @@ const ImageSetup = () => {
 
                 <Table
                   dataSource={qrcodes}
-                  columns={qrcodeImageColumns(deleteQrcodeImage, updateQrcodeImage)}
+                  columns={qrcodeImageColumns(
+                    deleteQrcodeImage,
+                    updateQrcodeImage
+                  )}
                   rowKey="_id"
                   style={{ marginTop: 16 }}
                 />
@@ -685,9 +726,11 @@ const ImageSetup = () => {
         </Upload>
       </Modal>
 
-      {/* Modal for Master Create/Update */}
+      {/* Modal for Master Create/Update with YouTube link */}
       <Modal
-        title={isEditingMaster ? "Edit Master Profile" : "Add New Master Profile"}
+        title={
+          isEditingMaster ? "Edit Master Profile" : "Add New Master Profile"
+        }
         visible={isMasterModalVisible}
         onCancel={() => setIsMasterModalVisible(false)}
         footer={null}
@@ -696,50 +739,43 @@ const ImageSetup = () => {
         <div style={{ padding: "20px 0" }}>
           <div style={{ marginBottom: "24px" }}>
             <Title level={5}>Master Profile Information</Title>
-            {/* <Text type="secondary">
-              Add information about the yoga master including profile image, introduction video and biography.
-            </Text> */}
+            <Text type="secondary">
+              Add information about the yoga master including profile image,
+              YouTube video and biography.
+            </Text>
           </div>
 
           <Form layout="vertical">
-            <Form.Item 
-              label="Master Name" 
-              required 
+            <Form.Item
+              label="Master Name"
+              required
               tooltip="The name of the yoga master"
             >
               <Input
                 value={masterFormData.mastername}
-                onChange={(e) => setMasterFormData({...masterFormData, mastername: e.target.value})}
+                onChange={(e) =>
+                  setMasterFormData({
+                    ...masterFormData,
+                    mastername: e.target.value,
+                  })
+                }
                 placeholder="Enter master's name"
               />
             </Form.Item>
 
-            {/* <Form.Item
-              label="Specialization"
-              tooltip="The yoga style or technique this master specializes in"
-            >
-              <Input
-                value={masterFormData.specialization}
-                onChange={(e) => setMasterFormData({...masterFormData, specialization: e.target.value})}
-                placeholder="Enter specialization (e.g., Hatha Yoga, Vinyasa, etc.)"
-              />
-            </Form.Item>
+          
 
-            <Form.Item
-              label="Biography"
-              tooltip="Short biography and qualifications of the master"
-            >
-              <TextArea
-                rows={4}
-                value={masterFormData.bio}
-                onChange={(e) => setMasterFormData({...masterFormData, bio: e.target.value})}
-                placeholder="Enter master's biography"
-              />
-            </Form.Item> */}
+            
 
             <Divider />
 
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: "20px",
+              }}
+            >
               <div style={{ flex: 1 }}>
                 <Form.Item
                   label={
@@ -755,11 +791,11 @@ const ImageSetup = () => {
                     accept="image/*"
                     showUploadList={!!masterFormData.image}
                     beforeUpload={(file) => {
-                      setMasterFormData({...masterFormData, image: file});
+                      setMasterFormData({ ...masterFormData, image: file });
                       return false;
                     }}
                     onRemove={() => {
-                      setMasterFormData({...masterFormData, image: null});
+                      setMasterFormData({ ...masterFormData, image: null });
                     }}
                     maxCount={1}
                     listType="picture-card"
@@ -776,39 +812,50 @@ const ImageSetup = () => {
                 <Form.Item
                   label={
                     <Space>
-                      <span>Introduction Video</span>
-                      <Tooltip title="Upload a short introduction video of the yoga master (MP4 format recommended)">
+                      <span>YouTube Video URL</span>
+                      <Tooltip title="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=xxxxxxxxxxx)">
                         <InfoCircleOutlined />
                       </Tooltip>
                     </Space>
                   }
                 >
-                  <Upload
-                    accept="video/*"
-                    showUploadList={!!masterFormData.video}
-                    beforeUpload={(file) => {
-                      setMasterFormData({...masterFormData, video: file});
-                      return false;
-                    }}
-                    onRemove={() => {
-                      setMasterFormData({...masterFormData, video: null});
-                    }}
-                    maxCount={1}
-                  >
-                    <Button icon={<VideoCameraOutlined />}>
-                      Upload Video
+                  <div style={{ display: "flex", marginBottom: "10px" }}>
+                    <Input
+                      value={masterFormData.videoUrl}
+                      onChange={(e) =>
+                        setMasterFormData({
+                          ...masterFormData,
+                          videoUrl: e.target.value,
+                        })
+                      }
+                      placeholder="Enter YouTube video URL"
+                      prefix={<YoutubeOutlined style={{ color: "red" }} />}
+                      style={{ marginRight: "10px", flex: 1 }}
+                    />
+                    <Button
+                      icon={<VideoCameraOutlined />}
+                      onClick={showVideoPreview}
+                      disabled={!masterFormData.videoUrl}
+                    >
+                      Preview
                     </Button>
-                  </Upload>
-                  <div style={{ marginTop: 8, fontSize: 12, color: "#999" }}>
-                    Max video size: 100MB, formats: MP4, MOV, WebM
                   </div>
+                  <Text type="secondary" style={{ fontSize: "12px" }}>
+                    Supported formats: youtube.com/watch?v=XXXX, youtu.be/XXXX
+                  </Text>
                 </Form.Item>
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "24px" }}>
-              <Button 
-                onClick={() => setIsMasterModalVisible(false)} 
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: "24px",
+              }}
+            >
+              <Button
+                onClick={() => setIsMasterModalVisible(false)}
                 style={{ marginRight: 8 }}
               >
                 Cancel
@@ -823,6 +870,41 @@ const ImageSetup = () => {
               </Button>
             </div>
           </Form>
+        </div>
+      </Modal>
+
+      {/* Modal for YouTube Video Preview */}
+      <Modal
+        title="YouTube Video Preview"
+        visible={videoPreviewVisible}
+        onCancel={() => setVideoPreviewVisible(false)}
+        footer={null}
+        width={800}
+        centered
+      >
+        <div
+          style={{
+            position: "relative",
+            paddingBottom: "56.25%" /* 16:9 Aspect Ratio */,
+            height: 0,
+            overflow: "hidden",
+            maxWidth: "100%",
+          }}
+        >
+          <iframe
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              border: "none",
+            }}
+            src={getYoutubeEmbedUrl(masterFormData.videoUrl)}
+            title="YouTube Video Preview"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
         </div>
       </Modal>
 
