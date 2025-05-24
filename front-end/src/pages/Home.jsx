@@ -24,7 +24,7 @@ const Home = () => {
         }
       })
       .catch((error) => {
-        console.error("Error fetching products:", error);
+        // console.error("Error fetching products:", error);
         message.error("Failed to load products");
       })
       .finally(() => setLoading(false));
@@ -53,8 +53,7 @@ const Home = () => {
       }}
     >
       <Navbar />
-
-      {/* Hero Section */}
+      {/* Image slider Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -63,7 +62,6 @@ const Home = () => {
       >
         <HeroSection />
       </motion.div>
-
       {/* Explore More Section */}
       <motion.section
         initial="hidden"
@@ -120,7 +118,15 @@ const Home = () => {
           </Link>
         </motion.div>
       </motion.section>
-
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="w-full px-4 sm:px-6 lg:px-8"
+      >
+        <HeroSection />
+      </motion.div>
       {/* Courses Section */}
       <motion.section
         initial="hidden"

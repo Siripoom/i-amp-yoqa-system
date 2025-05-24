@@ -27,6 +27,12 @@ const useAutoLogout = (timeoutMinutes = 10, isActive = true) => {
     localStorage.removeItem("username");
     localStorage.removeItem("user_id");
     localStorage.removeItem("role");
+    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:IDToken");
+    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:accessToken");
+    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:clientId");
+    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:context");
+    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:decodedIDToken");
+    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:loginTmp");
 
     // Show message and redirect to login page
     message.warning("Your session has expired. Please log in again.");
