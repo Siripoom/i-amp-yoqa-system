@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
+import liff from "@line/liff";
 
 /**
  * Custom hook for automatic logout after a period of inactivity
@@ -20,23 +21,62 @@ const useAutoLogout = (timeoutMinutes = 10, isActive = true) => {
     setIsWarningVisible(false);
   };
 
-  // Perform logout
-  const performLogout = () => {
-    // Clear all authentication data from localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("role");
-    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:IDToken");
-    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:accessToken");
-    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:clientId");
-    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:context");
-    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:decodedIDToken");
-    localStorage.removeItem("LIFF_STORE:2007091295-9VRjXwVY:loginTmp");
+  // Check if user logged in via LINE
+  const isLineLogin = () => {
+    return (
+      localStorage.getItem("LIFF_STORE:2007091295-9VRjXwVY:IDToken") !== null
+    );
+  };
 
-    // Show message and redirect to login page
-    message.warning("Your session has expired. Please log in again.");
-    navigate("/auth/signin");
+  // Perform logout with LINE support
+  const performLogout = async () => {
+    try {
+      // If user logged in via LINE, logout from LINE first
+      if (isLineLogin()) {
+        try {
+          // Initialize LIFF if not already initialized
+          if (!liff.isInClient() && !liff.isLoggedIn()) {
+            await liff.init({ liffId: import.meta.env.VITE_LINE_LIFF });
+          }
+
+          // Logout from LINE if logged in
+          if (liff.isLoggedIn()) {
+            liff.logout();
+          }
+        } catch (liffError) {
+          console.error("Error during LIFF logout:", liffError);
+          // Continue with local logout even if LIFF logout fails
+        }
+      }
+
+      // Clear all authentication data from localStorage
+      const keysToRemove = [
+        "token",
+        "username",
+        "user_id",
+        "role",
+        // LINE specific tokens
+        "LIFF_STORE:2007091295-9VRjXwVY:IDToken",
+        "LIFF_STORE:2007091295-9VRjXwVY:accessToken",
+        "LIFF_STORE:2007091295-9VRjXwVY:clientId",
+        "LIFF_STORE:2007091295-9VRjXwVY:context",
+        "LIFF_STORE:2007091295-9VRjXwVY:decodedIDToken",
+        "LIFF_STORE:2007091295-9VRjXwVY:loginTmp",
+      ];
+
+      keysToRemove.forEach((key) => {
+        localStorage.removeItem(key);
+      });
+
+      // Show message and redirect to login page
+      message.warning("Your session has expired. Please log in again.");
+      navigate("/auth/signin");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Even if there's an error, still clear localStorage and redirect
+      localStorage.clear();
+      navigate("/auth/signin");
+    }
   };
 
   useEffect(() => {
@@ -50,9 +90,12 @@ const useAutoLogout = (timeoutMinutes = 10, isActive = true) => {
       "keypress",
       "scroll",
       "touchstart",
+      "click",
+      "touchend",
     ];
+
     events.forEach((event) => {
-      document.addEventListener(event, updateActivity);
+      document.addEventListener(event, updateActivity, { passive: true });
     });
 
     // Set up interval to check for inactivity
@@ -94,6 +137,7 @@ const useAutoLogout = (timeoutMinutes = 10, isActive = true) => {
     remainingSeconds: remaining,
     updateActivity,
     isWarningVisible,
+    isLineLogin: isLineLogin(),
   };
 };
 
