@@ -1,8 +1,9 @@
-import { Button, Dropdown, Menu } from "antd";
+import { Button, Dropdown, Menuม, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { MenuOutlined, CloseOutlined, UserOutlined } from "@ant-design/icons";
 import logo from "../assets/images/logo.png";
+import { performCompleteLogout } from "../utils/lineLogout";
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -17,13 +18,17 @@ const Navbar = () => {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("role");
-    setUser(null);
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await performCompleteLogout(navigate, message);
+      setUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Fallback logout
+      localStorage.clear();
+      setUser(null);
+      navigate("/");
+    }
   };
 
   const userMenu = (
