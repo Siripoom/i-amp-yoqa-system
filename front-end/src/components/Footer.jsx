@@ -165,7 +165,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="https://forms.gle/uoTsFBoRRXYw9mL66"
+                  to="https://forms.gle/uoTsFBoRRXYw9mL66"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-gray-100 transition-colors duration-300 block"
