@@ -246,6 +246,7 @@ const Booking = () => {
 
         handleShowDetails(classId);
         message.success("✅ จองคอร์สสำเร็จ!");
+        fetchData(); // รีเฟรชข้อมูลคลาส
 
         // แสดง popup คำแนะนำหลังจองสำเร็จ
         showGuidelinesPopup();
