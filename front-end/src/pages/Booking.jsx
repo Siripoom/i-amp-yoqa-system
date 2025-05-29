@@ -246,7 +246,6 @@ const Booking = () => {
 
         handleShowDetails(classId);
         message.success("✅ จองคอร์สสำเร็จ!");
-        fetchData(); // รีเฟรชข้อมูลคลาส
 
         // แสดง popup คำแนะนำหลังจองสำเร็จ
         showGuidelinesPopup();
@@ -336,7 +335,7 @@ const Booking = () => {
       if (userResponse && userResponse.user) {
         setUserInfo(userResponse.user);
       }
-      fetchData(); // รีเฟรชข้อมูลคลาส
+
       message.success("✅ ยกเลิกการจองสำเร็จ");
     } catch (error) {
       console.error("❌ Error canceling reservation:", error);
