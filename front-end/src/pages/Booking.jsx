@@ -191,7 +191,7 @@ const Booking = () => {
     });
   };
 
-  // จองคอร์ส
+  // จองคอร์ส - ปรับปรุงให้อัปเดต state ทันที
   const handleReserveCourse = async (classId) => {
     if (!userId) {
       message.error("กรุณาเข้าสู่ระบบก่อนทำการจอง ❌");
@@ -216,7 +216,9 @@ const Booking = () => {
     try {
       const token = localStorage.getItem("token");
       const decoded = jwtDecode(token);
-      const fullName = `${decoded.first_name} ${decoded.last_name}`;
+      const fullName =
+        `${decoded.first_name || ""} ${decoded.last_name || ""}`.trim() ||
+        username;
 
       const reservationData = { user_id: userId, class_id: classId };
       const response = await reservationService.createReservation(
@@ -224,7 +226,7 @@ const Booking = () => {
       );
 
       if (response) {
-        // อัปเดตสถานะคลาส
+        // อัปเดตสถานะคลาสทันทีในหน้าเว็บ
         setEvents((prevEvents) =>
           prevEvents.map((event) =>
             event.id === classId
@@ -238,17 +240,30 @@ const Booking = () => {
           )
         );
 
-        // รีเฟรชข้อมูลผู้ใช้เพื่อปรับปรุงจำนวนคลาสที่เหลือและวันหมดอายุ
-        const userResponse = await getUserById(userId);
-        if (userResponse && userResponse.user) {
-          setUserInfo(userResponse.user);
+        // อัปเดตข้อมูลผู้ใช้ (จำนวนครั้งคงเหลือ)
+        if (userInfo) {
+          setUserInfo((prev) => ({
+            ...prev,
+            remaining_session: Math.max(0, (prev.remaining_session || 0) - 1),
+          }));
         }
 
+        // แสดงรายละเอียดคลาสทันที
         handleShowDetails(classId);
         message.success("✅ จองคอร์สสำเร็จ!");
 
         // แสดง popup คำแนะนำหลังจองสำเร็จ
         showGuidelinesPopup();
+
+        // รีเฟรชข้อมูลผู้ใช้เพื่อให้แน่ใจว่าข้อมูลตรงกับเซิร์ฟเวอร์
+        try {
+          const userResponse = await getUserById(userId);
+          if (userResponse && userResponse.user) {
+            setUserInfo(userResponse.user);
+          }
+        } catch (userError) {
+          console.warn("Failed to refresh user data:", userError);
+        }
       } else {
         message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
       }
@@ -266,11 +281,13 @@ const Booking = () => {
     }
   };
 
-  // ยกเลิกการจอง
+  // ยกเลิกการจอง - ปรับปรุงให้อัปเดต state ทันที
   const handleCancelReservation = async (classStartTime, classId) => {
     const token = localStorage.getItem("token");
     const decoded = jwtDecode(token);
-    const fullName = `${decoded.first_name} ${decoded.last_name}`;
+    const fullName =
+      `${decoded.first_name || ""} ${decoded.last_name || ""}`.trim() ||
+      username;
 
     try {
       // ดึงข้อมูลการจองจาก API
@@ -311,7 +328,7 @@ const Booking = () => {
       // ส่งคำขอยกเลิกการจองไปยัง API
       await reservationService.cancelReservation(reservation._id);
 
-      // อัปเดตสถานะคลาส
+      // อัปเดตสถานะคลาสทันทีในหน้าเว็บ
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
           event.id === classId
@@ -327,16 +344,28 @@ const Booking = () => {
         )
       );
 
+      // อัปเดตข้อมูลผู้ใช้ (เพิ่มจำนวนครั้งคงเหลือ)
+      if (userInfo) {
+        setUserInfo((prev) => ({
+          ...prev,
+          remaining_session: (prev.remaining_session || 0) + 1,
+        }));
+      }
+
       // ปิดรายละเอียดคลาสที่ถูกยกเลิก
       setShowDetails((prev) => prev.filter((id) => id !== classId));
 
-      // รีเฟรชข้อมูลผู้ใช้
-      const userResponse = await getUserById(userId);
-      if (userResponse && userResponse.user) {
-        setUserInfo(userResponse.user);
-      }
-
       message.success("✅ ยกเลิกการจองสำเร็จ");
+
+      // รีเฟรชข้อมูลผู้ใช้เพื่อให้แน่ใจว่าข้อมูลตรงกับเซิร์ฟเวอร์
+      try {
+        const userResponse = await getUserById(userId);
+        if (userResponse && userResponse.user) {
+          setUserInfo(userResponse.user);
+        }
+      } catch (userError) {
+        console.warn("Failed to refresh user data:", userError);
+      }
     } catch (error) {
       console.error("❌ Error canceling reservation:", error);
       message.error("❌ เกิดข้อผิดพลาดในการยกเลิกการจอง");

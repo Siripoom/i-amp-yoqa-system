@@ -485,9 +485,7 @@ const UserPage = () => {
               <Form.Item
                 name="birth_date"
                 label="Birth Date"
-                rules={[
-                  { required: true, message: "Please enter the birth date" },
-                ]}
+                rules={[{ message: "Please enter the birth date" }]}
               >
                 <Input type="date" />
               </Form.Item>
