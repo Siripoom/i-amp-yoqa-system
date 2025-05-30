@@ -10,14 +10,18 @@ import {
 } from "antd";
 import { useState, useEffect } from "react";
 import moment from "moment";
-import "moment/locale/th"; // Import Thai locale
+import "moment/locale/th";
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import reservationService from "../services/reservationService";
 import classService from "../services/classService";
 import { getUserById } from "../services/userService";
-import { jwtDecode } from "jwt-decode";
+import {
+  validateAndGetUserFromToken,
+  getUserFullName,
+  isUserInParticipants,
+} from "../utils/tokenUtils";
 import { InfoCircleOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
@@ -31,14 +35,20 @@ const Booking = () => {
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
-  const userId = localStorage.getItem("user_id");
-  const username = localStorage.getItem("username"); // ดึงชื่อผู้ใช้จาก localStorage
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    fetchData();
-  }, [userId, username]);
+    // ตรวจสอบ token และดึงข้อมูลผู้ใช้
+    const userFromToken = validateAndGetUserFromToken();
+    if (userFromToken) {
+      setCurrentUser(userFromToken);
+      fetchData(userFromToken.userId);
+    } else {
+      setLoading(false);
+    }
+  }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (userId) => {
     try {
       setLoading(true);
 
@@ -64,20 +74,16 @@ const Booking = () => {
       }
 
       // สร้างข้อมูลคลาสที่พร้อมแสดงผล
-      // ตรวจสอบว่าชื่อผู้ใช้ปัจจุบันอยู่ในรายชื่อผู้เข้าร่วมหรือไม่
+      const userFullName = getUserFullName();
+
       setEvents(
         classResponse.data.map((event) => {
-          // ตรวจสอบว่า participants มีค่าและเป็น array หรือไม่
           const participants = Array.isArray(event.participants)
             ? event.participants
             : [];
 
-          // ตรวจสอบว่า username ปัจจุบันอยู่ใน participants หรือไม่
-          const isReserved = username
-            ? participants.some((participant) =>
-                participant.toLowerCase().includes(username.toLowerCase())
-              )
-            : false;
+          // ใช้ฟังก์ชันใหม่ในการตรวจสอบ
+          const isReserved = isUserInParticipants(participants, userFullName);
 
           return {
             id: event._id,
@@ -87,7 +93,7 @@ const Booking = () => {
             instructor: event.instructor,
             description: event.description,
             difficulty: event.difficulty,
-            reserved: isReserved, // กำหนดค่าจากการตรวจสอบ username ในรายชื่อผู้เข้าร่วม
+            reserved: isReserved,
             zoomLink: event.zoom_link,
             roomNumber: event.room_number,
             passcode: event.passcode,
@@ -107,14 +113,12 @@ const Booking = () => {
 
   // ตรวจสอบว่าผู้ใช้สามารถจองคลาสได้หรือไม่
   const canBookClasses = () => {
-    if (!userInfo) return false;
+    if (!userInfo || !currentUser) return false;
 
     const { remaining_session, sessions_expiry_date } = userInfo;
 
-    // ตรวจสอบจำนวนการใช้งานที่เหลือ
     if (remaining_session <= 0) return false;
 
-    // ตรวจสอบวันหมดอายุ
     if (
       sessions_expiry_date &&
       moment(sessions_expiry_date).isBefore(moment())
@@ -129,9 +133,7 @@ const Booking = () => {
   const formatExpiryDate = (date) => {
     if (!date) return null;
 
-    // ตั้งค่า moment ให้ใช้ภาษาไทย
     moment.locale("th");
-
     const expiryDate = moment(date).endOf("day");
     const now = moment().startOf("day");
 
@@ -140,8 +142,6 @@ const Booking = () => {
     }
 
     const daysLeft = expiryDate.diff(now, "days");
-
-    // ใช้ปี พ.ศ. โดยเพิ่ม 543 เข้าไปในปี ค.ศ.
     const thaiDate =
       moment(date).format("D MMMM") +
       " " +
@@ -183,7 +183,9 @@ const Booking = () => {
             ให้ขับสารพิษออกทางรูปแบบปัสสาวะ
           </p>
           <p>ขอบคุณที่ใช้บริการไอแอมป์โยคะ 🙏🏻</p>
-          <p>ขออนุญาตนำภาพบรรยากาศการฝึกลงเพจ I'amp yoqa : ไอแอมป์โยคะ 🖼️❤️</p>
+          <p>
+            ขออนุญาตนำภาพบรรยากาศการฝึกลงเพจ I&apos;amp yoqa : ไอแอมป์โยคะ 🖼️❤️
+          </p>
         </div>
       ),
       okText: "เข้าใจแล้ว",
@@ -193,12 +195,13 @@ const Booking = () => {
 
   // จองคอร์ส - ปรับปรุงให้อัปเดต state ทันที
   const handleReserveCourse = async (classId) => {
-    if (!userId) {
+    // ตรวจสอบ token ก่อนดำเนินการ
+    const userFromToken = validateAndGetUserFromToken();
+    if (!userFromToken) {
       message.error("กรุณาเข้าสู่ระบบก่อนทำการจอง ❌");
       return;
     }
 
-    // ตรวจสอบว่าสามารถจองได้หรือไม่
     if (!canBookClasses()) {
       if (
         userInfo?.sessions_expiry_date &&
@@ -214,13 +217,17 @@ const Booking = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const decoded = jwtDecode(token);
-      const fullName =
-        `${decoded.first_name || ""} ${decoded.last_name || ""}`.trim() ||
-        username;
+      const fullName = getUserFullName();
+      if (!fullName) {
+        message.error("❌ ไม่สามารถระบุตัวตนได้ กรุณาล็อกอินใหม่");
+        return;
+      }
 
-      const reservationData = { user_id: userId, class_id: classId };
+      const reservationData = {
+        user_id: userFromToken.userId,
+        class_id: classId,
+      };
+
       const response = await reservationService.createReservation(
         reservationData
       );
@@ -240,7 +247,7 @@ const Booking = () => {
           )
         );
 
-        // อัปเดตข้อมูลผู้ใช้ (จำนวนครั้งคงเหลือ)
+        // อัปเดตข้อมูลผู้ใช้
         if (userInfo) {
           setUserInfo((prev) => ({
             ...prev,
@@ -248,16 +255,13 @@ const Booking = () => {
           }));
         }
 
-        // แสดงรายละเอียดคลาสทันที
         handleShowDetails(classId);
         message.success("✅ จองคอร์สสำเร็จ!");
-
-        // แสดง popup คำแนะนำหลังจองสำเร็จ
         showGuidelinesPopup();
 
-        // รีเฟรชข้อมูลผู้ใช้เพื่อให้แน่ใจว่าข้อมูลตรงกับเซิร์ฟเวอร์
+        // รีเฟรชข้อมูลผู้ใช้
         try {
-          const userResponse = await getUserById(userId);
+          const userResponse = await getUserById(userFromToken.userId);
           if (userResponse && userResponse.user) {
             setUserInfo(userResponse.user);
           }
@@ -270,7 +274,6 @@ const Booking = () => {
     } catch (error) {
       console.error("Error reserving class:", error);
 
-      // แสดงข้อความแจ้งเตือนที่เฉพาะเจาะจง
       if (error.message && error.message.includes("expired")) {
         message.error("❌ คลาสของคุณหมดอายุแล้ว กรุณาซื้อโปรโมชั่นใหม่");
       } else if (error.message && error.message.includes("session")) {
@@ -281,94 +284,166 @@ const Booking = () => {
     }
   };
 
-  // ยกเลิกการจอง - ปรับปรุงให้อัปเดต state ทันที
+  // ยกเลิกการจอง - แก้ไขปัญหาการยกเลิก
   const handleCancelReservation = async (classStartTime, classId) => {
-    const token = localStorage.getItem("token");
-    const decoded = jwtDecode(token);
-    const fullName =
-      `${decoded.first_name || ""} ${decoded.last_name || ""}`.trim() ||
-      username;
+    // ตรวจสอบ token ก่อนดำเนินการ
+    const userFromToken = validateAndGetUserFromToken();
+    if (!userFromToken) {
+      message.error("❌ กรุณาเข้าสู่ระบบก่อนดำเนินการ");
+      return;
+    }
+
+    const fullName = getUserFullName();
+    if (!fullName) {
+      message.error("❌ ไม่สามารถระบุตัวตนได้ กรุณาล็อกอินใหม่");
+      return;
+    }
 
     try {
-      // ดึงข้อมูลการจองจาก API
-      const response = await reservationService.getUserReservations(
-        decoded.userId
-      );
-      const reservations = response.reservations || [];
-
       const now = new Date();
       const fiveMinutesBeforeClass = new Date(classStartTime);
       fiveMinutesBeforeClass.setMinutes(
         fiveMinutesBeforeClass.getMinutes() - 5
       );
 
-      // ตรวจสอบว่าสามารถยกเลิกการจองได้หรือไม่ (ก่อนเวลาเริ่มคลาส 5 นาที)
+      // ตรวจสอบเวลา
       if (now >= fiveMinutesBeforeClass) {
         Modal.error({
-          title: "จองคลาสได้ตลอด",
+          title: "ไม่สามารถยกเลิกได้",
           content:
             "สามารถยกเลิกการจองได้ก่อนเริ่มคลาส 5 นาที โซนเวลาเริ่มคลาสคำนวณจากประเทศไทยปรับเปลี่ยนไปตามโซนเวลาท้องถิ่นในแต่ละประเทศให้อัตโนมัติแล้วนะคะ",
         });
         return;
       }
 
-      // หา reservation ที่ต้องการยกเลิก
-      const reservation = reservations.find(
-        (res) =>
-          res.class_id &&
-          res.class_id._id &&
-          res.class_id._id.toString() === classId.toString()
-      );
+      // แสดง loading
+      const hideLoading = message.loading("กำลังยกเลิกการจอง...", 0);
 
-      if (!reservation || !reservation._id) {
-        message.error("❌ ไม่พบข้อมูลการจอง");
-        return;
-      }
-
-      // ส่งคำขอยกเลิกการจองไปยัง API
-      await reservationService.cancelReservation(reservation._id);
-
-      // อัปเดตสถานะคลาสทันทีในหน้าเว็บ
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === classId
-            ? {
-                ...event,
-                reserved: false,
-                amount: Math.max(0, event.amount - 1),
-                participants: (event.participants || []).filter(
-                  (name) => name !== fullName
-                ),
-              }
-            : event
-        )
-      );
-
-      // อัปเดตข้อมูลผู้ใช้ (เพิ่มจำนวนครั้งคงเหลือ)
-      if (userInfo) {
-        setUserInfo((prev) => ({
-          ...prev,
-          remaining_session: (prev.remaining_session || 0) + 1,
-        }));
-      }
-
-      // ปิดรายละเอียดคลาสที่ถูกยกเลิก
-      setShowDetails((prev) => prev.filter((id) => id !== classId));
-
-      message.success("✅ ยกเลิกการจองสำเร็จ");
-
-      // รีเฟรชข้อมูลผู้ใช้เพื่อให้แน่ใจว่าข้อมูลตรงกับเซิร์ฟเวอร์
       try {
-        const userResponse = await getUserById(userId);
-        if (userResponse && userResponse.user) {
-          setUserInfo(userResponse.user);
+        // ดึงข้อมูลการจองจาก API
+        const response = await reservationService.getUserReservations(
+          userFromToken.userId
+        );
+        const reservations = response.reservations || [];
+
+        console.log("User reservations:", reservations);
+        console.log("Looking for class ID:", classId);
+        console.log("User full name:", fullName);
+
+        // หา reservation ที่ต้องการยกเลิก - ใช้หลายวิธีในการค้นหา
+        let reservation = reservations.find(
+          (res) =>
+            res.class_id &&
+            res.class_id._id &&
+            res.class_id._id.toString() === classId.toString() &&
+            res.status === "Reserved"
+        );
+
+        if (!reservation) {
+          console.warn(
+            "Reservation not found by class_id, trying alternative methods..."
+          );
+
+          // วิธีทางเลือก: หาจากชื่อคลาสและเวลา
+          const targetEvent = events.find((e) => e.id === classId);
+          if (targetEvent) {
+            reservation = reservations.find(
+              (res) =>
+                res.class_id &&
+                res.class_id.title === targetEvent.title &&
+                moment(res.class_id.start_time).isSame(
+                  moment(classStartTime)
+                ) &&
+                res.status === "Reserved"
+            );
+          }
         }
-      } catch (userError) {
-        console.warn("Failed to refresh user data:", userError);
+
+        hideLoading();
+
+        if (!reservation || !reservation._id) {
+          console.error("No reservation found:", {
+            reservations,
+            classId,
+            fullName,
+          });
+          message.error("❌ ไม่พบข้อมูลการจอง หรือการจองถูกยกเลิกไปแล้ว");
+
+          // รีเฟรชข้อมูลเพื่อให้แน่ใจว่าข้อมูลตรงกับเซิร์ฟเวอร์
+          fetchData(userFromToken.userId);
+          return;
+        }
+
+        console.log("Found reservation to cancel:", reservation);
+
+        // ส่งคำขอยกเลิกการจองไปยัง API
+        await reservationService.cancelReservation(reservation._id);
+
+        // อัปเดตสถานะคลาสทันทีในหน้าเว็บ
+        setEvents((prevEvents) =>
+          prevEvents.map((event) =>
+            event.id === classId
+              ? {
+                  ...event,
+                  reserved: false,
+                  amount: Math.max(0, event.amount - 1),
+                  participants: (event.participants || []).filter((name) => {
+                    const normalizedName = name.toLowerCase().trim();
+                    const normalizedFullName = fullName.toLowerCase().trim();
+                    return (
+                      !normalizedName.includes(normalizedFullName) &&
+                      !normalizedFullName.includes(normalizedName)
+                    );
+                  }),
+                }
+              : event
+          )
+        );
+
+        // อัปเดตข้อมูลผู้ใช้
+        if (userInfo) {
+          setUserInfo((prev) => ({
+            ...prev,
+            remaining_session: (prev.remaining_session || 0) + 1,
+          }));
+        }
+
+        // ปิดรายละเอียดคลาสที่ถูกยกเลิก
+        setShowDetails((prev) => prev.filter((id) => id !== classId));
+
+        message.success("✅ ยกเลิกการจองสำเร็จ");
+
+        // รีเฟรชข้อมูลผู้ใช้
+        try {
+          const userResponse = await getUserById(userFromToken.userId);
+          if (userResponse && userResponse.user) {
+            setUserInfo(userResponse.user);
+          }
+        } catch (userError) {
+          console.warn("Failed to refresh user data:", userError);
+        }
+      } catch (apiError) {
+        hideLoading();
+        throw apiError;
       }
     } catch (error) {
       console.error("❌ Error canceling reservation:", error);
-      message.error("❌ เกิดข้อผิดพลาดในการยกเลิกการจอง");
+
+      // แสดงข้อความแจ้งเตือนที่เฉพาะเจาะจง
+      if (error.response && error.response.status === 404) {
+        message.error("❌ ไม่พบข้อมูลการจอง กรุณารีเฟรชหน้าเว็บ");
+        // รีเฟรชข้อมูลอัตโนมัติ
+        fetchData(userFromToken.userId);
+      } else if (error.response && error.response.status === 401) {
+        message.error("❌ Session หมดอายุ กรุณาล็อกอินใหม่");
+        // ลบ token และ redirect ไปหน้า login
+        localStorage.clear();
+        window.location.href = "/auth/signin";
+      } else {
+        message.error(
+          "❌ เกิดข้อผิดพลาดในการยกเลิกการจอง กรุณาลองใหม่หรือติดต่อเจ้าหน้าที่"
+        );
+      }
     }
   };
 
@@ -392,6 +467,31 @@ const Booking = () => {
     return event.reserved || showDetails.includes(event.id);
   };
 
+  // ถ้าไม่มี token ให้แสดงข้อความให้ล็อกอิน
+  if (!currentUser) {
+    return (
+      <div
+        className="min-h-screen flex flex-col bg-gradient-to-b"
+        style={{
+          background:
+            "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+        }}
+      >
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <Card className="p-8 text-center">
+            <Title level={3}>กรุณาเข้าสู่ระบบ</Title>
+            <p>คุณต้องเข้าสู่ระบบก่อนเพื่อจองคลาสเรียน</p>
+            <Button type="primary" href="/auth/signin">
+              เข้าสู่ระบบ
+            </Button>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen flex flex-col bg-gradient-to-b"
@@ -407,6 +507,13 @@ const Booking = () => {
             <Title level={3} className="text-purple-700 mb-0">
               จองคลาสเรียน
             </Title>
+            <Button
+              type="default"
+              onClick={() => fetchData(currentUser.userId)}
+              loading={loading}
+            >
+              รีเฟรชข้อมูล
+            </Button>
           </div>
 
           {/* แบนเนอร์แสดงสถานะการหมดอายุ */}
@@ -424,6 +531,7 @@ const Booking = () => {
                 )}
               </div>
 
+              {/* Alert messages สำหรับสถานะต่างๆ */}
               {userInfo.sessions_expiry_date &&
                 moment(userInfo.sessions_expiry_date).isBefore(moment()) && (
                   <Alert
@@ -583,7 +691,7 @@ const Booking = () => {
                           </span>
                         )}
                       </div>
-                    ) : userId ? (
+                    ) : (
                       <Tooltip
                         title={
                           !canBookClasses()
@@ -607,10 +715,6 @@ const Booking = () => {
                           จองคลาสนี้
                         </Button>
                       </Tooltip>
-                    ) : (
-                      <span className="text-gray-500 font-semibold">
-                        🔒 ต้องเข้าสู่ระบบเพื่อจอง
-                      </span>
                     )}
                   </div>
                 </Card>
