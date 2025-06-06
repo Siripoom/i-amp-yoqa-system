@@ -94,7 +94,9 @@ exports.getUserReservations = async (req, res) => {
     const reservations = await Reservation.find({
       user_id,
       status: "Reserved",
-    }).populate("class_id", "title start_date end_date instructor");
+    })
+      .sort({ reservation_date: -1 })
+      .populate("class_id", "title start_date end_date instructor");
 
     res.status(200).json({ reservations });
   } catch (error) {
