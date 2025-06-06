@@ -64,10 +64,16 @@ exports.getAllClasses = async (req, res) => {
   try {
     const now = dayjs();
 
-    // First get all classes that haven't ended yet
-    const classes = await Class.find({
+    // Get all classes that haven't ended yet
+    let classes = await Class.find({
       end_time: { $gte: now.toDate() },
-    }).lean(); // Convert Mongoose docs to plain JS objects
+    }).lean();
+
+    // Filter out classes that have started and amount = 0
+    classes = classes.filter((cls) => {
+      const hasStarted = dayjs(cls.start_time).isBefore(now);
+      return !(hasStarted && cls.amount === 0);
+    });
 
     // Sort by start_time in ascending order (earliest first)
     const sortedClasses = classes.sort((a, b) =>
