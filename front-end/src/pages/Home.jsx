@@ -2,6 +2,7 @@ import { Button, message } from "antd";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
+import SEOHead from "../components/SEOHead";
 import SliderSection from "../components/SliderSection";
 import image1 from "../assets/images/iamge1.png";
 import courseShow from "../assets/images/courseshow.png";
@@ -13,7 +14,13 @@ import { useEffect, useState } from "react";
 const Home = () => {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
-
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "IAMPYOQA",
+    description: "โยคะออนไลน์ คลาสโยคะหลากหลายระดับ",
+    url: "https://iampyoqa.com",
+  };
   useEffect(() => {
     setLoading(true);
     getProducts()
@@ -53,6 +60,13 @@ const Home = () => {
           "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
       }}
     >
+      <SEOHead
+        title="หน้าแรก"
+        description="เรียนโยคะออนไลน์กับ IAMPYOQA คลาสโยคะหลากหลายระดับ จองคอร์สง่าย ๆ พร้อมครูผู้สอนมืออาชีพ เริ่มต้นฝึกโยคะที่บ้าน"
+        keywords="โยคะ, โยคะออนไลน์, คลาสโยคะ, เรียนโยคะ, โยคะไทย"
+        url="/"
+        structuredData={structuredData}
+      />
       <Navbar />
       {/* Image slider Section */}
       <motion.div
@@ -63,7 +77,7 @@ const Home = () => {
       >
         <SliderSection />
       </motion.div>
-      {/* Explore More Section */}
+      {/* /* Explore More Section */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -87,7 +101,7 @@ const Home = () => {
           {loading ? (
             <p className="text-center text-gray-500">Loading products...</p>
           ) : products.length > 0 ? (
-            products.map((product, index) => (
+            products.slice(0, 6).map((product, index) => (
               <div
                 key={index}
                 className="w-32 sm:w-36 md:w-40 h-40 sm:h-48 md:h-52 bg-white rounded-lg shadow-md flex flex-col items-center justify-center p-3 md:p-4 hover:shadow-lg transition-shadow duration-300"
@@ -96,6 +110,7 @@ const Home = () => {
                   src={product.image || image1}
                   alt="Product"
                   className="w-full h-24 sm:h-28 md:h-32 object-cover rounded-t-lg"
+                  loading="lazy"
                 />
                 <p className="mt-2 text-gray-700 font-semibold text-center text-xs sm:text-sm">
                   {product.sessions
@@ -154,6 +169,7 @@ const Home = () => {
               src={courseShow}
               alt="courseShow"
               className="rounded-lg shadow-lg w-full h-auto"
+              loading="lazy"
             />
           </motion.div>
           <motion.div

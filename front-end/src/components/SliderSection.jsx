@@ -65,6 +65,7 @@ const SliderSection = () => {
                   src={sliderImages[0].image}
                   alt={sliderImages[0].title || "Hero Image"}
                   className="rounded-lg shadow-lg object-cover w-full h-64 md:h-80 lg:h-96"
+                  loading="lazy"
                 />
                 {sliderImages[0].title && (
                   <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
@@ -87,6 +88,7 @@ const SliderSection = () => {
                       src={slide.image}
                       alt={slide.title || `Slide ${index + 1}`}
                       className="object-cover w-full h-64 md:h-80 lg:h-96"
+                      loading="lazy"
                     />
                     {slide.title && (
                       <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded">

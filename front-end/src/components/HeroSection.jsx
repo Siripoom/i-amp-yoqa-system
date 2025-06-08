@@ -26,6 +26,7 @@ const HeroSection = () => {
               src={heroImage}
               alt="Yoga Hero"
               className="rounded-lg shadow-lg object-cover"
+              loading="lazy"
             />
           </div>
         </Col>

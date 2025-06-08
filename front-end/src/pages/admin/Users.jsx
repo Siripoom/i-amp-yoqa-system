@@ -41,7 +41,7 @@ import {
 } from "../../services/userService";
 import reservationService from "../../services/reservationService";
 import moment from "moment";
-
+import dayjs from "dayjs";
 const { Sider, Content } = Layout;
 const { Option } = Select;
 
@@ -217,6 +217,12 @@ const UserPage = () => {
     { title: "First Name", dataIndex: "first_name", key: "first_name" },
     { title: "Last Name", dataIndex: "last_name", key: "last_name" },
     { title: "Email", dataIndex: "email", key: "email" },
+    {
+      title: "Birth Date",
+      dataIndex: "birth_date",
+      key: "birth_date",
+      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : null),
+    },
     {
       title: "Remaining Session",
       dataIndex: "remaining_session",

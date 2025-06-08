@@ -5,12 +5,21 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { getProducts } from "../services/productService";
 import image from "../assets/images/imageC1.png";
-
+import SEOHead from "../components/SEOHead";
 const Course = () => {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
-
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: "คอร์สโยคะ IAMPYOQA",
+    description: "โปรโมชั่นคอร์สโยคะ ราคาพิเศษ",
+    provider: {
+      "@type": "Organization",
+      name: "IAMPYOQA",
+    },
+  };
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchProducts();
@@ -44,6 +53,13 @@ const Course = () => {
 
   return (
     <>
+      <SEOHead
+        title="โปรโมชั่นคอร์สโยคะ"
+        description="โปรโมชั่นคอร์สโยคะ IAMPYOQA ราคาพิเศษ คอร์สหลากหลาย เหมาะกับทุกระดับ จองง่าย เริ่มเรียนได้ทันที"
+        keywords="โปรโมชั่นโยคะ, คอร์สโยคะ, ราคาพิเศษ, จองคอร์สโยคะ"
+        url="/course"
+        structuredData={structuredData}
+      />
       <div
         className="min-h-screen"
         style={{
@@ -79,6 +95,7 @@ const Course = () => {
                           src={product.image || image}
                           className="rounded-t-lg object-cover h-65"
                           alt="Course"
+                          loading="lazy"
                         />
                       }
                     >

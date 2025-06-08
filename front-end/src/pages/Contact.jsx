@@ -123,6 +123,7 @@ const Contact = () => {
                           objectFit: "cover",
                           width: "100%",
                         }}
+                        loading="lazy"
                       />
                       {/* Video overlay button */}
                       {instructor.videoUrl && (
