@@ -70,11 +70,7 @@ const SignIn = () => {
             name="username"
             rules={[{ required: true, message: "Please enter your username!" }]}
           >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="Username"
-              size="large"
-            />
+            <Input prefix={<UserOutlined />} placeholder="Email" size="large" />
           </Form.Item>
 
           <Form.Item
