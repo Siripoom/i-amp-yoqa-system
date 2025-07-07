@@ -72,6 +72,19 @@ const Footer = () => {
             <p className="text-gray-400 text-sm mt-4">
               @ 2024 - IAMPYOQA - Designed & Developed by Siripoom
             </p>
+            <Link
+              to="https://dbdregistered.dbd.go.th/api/public/shopinfo?param=6A693ADD3AD1C7457F18C78598EDAD1C1AF6EFDB5823CFE666A39F9441048B67"
+              target="_blank"
+              className="dbd-link-container"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://dbdregistered.dbd.go.th/api/public/banner?param=6A693ADD3AD1C7457F18C78598EDAD1C1AF6EFDB5823CFE666A39F9441048B67"
+                alt="DBD Registered Shop Information"
+                className="dbd-banner-image"
+                loading="lazy"
+              />
+            </Link>
           </div>
 
           {/* Support Section */}

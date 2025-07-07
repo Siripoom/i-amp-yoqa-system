@@ -5,7 +5,6 @@ import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
-import classService from "../services/classService";
 import reservationService from "../services/reservationService";
 import { getUserById } from "../services/userService";
 
@@ -16,48 +15,62 @@ const Myplane = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const [events, setEvents] = useState([]);
+  const [bookedClasses, setBookedClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userInfo, setUserInfo] = useState(null);
   const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
-    const fetchUserAndClasses = async () => {
+    const fetchUserAndBookedClasses = async () => {
       try {
-        // Fetch user info and class data in parallel
-        const [userResponse, classResponse, reservationResponse] =
-          await Promise.all([
-            userId ? getUserById(userId) : Promise.resolve(null),
-            classService.getAllClasses(),
-            userId
-              ? reservationService.getUserReservations(userId)
-              : Promise.resolve({ data: [] }),
-          ]);
+        if (!userId) {
+          setLoading(false);
+          return;
+        }
+
+        // Fetch user info and reservations in parallel
+        const [userResponse, reservationResponse] = await Promise.all([
+          getUserById(userId),
+          reservationService.getUserReservations(userId),
+        ]);
+
+        // Debug logs (ลบออกหลังจากทดสอบเสร็จ)
+        console.log("User Response:", userResponse);
+        console.log("Reservation Response:", reservationResponse);
 
         // Set user info
         if (userResponse && userResponse.user) {
           setUserInfo(userResponse.user);
         }
 
-        if (classResponse.status === "success") {
-          const reservedClassIds = new Set(
-            reservationResponse.data.map((res) => res.class_id)
-          );
+        // ดึงข้อมูลเฉพาะคลาสที่จองแล้ว
+        const reservations = reservationResponse.reservations || [];
+        console.log("Reservations:", reservations);
 
-          setEvents(
-            classResponse.data.map((event) => ({
-              id: event._id,
-              title: event.title,
-              date: new Date(event.start_time),
-              instructor: event.instructor,
-              description: event.description,
-              reserved: reservedClassIds.has(event._id),
-              zoomLink: event.zoom_link,
-              roomNumber: event.room_number,
-              passcode: event.passcode,
-            }))
-          );
-        }
+        // แปลงข้อมูล reservations เป็นรูปแบบที่ต้องการแสดงผล
+        const bookedClassesData = reservations
+          .filter((res) => res.status === "Reserved") // แสดงเฉพาะที่ยังจองอยู่
+          .map((res) => {
+            const classData = res.class_id;
+            console.log("Class data from reservation:", classData);
+
+            return {
+              id: classData._id,
+              reservationId: res._id,
+              title: classData.title,
+              instructor: classData.instructor,
+              date: new Date(classData.start_time),
+              description: classData.description,
+              reserved: true, // เป็น true เสมอเพราะเป็นคลาสที่จองแล้ว
+              zoomLink: classData.zoom_link,
+              roomNumber: classData.room_number,
+              passcode: classData.passcode,
+              reservationDate: new Date(res.reservation_date),
+            };
+          });
+
+        console.log("Booked classes data:", bookedClassesData);
+        setBookedClasses(bookedClassesData);
       } catch (error) {
         console.error("Error fetching data:", error);
         message.error("ไม่สามารถโหลดข้อมูลได้ ❌");
@@ -66,7 +79,7 @@ const Myplane = () => {
       }
     };
 
-    fetchUserAndClasses();
+    fetchUserAndBookedClasses();
   }, [userId]);
 
   // Format expiration date with relative time
@@ -120,46 +133,32 @@ const Myplane = () => {
     }
   };
 
-  // Handle reserve course
-  const handleReserveCourse = async (classId) => {
-    if (!userId) {
-      message.error("กรุณาเข้าสู่ระบบก่อนทำการจอง ❌");
-      return;
-    }
-
+  // Handle cancel reservation
+  const handleCancelReservation = async (reservationId, classTitle) => {
     try {
-      const reservationData = { user_id: userId, class_id: classId };
-      const response = await reservationService.createReservation(
-        reservationData
+      const confirmed = window.confirm(
+        `คุณต้องการยกเลิกการจอง "${classTitle}" หรือไม่?`
       );
 
-      if (response) {
-        // Update events state
-        setEvents((prevEvents) =>
-          prevEvents.map((event) =>
-            event.id === classId ? { ...event, reserved: true } : event
-          )
-        );
+      if (!confirmed) return;
 
-        // Refresh user info to get updated session count and expiry date
-        const userResponse = await getUserById(userId);
-        if (userResponse && userResponse.user) {
-          setUserInfo(userResponse.user);
-        }
+      await reservationService.cancelReservation(reservationId);
 
-        message.success("✅ จองคอร์สสำเร็จ! ตรวจสอบรายละเอียดใน My Plane.");
-      } else {
-        message.error("❌ เกิดข้อผิดพลาดในการจอง กรุณาลองใหม่");
+      // Remove the cancelled class from the list
+      setBookedClasses((prevClasses) =>
+        prevClasses.filter((cls) => cls.reservationId !== reservationId)
+      );
+
+      // Refresh user info to get updated session count
+      const userResponse = await getUserById(userId);
+      if (userResponse && userResponse.user) {
+        setUserInfo(userResponse.user);
       }
+
+      message.success("✅ ยกเลิกการจองสำเร็จ!");
     } catch (error) {
-      console.error("Error reserving class:", error);
-
-      // More specific error messages based on the error
-      if (error.message && error.message.includes("expired")) {
-        message.error("❌ คลาสของคุณหมดอายุแล้ว กรุณาซื้อโปรโมชั่นใหม่");
-      } else {
-        message.error("❌ จองคอร์สไม่สำเร็จ กรุณาลองใหม่");
-      }
+      console.error("Error cancelling reservation:", error);
+      message.error("❌ ไม่สามารถยกเลิกการจองได้");
     }
   };
 
@@ -256,78 +255,99 @@ const Myplane = () => {
               </div>
             )}
 
-            <Title level={3} className="text-purple-700">
-              My Course Schedule
-            </Title>
+            <div className="flex justify-between items-center mb-4">
+              <Title level={3} className="text-purple-700 mb-0">
+                My Booked Classes
+              </Title>
+              <Link to="/booking">
+                <Button type="primary" className="bg-purple-600">
+                  Book More Classes
+                </Button>
+              </Link>
+            </div>
 
             {loading ? (
               <p className="text-center text-gray-500">
                 กำลังโหลดข้อมูลคอร์ส...
               </p>
-            ) : events.length === 0 ? (
-              <p className="text-center text-gray-500">
-                ไม่มีคอร์สที่สามารถจองได้
-              </p>
+            ) : !userId ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">
+                  กรุณาเข้าสู่ระบบเพื่อดูคลาสที่จองไว้
+                </p>
+                <Link to="/auth/signin">
+                  <Button type="primary" className="bg-purple-600">
+                    เข้าสู่ระบบ
+                  </Button>
+                </Link>
+              </div>
+            ) : bookedClasses.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">คุณยังไม่มีคลาสที่จองไว้</p>
+                <Link to="/booking">
+                  <Button type="primary" className="bg-purple-600">
+                    จองคลาสเลย
+                  </Button>
+                </Link>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                {events.map((event) => (
+                {bookedClasses.map((classItem) => (
                   <Card
-                    key={event.id}
+                    key={classItem.reservationId}
                     className="p-4 rounded-lg shadow-md"
-                    title={event.title}
+                    title={classItem.title}
                     extra={
-                      event.reserved ? (
+                      <div className="flex items-center gap-2">
                         <span className="text-green-500 font-semibold">
                           จองแล้ว ✅
                         </span>
-                      ) : (
-                        <Button
-                          type="primary"
-                          className="bg-purple-600 text-white"
-                          onClick={() => handleReserveCourse(event.id)}
-                          disabled={
-                            !userInfo ||
-                            userInfo.remaining_session <= 0 ||
-                            (userInfo.sessions_expiry_date &&
-                              moment(userInfo.sessions_expiry_date).isBefore(
-                                moment()
-                              ))
-                          }
-                        >
-                          Reserve Course
-                        </Button>
-                      )
+                      </div>
                     }
                   >
                     <p>
-                      <strong>Instructor:</strong> {event.instructor}
+                      <strong>Instructor:</strong> {classItem.instructor}
                     </p>
+                    {/* <p>
+                      <strong>Class Date:</strong>{" "}
+                      {moment(classItem.date).format("MMMM Do YYYY, h:mm A")}
+                    </p> */}
                     <p>
-                      <strong>Date:</strong>{" "}
-                      {moment(event.date).format("MMMM Do YYYY")}
+                      <strong>Booked Date:</strong>{" "}
+                      {moment(classItem.reservationDate).format("MMMM Do YYYY")}
                     </p>
-                    <p>
-                      <strong>Description:</strong> {event.description}
-                    </p>
+                    {/* {classItem.description && (
+                      <p>
+                        <strong>Description:</strong> {classItem.description}
+                      </p>
+                    )} */}
 
-                    {event.reserved && (
-                      <>
+                    {/* แสดงข้อมูลคลาสที่จองแล้วเสมอ */}
+                    {/* <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+                      <h4 className="text-purple-700 font-semibold mb-2">
+                        Class Details:
+                      </h4>
+                      {classItem.roomNumber && (
                         <p>
                           <strong>📌 Room Number:</strong>{" "}
                           <span className="text-purple-600">
-                            {event.roomNumber}
+                            {classItem.roomNumber}
                           </span>
                         </p>
+                      )}
+                      {classItem.passcode && (
                         <p>
                           <strong>🔑 Passcode:</strong>{" "}
                           <span className="text-purple-600">
-                            {event.passcode}
+                            {classItem.passcode}
                           </span>
                         </p>
+                      )}
+                      {classItem.zoomLink && (
                         <p>
-                          <strong>🔗 Zoom Link:</strong>
+                          <strong>🔗 Zoom Link:</strong>{" "}
                           <a
-                            href={event.zoomLink}
+                            href={classItem.zoomLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 underline"
@@ -335,8 +355,22 @@ const Myplane = () => {
                             Join Zoom Class
                           </a>
                         </p>
-                      </>
-                    )}
+                      )}
+                    </div> */}
+
+                    {/* <div className="mt-4 text-center">
+                      <Button
+                        danger
+                        onClick={() =>
+                          handleCancelReservation(
+                            classItem.reservationId,
+                            classItem.title
+                          )
+                        }
+                      >
+                        Cancel Reservation
+                      </Button>
+                    </div> */}
                   </Card>
                 ))}
               </div>

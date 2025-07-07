@@ -8,7 +8,6 @@ import {
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import HeroSection from "../components/HeroSection";
 import { MasterImage } from "../services/imageService";
 
 const { Title, Paragraph, Text } = Typography;
@@ -89,7 +88,6 @@ const Contact = () => {
       }}
     >
       <Navbar />
-      {/* <HeroSection /> */}
 
       {/* Grid Layout สำหรับแสดงครูโยคะ */}
       <div className="container mx-auto px-4 py-10">
@@ -119,8 +117,8 @@ const Contact = () => {
                         alt={instructor.mastername}
                         src={instructor.image}
                         style={{
-                          height: "250px",
-                          objectFit: "cover",
+                          height: "350px",
+                          objectFit: "fit",
                           width: "100%",
                         }}
                         loading="lazy"

@@ -42,8 +42,8 @@ const SliderSection = () => {
       <div className="hero-section py-12 flex justify-center items-center">
         <Row justify="center" align="middle" className="w-full">
           <Col xs={24} className="flex justify-center">
-            <div className="w-3/4 md:w-1/2 h-auto">
-              <div className="bg-gray-200 rounded-lg shadow-lg flex items-center justify-center h-64">
+            <div className="w-full max-w-4xl px-4">
+              <div className="bg-gray-200 rounded-lg shadow-lg flex items-center justify-center h-48 sm:h-64 md:h-80 lg:h-96">
                 <span className="text-gray-500">No images available</span>
               </div>
             </div>
@@ -57,14 +57,14 @@ const SliderSection = () => {
     <div className="hero-section py-12 flex justify-center items-center">
       <Row justify="center" align="middle" className="w-full">
         <Col xs={24} className="flex justify-center">
-          <div className="w-3/4 md:w-1/2 h-auto">
+          <div className="w-full max-w-4xl px-4">
             {sliderImages.length === 1 ? (
               // แสดงรูปเดียวถ้ามีแค่รูปเดียว
-              <div className="relative">
+              <div className="relative  overflow-hidden">
                 <img
                   src={sliderImages[0].image}
                   alt={sliderImages[0].title || "Hero Image"}
-                  className="rounded-lg shadow-lg object-cover w-full h-64 md:h-80 lg:h-96"
+                  className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-contain"
                   loading="lazy"
                 />
                 {sliderImages[0].title && (
@@ -80,14 +80,14 @@ const SliderSection = () => {
                 autoplaySpeed={4000}
                 dots={true}
                 effect="fade"
-                className="rounded-lg overflow-hidden shadow-lg"
+                className=" overflow-hidden "
               >
                 {sliderImages.map((slide, index) => (
-                  <div key={slide._id || index} className="relative">
+                  <div key={slide._id || index} className="relative ">
                     <img
                       src={slide.image}
                       alt={slide.title || `Slide ${index + 1}`}
-                      className="object-cover w-full h-64 md:h-80 lg:h-96"
+                      className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-contain"
                       loading="lazy"
                     />
                     {slide.title && (

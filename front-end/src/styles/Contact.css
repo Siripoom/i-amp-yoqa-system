@@ -1,19 +1,25 @@
-/* Contact.css */
+/* Contact.css - Updated for Full Width Images */
 .master-card {
   transition: all 0.3s ease;
-  position: relative;
+  border-radius: 12px;
   overflow: hidden;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .master-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
 .master-image-container {
   position: relative;
   overflow: hidden;
-  height: 250px;
+  height: 280px;
+  width: 100%;
 }
 
 .master-image {
@@ -24,68 +30,91 @@
 }
 
 .master-card:hover .master-image {
-  transform: scale(1.05);
+  transform: scale(1.08);
+}
+
+/* Video play overlay */
+.master-image-container .absolute {
+  backdrop-filter: blur(1px);
 }
 
 .video-indicator {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background-color: rgba(253, 91, 144, 0.8);
+  bottom: 12px;
+  right: 12px;
+  background-color: rgba(253, 91, 144, 0.9);
   color: white;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .video-indicator:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
   background-color: rgba(253, 91, 144, 1);
+  box-shadow: 0 4px 12px rgba(253, 91, 144, 0.4);
 }
 
 .master-info {
-  padding: 15px;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .master-name {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 600;
-  color: #4a4a4a;
+  color: #7c3aed;
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  line-height: 1.3;
 }
 
 .master-specialization {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.master-specialization .ant-typography {
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .master-bio {
-  color: #666;
+  color: #6b7280;
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.6;
   text-align: center;
+  flex: 1;
+  margin-bottom: 16px;
 }
 
 .watch-button {
-  margin-top: 12px;
-  background-color: #fd5b90;
-  border-color: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  margin-right: auto;
+  background: linear-gradient(135deg, #fd5b90 0%, #ff3a78 100%);
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  height: 40px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(253, 91, 144, 0.3);
 }
 
 .watch-button:hover {
-  background-color: #ff3a78;
-  border-color: transparent;
+  background: linear-gradient(135deg, #ff3a78 0%, #e8356e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(253, 91, 144, 0.4);
+}
+
+.watch-button:focus {
+  background: linear-gradient(135deg, #fd5b90 0%, #ff3a78 100%);
 }
 
 /* Video Modal Styles */
@@ -94,59 +123,142 @@
   padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
   height: 0;
   overflow: hidden;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.video-container video {
+.video-container iframe {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  border: none;
+  border-radius: 12px;
 }
 
 /* Master Detail in Modal */
 .master-details {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 15px;
+  background-color: #f8fafc;
+  padding: 20px;
+  border-radius: 0 0 12px 12px;
 }
 
-.master-details h5 {
+.master-details .ant-typography {
   margin-bottom: 8px;
-  color: #333;
 }
 
-/* Specialized for dark mode compatibility */
-@media (prefers-color-scheme: dark) {
-  .master-details {
-    background-color: #2a2a2a;
-  }
-
-  .master-name {
-    color: #e0e0e0;
-  }
-
-  .master-bio {
-    color: #b0b0b0;
-  }
-}
-
-/* Loading Skeleton styles */
+/* Loading state */
 .master-skeleton {
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
+  background: #f1f5f9;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
   .master-image-container {
+    height: 220px;
+  }
+
+  .master-name {
+    font-size: 1.1rem;
+  }
+
+  .master-info {
+    padding: 16px;
+  }
+
+  .video-indicator {
+    width: 40px;
+    height: 40px;
+    bottom: 10px;
+    right: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .master-image-container {
     height: 200px;
   }
 
   .master-name {
-    font-size: 1.2rem;
+    font-size: 1rem;
+  }
+
+  .master-bio {
+    font-size: 0.85rem;
+  }
+}
+
+/* Dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+  .master-card {
+    background-color: #1f2937;
+  }
+
+  .master-details {
+    background-color: #374151;
+  }
+
+  .master-name {
+    color: #e5e7eb;
+  }
+
+  .master-bio {
+    color: #d1d5db;
+  }
+}
+
+/* Grid responsiveness enhancements */
+.ant-row {
+  margin-left: -12px;
+  margin-right: -12px;
+}
+
+.ant-col {
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-bottom: 24px;
+}
+
+/* Smooth loading transition */
+.master-card {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.master-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.master-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.master-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.master-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
