@@ -65,8 +65,8 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   userTerms: {
-    Boolean: false, // ฟิลด์สำหรับเก็บข้อมูล UserTerms
-    default: false,
+    type: Boolean,
+    default: false, // ฟิลด์สำหรับเก็บข้อมูลการยอมรับเง
   },
 
   deleted: { type: Boolean, default: false }, // ฟิลด์สำหรับ soft delete

@@ -18,7 +18,7 @@ import {
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../services/authService";
-import IampYogaTermsForm from "./components/IampYogaTermsForm";
+import IampYogaTermsForm from "../components/IampYogaTermsForm";
 import dayjs from "dayjs";
 
 const { Title } = Typography;

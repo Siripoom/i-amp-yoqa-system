@@ -111,7 +111,7 @@ const IampYogaTermsForm = ({
 
       // Import service at runtime to avoid dependency issues
       const { createUserTerms, updateUserTerms } = await import(
-        "../services/userTermsService"
+        "../services/userTermService"
       );
 
       let response;
