@@ -141,7 +141,12 @@ const MyOrders = () => {
               >
                 My Profile
               </Link>
-
+              <Link
+                to="/my-plane"
+                className="text-gray-400 cursor-pointer block"
+              >
+                My Plane
+              </Link>
               <Link
                 to="/my-orders"
                 className="text-purple-600 font-semibold cursor-pointer block"

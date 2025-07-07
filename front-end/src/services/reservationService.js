@@ -20,6 +20,7 @@ const reservationService = {
   getUserReservations: async (userId) => {
     try {
       const response = await axios.get(`${API_URL}/api/user/${userId}`);
+      console.log(response.data);
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : error;
