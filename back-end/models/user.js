@@ -64,6 +64,10 @@ const userSchema = new mongoose.Schema({
   special_rights: {
     type: String,
   },
+  userTerms: {
+    Boolean: false, // ฟิลด์สำหรับเก็บข้อมูล UserTerms
+    default: false,
+  },
 
   deleted: { type: Boolean, default: false }, // ฟิลด์สำหรับ soft delete
 });
