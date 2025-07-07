@@ -1,41 +1,21 @@
-const userTerms = require("../models/userTerms");
+const UserTerms = require("../models/userTerms");
 
 exports.createUserTerms = async (req, res) => {
   try {
-    const {
-      userId,
-      accepted,
-      agreement1,
-      agreement2,
-      agreement3,
-      agreement4,
-      agreement5,
-    } = req.body;
+    const { fullName } = req.body;
 
-    // ตรวจสอบว่ามี User อยู่หรือไม่
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-
-    // สร้าง UserTerms ใหม่
-    const userTermsData = new userTerms({
-      userId,
-      accepted,
-      agreement1,
-      agreement2,
-      agreement3,
-      agreement4,
-      agreement5,
+    const userTermsData = new UserTerms({
+      fullName,
+      accepted: true, // set to true when created
       acceptedAt: new Date(),
     });
 
-    // บันทึกลงฐานข้อมูล
+    // Save to database
     await userTermsData.save();
 
     res.status(201).json({
       status: "success",
       message: "User terms created successfully",
-      data: userTermsData,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -28,6 +28,7 @@ import ImageSetup from "./pages/admin/ImageSetup";
 import Line from "./pages/Line";
 import InstructorReport from "./pages/admin/InstructorReport";
 import AutoLogoutProvider from "./components/AutoLogoutProvider";
+import Term from "./pages/Term";
 
 const AppRouter = () => (
   <Router>
@@ -37,6 +38,7 @@ const AppRouter = () => (
         <Route path="/" element={<HomePage />} />
         <Route path="/auth/signin" element={<SignIn />} />
         <Route path="/auth/signup" element={<SignUp />} />
+        <Route path="/term" element={<Term />} />
         <Route path="/auth/line" element={<Line />} />
         <Route path="/course" element={<Course />} />
         <Route path="/course/id" element={<CourseDetail />} />

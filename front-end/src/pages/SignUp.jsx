@@ -18,7 +18,7 @@ import {
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../services/authService";
-import IampYogaTermsForm from "../components/IampYogaTermsForm";
+
 import dayjs from "dayjs";
 
 const { Title } = Typography;
@@ -40,7 +40,7 @@ const SignUp = () => {
       const response = await register(formattedValues);
 
       message.success("Registration successful! Redirecting...");
-      setTimeout(() => navigate("/auth/signin"), 2000);
+      setTimeout(() => navigate("/term"), 2000);
     } catch (error) {
       message.error(error.response?.data?.message || "Registration failed");
     } finally {
