@@ -29,6 +29,7 @@ import Line from "./pages/Line";
 import InstructorReport from "./pages/admin/InstructorReport";
 import AutoLogoutProvider from "./components/AutoLogoutProvider";
 import Term from "./pages/Term";
+import GoodsPages from "./pages/admin/Goods";
 
 const AppRouter = () => (
   <Router>
@@ -79,6 +80,14 @@ const AppRouter = () => (
           element={
             <AdminRoute>
               <ProductPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/goods"
+          element={
+            <AdminRoute>
+              <GoodsPages />
             </AdminRoute>
           }
         />

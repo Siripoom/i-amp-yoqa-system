@@ -40,7 +40,14 @@ const Sidebar = () => {
           activeClassName="active"
           className="nav-item"
         >
-          <AppstoreOutlined /> <span>Products</span>
+          <AppstoreOutlined /> <span>Promotion</span>
+        </NavLink>
+        <NavLink
+          to="/admin/goods"
+          activeClassName="active"
+          className="nav-item"
+        >
+          <AppstoreOutlined /> <span>Product</span>
         </NavLink>
         <NavLink
           to="/admin/courses"

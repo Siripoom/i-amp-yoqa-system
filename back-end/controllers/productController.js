@@ -1,29 +1,107 @@
 const Product = require("../models/product");
 const multer = require("multer");
 const path = require("path");
-const supabase = require("../config/supabaseConfig"); // Import the Supabase client
+const supabase = require("../config/supabaseConfig");
 const dotenv = require("dotenv");
-dotenv.config(); // Load environment variables
+dotenv.config();
 
 // Use Multer for file uploads (memory storage)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// Helper function to validate promotion data
+const validatePromotion = (promotion) => {
+  if (!promotion) return true;
+
+  // If promotion object exists, validate its fields
+  if (promotion.price && promotion.price <= 0) {
+    throw new Error("Promotion price must be greater than 0");
+  }
+
+  if (promotion.startDate && promotion.endDate) {
+    const start = new Date(promotion.startDate);
+    const end = new Date(promotion.endDate);
+
+    if (start >= end) {
+      throw new Error("Promotion start date must be before end date");
+    }
+  }
+
+  return true;
+};
+
+// Helper function to check if promotion is active
+const isPromotionActive = (promotion) => {
+  if (!promotion || !promotion.startDate || !promotion.endDate) {
+    return false;
+  }
+
+  const now = new Date();
+  const startDate = new Date(promotion.startDate);
+  const endDate = new Date(promotion.endDate);
+
+  return now >= startDate && now <= endDate;
+};
+
+// Helper function to parse promotion data from FormData
+const parsePromotionData = (promotionString) => {
+  if (
+    !promotionString ||
+    promotionString === "null" ||
+    promotionString === "undefined"
+  ) {
+    return null;
+  }
+
+  try {
+    const promotionData = JSON.parse(promotionString);
+
+    // Validate that parsed data is an object
+    if (typeof promotionData !== "object" || promotionData === null) {
+      return null;
+    }
+
+    // Clean up the promotion data
+    const cleanPromotion = {};
+
+    if (promotionData.price && !isNaN(Number(promotionData.price))) {
+      cleanPromotion.price = Number(promotionData.price);
+    }
+
+    if (promotionData.startDate) {
+      cleanPromotion.startDate = new Date(promotionData.startDate);
+    }
+
+    if (promotionData.endDate) {
+      cleanPromotion.endDate = new Date(promotionData.endDate);
+    }
+
+    // Return null if no valid promotion data
+    if (Object.keys(cleanPromotion).length === 0) {
+      return null;
+    }
+
+    return cleanPromotion;
+  } catch (error) {
+    console.error("Error parsing promotion data:", error);
+    return null;
+  }
+};
+
 // Product creation (with Supabase file upload)
 exports.createProduct = async (req, res) => {
   try {
-    let imageUrl = req.body.image; // Default to the image URL from the request body
+    let imageUrl = req.body.image;
 
     // If a file is uploaded, upload it to Supabase Storage
     if (req.file) {
       const file = req.file;
-      const ext = path.extname(file.originalname); // Get the file extension
-      const fileName = `${Date.now()}${ext}`; // Unique file name
-      const folderPath = "products"; // The folder where files will be stored
+      const ext = path.extname(file.originalname);
+      const fileName = `${Date.now()}${ext}`;
+      const folderPath = "products";
 
-      // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
-        .from("store") // Replace with your Supabase bucket name
+        .from("store")
         .upload(`${folderPath}/${fileName}`, file.buffer, {
           contentType: file.mimetype,
         });
@@ -32,17 +110,37 @@ exports.createProduct = async (req, res) => {
         return res.status(500).json({ message: error.message });
       }
 
-      // Construct the public URL for the uploaded image
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
+    // Parse promotion data from FormData
+    let promotionData = null;
+    if (req.body.promotion) {
+      promotionData = parsePromotionData(req.body.promotion);
+
+      // Validate promotion data if provided
+      if (promotionData) {
+        validatePromotion(promotionData);
+      }
+    }
+
+    // console.log("Parsed promotion data:", promotionData); // Debug log
+
     // Prepare product data
     const productData = {
-      sessions: req.body.sessions,
-      price: req.body.price,
-      duration: req.body.duration,
-      image: imageUrl, // Store the public URL of the image
+      sessions: Number(req.body.sessions),
+      price: Number(req.body.price),
+      duration: Number(req.body.duration),
+      image: imageUrl,
+      hotSale: req.body.hotSale === "true" || req.body.hotSale === true,
     };
+
+    // Add promotion data if provided
+    if (promotionData) {
+      productData.promotion = promotionData;
+    }
+
+    // console.log("Final product data:", productData); // Debug log
 
     // Save product to the database
     const product = new Product(productData);
@@ -58,25 +156,24 @@ exports.createProduct = async (req, res) => {
 // Product update (with Supabase file upload)
 exports.updateProduct = async (req, res) => {
   try {
+    console.log("Update request body:", req.body); // Debug log
+
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    let imageUrl = product.image; // Default to the existing image URL
+    let imageUrl = product.image;
 
-    if (imageUrl && typeof imageUrl === "string") {
+    // Delete old image if exists and new image is uploaded
+    if (req.file && imageUrl && typeof imageUrl === "string") {
       try {
-        const Url = imageUrl;
-
-        // Extract file name directly from the image URL (after the last '/')
-        const fileName = Url.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
+        const fileName = imageUrl.split("/").pop().split("?")[0];
 
         if (fileName) {
-          // Correct file path: Remove any spaces between "products" and the file name
           const { error } = await supabase.storage
-            .from("store") // Replace with your Supabase bucket name
-            .remove([`products/${fileName}`]); // Remove the space between "products" and fileName
+            .from("store")
+            .remove([`products/${fileName}`]);
 
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
@@ -84,11 +181,6 @@ exports.updateProduct = async (req, res) => {
               .status(500)
               .json({ message: "Error deleting file from storage" });
           }
-        } else {
-          console.error("Image URL structure is incorrect:", imageUrl);
-          return res
-            .status(400)
-            .json({ message: "Invalid image URL structure" });
         }
       } catch (error) {
         console.error("Error processing the image URL:", error.message);
@@ -96,20 +188,17 @@ exports.updateProduct = async (req, res) => {
           .status(500)
           .json({ message: "Error processing the image URL" });
       }
-    } else {
-      console.warn("No image URL found for the product, skipping deletion");
     }
 
     // If a new file is uploaded, upload it to Supabase Storage
     if (req.file) {
       const file = req.file;
-      const ext = path.extname(file.originalname); // Get the file extension
-      const fileName = `${Date.now()}${ext}`; // Unique file name
-      const folderPath = "products"; // The folder where files will be stored
+      const ext = path.extname(file.originalname);
+      const fileName = `${Date.now()}${ext}`;
+      const folderPath = "products";
 
-      // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
-        .from("store") // Replace with your Supabase bucket name
+        .from("store")
         .upload(`${folderPath}/${fileName}`, file.buffer, {
           contentType: file.mimetype,
         });
@@ -118,15 +207,63 @@ exports.updateProduct = async (req, res) => {
         return res.status(500).json({ message: error.message });
       }
 
-      // Construct the public URL for the uploaded image
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
+    // Parse promotion data from FormData
+    let promotionData = null;
+    let shouldUpdatePromotion = false;
+
+    if (req.body.promotion !== undefined) {
+      shouldUpdatePromotion = true;
+
+      if (
+        req.body.promotion === "null" ||
+        req.body.promotion === null ||
+        req.body.promotion === ""
+      ) {
+        promotionData = null; // Remove promotion
+      } else {
+        promotionData = parsePromotionData(req.body.promotion);
+
+        // Validate promotion data if provided
+        if (promotionData) {
+          validatePromotion(promotionData);
+        }
+      }
+    }
+
+    console.log("Parsed promotion data for update:", promotionData); // Debug log
+
     // Update product data
-    product.sessions = req.body.sessions || product.sessions;
-    product.price = req.body.price || product.price;
-    product.duration = req.body.duration || product.duration;
+    if (req.body.sessions !== undefined) {
+      product.sessions = Number(req.body.sessions);
+    }
+    if (req.body.price !== undefined) {
+      product.price = Number(req.body.price);
+    }
+    if (req.body.duration !== undefined) {
+      product.duration = Number(req.body.duration);
+    }
+
     product.image = imageUrl;
+
+    if (req.body.hotSale !== undefined) {
+      product.hotSale =
+        req.body.hotSale === "true" || req.body.hotSale === true;
+    }
+
+    // Update promotion data if it was included in the request
+    if (shouldUpdatePromotion) {
+      if (promotionData === null) {
+        // Remove promotion
+        product.promotion = undefined;
+      } else {
+        product.promotion = promotionData;
+      }
+    }
+
+    console.log("Final updated product data:", product.toObject()); // Debug log
 
     // Save updated product to the database
     await product.save();
@@ -138,10 +275,71 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Get all products
+// Get all products with filtering and sorting options
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ price: 1 }); 
+    const {
+      sortBy = "price",
+      sortOrder = "asc",
+      hotSale,
+      onPromotion,
+      minPrice,
+      maxPrice,
+    } = req.query;
+
+    // Build filter object
+    let filter = {};
+
+    if (hotSale !== undefined) {
+      filter.hotSale = hotSale === "true";
+    }
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Build sort object
+    const sortObj = {};
+    sortObj[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    let products = await Product.find(filter).sort(sortObj);
+
+    // Filter by active promotion if requested
+    if (onPromotion === "true") {
+      products = products.filter((product) =>
+        isPromotionActive(product.promotion)
+      );
+    }
+
+    // Add computed fields for frontend
+    products = products.map((product) => {
+      const productObj = product.toObject();
+
+      // Add promotion status
+      productObj.isPromotionActive = isPromotionActive(product.promotion);
+
+      // Add effective price (considering active promotion)
+      if (productObj.isPromotionActive && product.promotion.price) {
+        productObj.effectivePrice = product.promotion.price;
+      } else {
+        productObj.effectivePrice = product.price;
+      }
+
+      // Add discount percentage
+      if (productObj.isPromotionActive && product.promotion.price) {
+        const discountPercentage = Math.round(
+          ((product.price - product.promotion.price) / product.price) * 100
+        );
+        productObj.discountPercentage = discountPercentage;
+      } else {
+        productObj.discountPercentage = 0;
+      }
+
+      return productObj;
+    });
+
     res.status(200).json({
       status: "success",
       productCount: products.length,
@@ -153,6 +351,41 @@ exports.getProducts = async (req, res) => {
   }
 };
 
+// Get hot sale products
+exports.getHotSaleProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ hotSale: true }).sort({ price: 1 });
+
+    res.status(200).json({
+      status: "success",
+      productCount: products.length,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching hot sale products:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get products on promotion
+exports.getPromotionProducts = async (req, res) => {
+  try {
+    const products = await Product.find({
+      "promotion.startDate": { $lte: new Date() },
+      "promotion.endDate": { $gte: new Date() },
+    }).sort({ price: 1 });
+
+    res.status(200).json({
+      status: "success",
+      productCount: products.length,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching promotion products:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Get a product by ID
 exports.getProductById = async (req, res) => {
   try {
@@ -160,7 +393,30 @@ exports.getProductById = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.status(200).json({ status: "success", data: product });
+
+    const productObj = product.toObject();
+
+    // Add promotion status
+    productObj.isPromotionActive = isPromotionActive(product.promotion);
+
+    // Add effective price
+    if (productObj.isPromotionActive && product.promotion.price) {
+      productObj.effectivePrice = product.promotion.price;
+    } else {
+      productObj.effectivePrice = product.price;
+    }
+
+    // Add discount percentage
+    if (productObj.isPromotionActive && product.promotion.price) {
+      const discountPercentage = Math.round(
+        ((product.price - product.promotion.price) / product.price) * 100
+      );
+      productObj.discountPercentage = discountPercentage;
+    } else {
+      productObj.discountPercentage = 0;
+    }
+
+    res.status(200).json({ status: "success", data: productObj });
   } catch (error) {
     console.error("Error fetching product by ID:", error);
     res.status(500).json({ message: error.message });
@@ -175,19 +431,15 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Ensure product.image exists and is a valid string before attempting to split it
+    // Delete image from Supabase if exists
     if (product.image && typeof product.image === "string") {
       try {
-        const imageUrl = product.image;
-
-        // Extract file name directly from the image URL (after the last '/')
-        const fileName = imageUrl.split("/").pop().split("?")[0]; // Get the last part of the URL, remove query params if present
+        const fileName = product.image.split("/").pop().split("?")[0];
 
         if (fileName) {
-          // Correct file path: Remove any spaces between "products" and the file name
           const { error } = await supabase.storage
-            .from("store") // Replace with your Supabase bucket name
-            .remove([`products/${fileName}`]); // Remove the space between "products" and fileName
+            .from("store")
+            .remove([`products/${fileName}`]);
 
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
@@ -195,11 +447,6 @@ exports.deleteProduct = async (req, res) => {
               .status(500)
               .json({ message: "Error deleting file from storage" });
           }
-        } else {
-          console.error("Image URL structure is incorrect:", imageUrl);
-          return res
-            .status(400)
-            .json({ message: "Invalid image URL structure" });
         }
       } catch (error) {
         console.error("Error processing the image URL:", error.message);
@@ -207,8 +454,6 @@ exports.deleteProduct = async (req, res) => {
           .status(500)
           .json({ message: "Error processing the image URL" });
       }
-    } else {
-      console.warn("No image URL found for the product, skipping deletion");
     }
 
     // Delete the product from the database
@@ -221,4 +466,40 @@ exports.deleteProduct = async (req, res) => {
     console.error("Error deleting product:", error);
     res.status(500).json({ message: error.message });
   }
+};
+
+// Toggle hot sale status
+exports.toggleHotSale = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    product.hotSale = !product.hotSale;
+    await product.save();
+
+    res.status(200).json({
+      status: "success",
+      message: `Product ${
+        product.hotSale ? "added to" : "removed from"
+      } hot sale`,
+      data: product,
+    });
+  } catch (error) {
+    console.error("Error toggling hot sale:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  upload,
+  createProduct: exports.createProduct,
+  updateProduct: exports.updateProduct,
+  getProducts: exports.getProducts,
+  getHotSaleProducts: exports.getHotSaleProducts,
+  getPromotionProducts: exports.getPromotionProducts,
+  getProductById: exports.getProductById,
+  deleteProduct: exports.deleteProduct,
+  toggleHotSale: exports.toggleHotSale,
 };

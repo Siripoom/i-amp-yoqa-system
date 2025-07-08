@@ -1,18 +1,40 @@
 const mongoose = require("mongoose");
 
-const productSchema = new mongoose.Schema(
+const goods = new mongoose.Schema(
   {
-    sessions: {
+    goods: { type: String, required: false },
+    code: {
+      type: String,
+      unique: true,
+    },
+
+    detail: { type: String, required: false },
+    stock: {
       type: Number,
       required: true,
+      min: 0,
+      default: 0,
+    },
+    unit: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "ชิ้น",
+    },
+    size: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    color: {
+      type: String,
+      required: false,
+      trim: true,
     },
     price: {
       type: Number,
       required: true,
-    },
-    duration: {
-      type: Number, // หน่วยเป็นวัน หรือชั่วโมง ขึ้นอยู่กับธุรกิจของคุณ
-      required: true,
+      min: 0,
     },
     promotion: {
       price: {
@@ -40,4 +62,4 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model("Goods", goods);

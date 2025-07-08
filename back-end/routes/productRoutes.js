@@ -7,6 +7,9 @@ const {
   updateProduct,
   deleteProduct,
   uploadImage,
+  getHotSaleProducts,
+  getPromotionProducts,
+  toggleHotSale,
 } = require("../controllers/productController");
 const multer = require("multer");
 
@@ -28,4 +31,7 @@ router.put("/:id", upload.single("image"), updateProduct);
 // Route for deleting a product
 router.delete("/:id", deleteProduct);
 
+router.get("/hot-sale", getHotSaleProducts);
+router.get("/promotion", getPromotionProducts);
+router.patch("/:id/toggle-hot-sale", toggleHotSale);
 module.exports = router;
