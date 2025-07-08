@@ -93,18 +93,44 @@ const Course = () => {
     setGoodsLoading(false);
   };
 
-  // ฟังก์ชันเช็คการล็อกอินและส่ง product_id ไปหน้า Checkout
-  const handleCheckout = (product) => {
+  // ฟังก์ชันเช็คการล็อกอินและส่ง product ไปหน้า Checkout
+  const handleProductCheckout = (product) => {
     const isLoggedIn = localStorage.getItem("token");
     if (isLoggedIn) {
-      navigate("/checkout", { state: { product } });
+      navigate("/checkout", {
+        state: {
+          item: product,
+          orderType: "product",
+        },
+      });
     } else {
       message.warning("Please login before proceeding to checkout");
       navigate("/auth/signin");
     }
   };
 
-  // ฟังก์ชันแสดงราคา
+  // ฟังก์ชันเช็คการล็อกอินและส่ง goods ไปหน้า Checkout
+  const handleGoodsCheckout = (goodsItem) => {
+    const isLoggedIn = localStorage.getItem("token");
+    if (isLoggedIn) {
+      // ตรวจสอบสต็อกก่อน
+      if (goodsItem.stock <= 0) {
+        message.error("This item is out of stock");
+        return;
+      }
+      navigate("/checkout", {
+        state: {
+          item: goodsItem,
+          orderType: "goods",
+        },
+      });
+    } else {
+      message.warning("Please login before proceeding to checkout");
+      navigate("/auth/signin");
+    }
+  };
+
+  // ฟังก์ชันแสดงราคา product
   const renderPrice = (product) => {
     const hasActivePromotion =
       product.isPromotionActive && product.promotion?.price;
@@ -283,7 +309,7 @@ const Course = () => {
               }
               text-white shadow-lg hover:shadow-xl hover:scale-105
             `}
-            onClick={() => handleCheckout(product)}
+            onClick={() => handleProductCheckout(product)}
           >
             {isHotSale
               ? "🔥 Buy Now!"
@@ -454,11 +480,9 @@ const Course = () => {
                 }
                 text-white shadow-lg hover:shadow-xl hover:scale-105
               `}
-              onClick={() => {
-                message.info("Add to cart functionality coming soon!");
-              }}
+              onClick={() => handleGoodsCheckout(goodsItem)}
             >
-              Add to Cart
+              Checkout
             </Button>
           )}
         </div>
@@ -593,15 +617,15 @@ const Course = () => {
           </Button>,
           selectedGoods && selectedGoods.stock > 0 && (
             <Button
-              key="add-to-cart"
+              key="checkout"
               type="primary"
               icon={<ShoppingCartOutlined />}
               onClick={() => {
-                message.info("Add to cart functionality coming soon!");
+                handleGoodsCheckout(selectedGoods);
                 handleGoodsModalCancel();
               }}
             >
-              Add to Cart
+              Checkout
             </Button>
           ),
         ]}

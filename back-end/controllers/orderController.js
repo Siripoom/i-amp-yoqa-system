@@ -1,11 +1,12 @@
 const Order = require("../models/order");
 const User = require("../models/user");
 const Product = require("../models/product");
+const Goods = require("../models/goods"); // เพิ่ม import Goods model
 const multer = require("multer");
 const path = require("path");
-const supabase = require("../config/supabaseConfig"); // Import the Supabase client
+const supabase = require("../config/supabaseConfig");
 const dotenv = require("dotenv");
-dotenv.config(); // Load environment variables
+dotenv.config();
 
 // Use Multer for file uploads (memory storage)
 const storage = multer.memoryStorage();
@@ -14,13 +15,33 @@ const upload = multer({ storage: storage });
 // สร้างคำสั่งซื้อใหม่พร้อมอัปโหลดรูปภาพไปยัง Supabase
 exports.createOrder = async (req, res) => {
   try {
-    const { user_id, product_id, quantity } = req.body;
-
+    const { user_id, product_id, goods_id, order_type, quantity, size, color } =
+      req.body;
+    console.log("Received order data:", req.body);
     // Validate required fields
-    if (!user_id || !product_id) {
-      return res
-        .status(400)
-        .json({ message: "User ID and Product ID are required." });
+    if (!user_id || !order_type) {
+      return res.status(400).json({
+        message: "User ID and order_type are required.",
+      });
+    }
+
+    // Validate order_type และ reference ID
+    if (order_type === "product" && !product_id) {
+      return res.status(400).json({
+        message: "Product ID is required for product orders.",
+      });
+    }
+
+    if (order_type === "goods" && !goods_id) {
+      return res.status(400).json({
+        message: "Goods ID is required for goods orders.",
+      });
+    }
+
+    if (!["product", "goods"].includes(order_type)) {
+      return res.status(400).json({
+        message: "order_type must be either 'product' or 'goods'.",
+      });
     }
 
     // Parse quantity (default to 1 if not provided)
@@ -34,13 +55,13 @@ exports.createOrder = async (req, res) => {
     // ถ้ามีการอัปโหลดไฟล์ ให้อัปโหลดไปยัง Supabase Storage
     if (req.file) {
       const file = req.file;
-      const ext = path.extname(file.originalname); // ดึงนามสกุลไฟล์
-      const fileName = `${Date.now()}${ext}`; // ชื่อไฟล์ที่ไม่ซ้ำกัน
-      const folderPath = "orders"; // โฟลเดอร์ที่จะเก็บไฟล์
+      const ext = path.extname(file.originalname);
+      const fileName = `${Date.now()}${ext}`;
+      const folderPath = "orders";
 
       // อัปโหลดไฟล์ไปยัง Supabase Storage
       const { data, error } = await supabase.storage
-        .from("store") // เปลี่ยนเป็นชื่อ bucket ของคุณใน Supabase
+        .from("store")
         .upload(`${folderPath}/${fileName}`, file.buffer, {
           contentType: file.mimetype,
         });
@@ -49,30 +70,68 @@ exports.createOrder = async (req, res) => {
         return res.status(500).json({ message: error.message });
       }
 
-      // สร้าง URL สาธารณะสำหรับรูปภาพที่อัปโหลด
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+      // console.log("Image uploaded to Supabase:", imageUrl);
     }
 
-    // Find the product to get details
-    const product = await Product.findById(product_id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found." });
-    }
-
-    // Store the original product values and quantity info in the order
-    const order = new Order({
+    let item = null;
+    let orderData = {
       user_id,
-      product_id,
+      order_type,
       image: imageUrl,
-      status: "รออนุมัติ", // ตั้งค่าเริ่มต้นเป็น "รออนุมัติ"
-      quantity: orderQuantity, // Store the quantity in the order
-      // Store the calculated total values based on quantity
-      total_sessions: product.sessions * orderQuantity,
-      total_duration: product.duration * orderQuantity,
-      unit_price: product.price,
-      total_price: product.price * orderQuantity,
-    });
+      status: "รออนุมัติ",
+      quantity: orderQuantity,
+    };
 
+    // ดึงข้อมูลและตั้งค่าตาม order_type
+    if (order_type === "product") {
+      item = await Product.findById(product_id);
+      if (!item) {
+        return res.status(404).json({ message: "Product not found." });
+      }
+
+      orderData.product_id = product_id;
+      orderData.total_sessions = item.sessions * orderQuantity;
+      orderData.total_duration = item.duration * orderQuantity;
+      orderData.unit_price = item.price;
+      orderData.total_price = item.price * orderQuantity;
+    } else if (order_type === "goods") {
+      item = await Goods.findById(goods_id);
+      if (!item) {
+        return res.status(404).json({ message: "Goods not found." });
+      }
+
+      // ตรวจสอบสต็อก
+      if (item.stock < orderQuantity) {
+        return res.status(400).json({
+          message: `Insufficient stock. Available: ${item.stock}, Requested: ${orderQuantity}`,
+        });
+      }
+
+      orderData.goods_id = goods_id;
+      orderData.unit = item.unit;
+      orderData.size = size || item.size;
+      orderData.color = color || item.color;
+
+      // คำนวณราคา (ใช้ promotion price ถ้ามีและยังไม่หมดอายุ)
+      let unitPrice = item.price;
+      if (
+        item.promotion &&
+        item.promotion.price &&
+        item.promotion.startDate &&
+        item.promotion.endDate
+      ) {
+        const now = new Date();
+        if (now >= item.promotion.startDate && now <= item.promotion.endDate) {
+          unitPrice = item.promotion.price;
+        }
+      }
+
+      orderData.unit_price = unitPrice;
+      orderData.total_price = unitPrice * orderQuantity;
+    }
+
+    const order = new Order(orderData);
     await order.save();
 
     res.status(201).json({
@@ -94,54 +153,40 @@ exports.updateOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    let imageUrl = order.image; // ใช้ URL รูปภาพเดิมเป็นค่าเริ่มต้น
+    let imageUrl = order.image;
 
-    // ถ้ามี URL รูปภาพเดิม ให้ลบไฟล์เดิมออกจาก Supabase
+    // ลบรูปภาพเดิม (ถ้ามี)
     if (imageUrl && typeof imageUrl === "string") {
       try {
-        const Url = imageUrl;
-
-        // ดึงชื่อไฟล์จาก URL (หลังเครื่องหมาย / ตัวสุดท้าย)
-        const fileName = Url.split("/").pop().split("?")[0]; // ดึงส่วนสุดท้ายของ URL และตัดพารามิเตอร์ query ออก
-
+        const fileName = imageUrl.split("/").pop().split("?")[0];
         if (fileName) {
-          // ลบไฟล์เดิมออกจาก Supabase Storage
           const { error } = await supabase.storage
-            .from("store") // เปลี่ยนเป็นชื่อ bucket ของคุณใน Supabase
+            .from("store")
             .remove([`orders/${fileName}`]);
-
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
-            return res
-              .status(500)
-              .json({ message: "Error deleting file from storage" });
+            return res.status(500).json({
+              message: "Error deleting file from storage",
+            });
           }
-        } else {
-          console.error("Image URL structure is incorrect:", imageUrl);
-          return res
-            .status(400)
-            .json({ message: "Invalid image URL structure" });
         }
       } catch (error) {
         console.error("Error processing the image URL:", error.message);
-        return res
-          .status(500)
-          .json({ message: "Error processing the image URL" });
+        return res.status(500).json({
+          message: "Error processing the image URL",
+        });
       }
-    } else {
-      console.warn("No image URL found for the order, skipping deletion");
     }
 
-    // ถ้ามีการอัปโหลดไฟล์ใหม่ ให้อัปโหลดไปยัง Supabase Storage
+    // อัปโหลดรูปภาพใหม่
     if (req.file) {
       const file = req.file;
-      const ext = path.extname(file.originalname); // ดึงนามสกุลไฟล์
-      const fileName = `${Date.now()}${ext}`; // ชื่อไฟล์ที่ไม่ซ้ำกัน
-      const folderPath = "orders"; // โฟลเดอร์ที่จะเก็บไฟล์
+      const ext = path.extname(file.originalname);
+      const fileName = `${Date.now()}${ext}`;
+      const folderPath = "orders";
 
-      // อัปโหลดไฟล์ไปยัง Supabase Storage
       const { data, error } = await supabase.storage
-        .from("store") // เปลี่ยนเป็นชื่อ bucket ของคุณใน Supabase
+        .from("store")
         .upload(`${folderPath}/${fileName}`, file.buffer, {
           contentType: file.mimetype,
         });
@@ -150,30 +195,22 @@ exports.updateOrder = async (req, res) => {
         return res.status(500).json({ message: error.message });
       }
 
-      // สร้าง URL สาธารณะสำหรับรูปภาพที่อัปโหลด
       imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
     }
 
     // อัปเดตข้อมูลคำสั่งซื้อ
     if (req.body.user_id) order.user_id = req.body.user_id;
-    if (req.body.product_id) order.product_id = req.body.product_id;
+    if (req.body.product_id && order.order_type === "product") {
+      order.product_id = req.body.product_id;
+    }
+    if (req.body.goods_id && order.order_type === "goods") {
+      order.goods_id = req.body.goods_id;
+    }
     if (req.body.status) order.status = req.body.status;
+    if (req.body.size) order.size = req.body.size;
+    if (req.body.color) order.color = req.body.color;
     order.image = imageUrl;
 
-    // ค้นหา user
-    const user = await User.findById(req.body.user_id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // อัปเดต remaining_session ของ user หลังการสั่งซื้อ
-    const updatedUser = await User.findByIdAndUpdate(
-      user_id,
-      { remaining_session: order.total_sessions },
-      { new: true }
-    );
-
-    // บันทึกคำสั่งซื้อที่อัปเดตแล้วลงในฐานข้อมูล
     await order.save();
 
     res.status(200).json({ status: "success", data: order });
@@ -187,8 +224,11 @@ exports.updateOrder = async (req, res) => {
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("user_id product_id")
-      .sort({ createdAt: -1 }); // 🔽 ใหม่สุดก่อน
+      .populate("user_id")
+      .populate("product_id")
+      .populate("goods_id")
+      .sort({ createdAt: -1 });
+
     res.status(200).json({
       status: "success",
       length: orders.length,
@@ -203,9 +243,11 @@ exports.getAllOrders = async (req, res) => {
 // ดึงข้อมูลคำสั่งซื้อโดย ID
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate(
-      "user_id product_id"
-    );
+    const order = await Order.findById(req.params.id)
+      .populate("user_id")
+      .populate("product_id")
+      .populate("goods_id");
+
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -224,48 +266,36 @@ exports.deleteOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // ตรวจสอบว่ามี URL รูปภาพหรือไม่ก่อนที่จะพยายามลบไฟล์
+    // ลบรูปภาพ (ถ้ามี)
     if (order.image && typeof order.image === "string") {
       try {
         const imageUrl = order.image;
-
-        // ดึงชื่อไฟล์จาก URL (หลังเครื่องหมาย / ตัวสุดท้าย)
-        const fileName = imageUrl.split("/").pop().split("?")[0]; // ดึงส่วนสุดท้ายของ URL และตัดพารามิเตอร์ query ออก
-
+        const fileName = imageUrl.split("/").pop().split("?")[0];
         if (fileName) {
-          // ลบไฟล์ออกจาก Supabase Storage
           const { error } = await supabase.storage
-            .from("store") // เปลี่ยนเป็นชื่อ bucket ของคุณใน Supabase
+            .from("store")
             .remove([`orders/${fileName}`]);
-
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
-            return res
-              .status(500)
-              .json({ message: "Error deleting file from storage" });
+            return res.status(500).json({
+              message: "Error deleting file from storage",
+            });
           }
-        } else {
-          console.error("Image URL structure is incorrect:", imageUrl);
-          return res
-            .status(400)
-            .json({ message: "Invalid image URL structure" });
         }
       } catch (error) {
         console.error("Error processing the image URL:", error.message);
-        return res
-          .status(500)
-          .json({ message: "Error processing the image URL" });
+        return res.status(500).json({
+          message: "Error processing the image URL",
+        });
       }
-    } else {
-      console.warn("No image URL found for the order, skipping deletion");
     }
 
-    // ลบคำสั่งซื้อออกจากฐานข้อมูล
     await Order.findByIdAndDelete(req.params.id);
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Order deleted successfully" });
+    res.status(200).json({
+      status: "success",
+      message: "Order deleted successfully",
+    });
   } catch (error) {
     console.error("Error deleting order:", error);
     res.status(500).json({ message: error.message });
@@ -277,8 +307,10 @@ exports.getOrdersByUserId = async (req, res) => {
   try {
     const { user_id } = req.params;
     const orders = await Order.find({ user_id })
-      .populate("user_id product_id")
-      .sort({ createdAt: -1 }); // 🔽 ใหม่สุดก่อน
+      .populate("user_id")
+      .populate("product_id")
+      .populate("goods_id")
+      .sort({ createdAt: -1 });
 
     if (orders.length === 0) {
       return res.status(404).json({ message: "No orders found for this user" });
@@ -295,8 +327,34 @@ exports.getOrdersByUserId = async (req, res) => {
   }
 };
 
+// ดึงรายการ Order ตาม order_type
+exports.getOrdersByType = async (req, res) => {
+  try {
+    const { order_type } = req.params;
+
+    if (!["product", "goods"].includes(order_type)) {
+      return res.status(400).json({
+        message: "Invalid order_type. Must be 'product' or 'goods'.",
+      });
+    }
+
+    const orders = await Order.find({ order_type })
+      .populate("user_id")
+      .populate(order_type === "product" ? "product_id" : "goods_id")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      status: "success",
+      count: orders.length,
+      data: orders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders by type:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // อัปเดตสถานะคำสั่งซื้อ
-// in back-end/controllers/orderController.js in the updateOrderStatus function
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -308,7 +366,9 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // Get existing order
-    const existingOrder = await Order.findById(id);
+    const existingOrder = await Order.findById(id)
+      .populate("product_id")
+      .populate("goods_id");
     if (!existingOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -324,36 +384,50 @@ exports.updateOrderStatus = async (req, res) => {
     // Update the order
     const order = await Order.findByIdAndUpdate(id, updateData, { new: true })
       .populate("user_id")
-      .populate("product_id");
+      .populate("product_id")
+      .populate("goods_id");
 
     // Handle status change from pending to approved
-    if (
-      previousStatus === "รออนุมัติ" &&
-      status === "อนุมัติ" &&
-      order.user_id &&
-      order.product_id
-    ) {
+    if (previousStatus === "รออนุมัติ" && status === "อนุมัติ") {
       const user = order.user_id;
-      const product = order.product_id;
 
-      if (product.sessions) {
-        // Calculate initial expiry date (90 days from approval)
-        const initialExpiryDate = new Date();
-        initialExpiryDate.setDate(initialExpiryDate.getDate() + 90);
+      if (order.order_type === "product" && order.product_id) {
+        // สำหรับ product orders - เพิ่ม sessions ให้ user
+        const product = order.product_id;
+        if (product.sessions) {
+          const initialExpiryDate = new Date();
+          initialExpiryDate.setDate(initialExpiryDate.getDate() + 90);
 
-        // Update user with sessions and expiry date
-        await User.findByIdAndUpdate(user._id, {
-          $inc: { remaining_session: order.total_sessions },
-          // Set initial expiry date only if not already set or current one is in the past
-          $set: {
-            sessions_expiry_date:
-              user.sessions_expiry_date &&
-              user.sessions_expiry_date > new Date()
-                ? user.sessions_expiry_date
-                : initialExpiryDate,
-          },
+          await User.findByIdAndUpdate(user._id, {
+            $inc: { remaining_session: order.total_sessions },
+            $set: {
+              sessions_expiry_date:
+                user.sessions_expiry_date &&
+                user.sessions_expiry_date > new Date()
+                  ? user.sessions_expiry_date
+                  : initialExpiryDate,
+            },
+          });
+        }
+      } else if (order.order_type === "goods" && order.goods_id) {
+        // สำหรับ goods orders - ลดสต็อก
+        const goods = order.goods_id;
+        await Goods.findByIdAndUpdate(goods._id, {
+          $inc: { stock: -order.quantity },
         });
       }
+    }
+
+    // หากยกเลิก order ของ goods ให้คืนสต็อก
+    if (
+      previousStatus === "อนุมัติ" &&
+      status === "ยกเลิก" &&
+      order.order_type === "goods" &&
+      order.goods_id
+    ) {
+      await Goods.findByIdAndUpdate(order.goods_id._id, {
+        $inc: { stock: order.quantity },
+      });
     }
 
     res.status(200).json({
@@ -363,6 +437,42 @@ exports.updateOrderStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating order status:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ดึงสถิติการสั่งซื้อ
+exports.getOrderStats = async (req, res) => {
+  try {
+    const stats = await Order.aggregate([
+      {
+        $group: {
+          _id: "$order_type",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$total_price" },
+          averageAmount: { $avg: "$total_price" },
+        },
+      },
+    ]);
+
+    const statusStats = await Order.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        typeStats: stats,
+        statusStats: statusStats,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching order stats:", error);
     res.status(500).json({ message: error.message });
   }
 };
