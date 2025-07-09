@@ -16,7 +16,6 @@ export const getUsers = async () => {
 
 export const createUser = async (userData) => {
   try {
-  
     const response = await axios.post(`${API_URL}/api/users`, userData);
     return response.data;
   } catch (error) {
@@ -48,7 +47,9 @@ export const deleteUser = async (id) => {
 //getuserbyid
 export const getUserById = async (id) => {
   try {
+    console.log("Fetching user by ID:", id); // Log the ID for debugging
     const response = await axios.get(`${API_URL}/api/users/${id}`);
+    console.log("User data:", response.data); // Log the user data for debugging
     return response.data;
   } catch (error) {
     console.error("Error fetching user by ID:", error);

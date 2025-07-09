@@ -25,6 +25,7 @@ import {
   Badge,
   Empty,
   Spin,
+  Carousel,
 } from "antd";
 import {
   SearchOutlined,
@@ -41,10 +42,12 @@ import {
   FilterOutlined,
   ClearOutlined,
   BarcodeOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
-import goodsService from "../../services/goods-service"; // Import the service
+import goodsService from "../../services/goods-service";
 import "../../styles/Goods.css";
 import dayjs from "dayjs";
 
@@ -173,9 +176,8 @@ const GoodsPage = () => {
   const showCreateModal = () => {
     setEditingGoods(null);
     form.resetFields();
-    // Auto-generate code for new goods
     form.setFieldsValue({
-      code: "", // generateCode()
+      code: "",
       unit: "ชิ้น",
       hotSale: false,
     });
@@ -184,8 +186,21 @@ const GoodsPage = () => {
 
   const showEditModal = (record) => {
     setEditingGoods(record);
+
+    // Handle multiple images for editing
+    const imageFileList =
+      record.image && Array.isArray(record.image)
+        ? record.image.map((url, index) => ({
+            uid: `image-${index}`,
+            name: `image-${index}`,
+            status: "done",
+            url: url,
+          }))
+        : [];
+
     form.setFieldsValue({
       ...record,
+      images: imageFileList,
       promotionPrice: record.promotion?.price || null,
       promotionStartDate: record.promotion?.startDate
         ? dayjs(record.promotion.startDate)
@@ -226,38 +241,60 @@ const GoodsPage = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      // Prepare goods data
-      const goodsData = {
-        goods: values.goods,
-        code: values.code,
-        detail: values.detail,
-        stock: values.stock,
-        unit: values.unit,
-        size: values.size,
-        color: values.color,
-        price: values.price,
-        hotSale: values.hotSale,
-        image: values.image?.fileList || values.image,
-      };
+      console.log("Form values:", values); // Debug log
+
+      // Create FormData for file upload
+      const formData = new FormData();
+
+      // Append basic fields with proper type checking
+      formData.append("goods", values.goods || "");
+      formData.append("code", values.code || "");
+      formData.append("detail", values.detail || "");
+      formData.append(
+        "stock",
+        values.stock !== undefined ? Number(values.stock) : 0
+      );
+      formData.append("unit", values.unit || "ชิ้น");
+      formData.append("size", values.size || "");
+      formData.append("color", values.color || "");
+      formData.append(
+        "price",
+        values.price !== undefined ? Number(values.price) : 0
+      );
+      formData.append("hotSale", values.hotSale || false);
+
+      // Handle multiple images
+      if (values.images && values.images.length > 0) {
+        values.images.forEach((file) => {
+          if (file.originFileObj) {
+            formData.append("images", file.originFileObj);
+          }
+        });
+      }
 
       // Handle promotion data
       if (values.hasPromotion) {
-        goodsData.promotion = {
+        const promotionData = {
           price: values.promotionPrice,
           startDate: values.promotionStartDate?.toISOString(),
           endDate: values.promotionEndDate?.toISOString(),
         };
+        formData.append("promotion", JSON.stringify(promotionData));
       } else {
-        goodsData.promotion = null;
+        formData.append("promotion", "null");
+      }
+
+      // Debug: Log FormData contents
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       if (editingGoods) {
-        // Update goods
-        await goodsService.updateGoods(editingGoods._id, goodsData);
+        await goodsService.updateGoods(editingGoods._id, formData);
         message.success("Goods updated successfully");
       } else {
-        // Create new goods
-        await goodsService.createGoods(goodsData);
+        await goodsService.createGoods(formData);
         message.success("Goods created successfully");
       }
 
@@ -322,6 +359,64 @@ const GoodsPage = () => {
     return goods.price;
   };
 
+  // Render multiple images
+  const renderMultipleImages = (images) => {
+    if (!images || images.length === 0) {
+      return (
+        <Image
+          width={50}
+          height={50}
+          src="/placeholder-image.jpg"
+          fallback="/placeholder-image.jpg"
+          style={{ borderRadius: "8px", objectFit: "cover" }}
+        />
+      );
+    }
+
+    if (images.length === 1) {
+      return (
+        <Image
+          width={50}
+          height={50}
+          src={images[0] || "/placeholder-image.jpg"}
+          fallback="/placeholder-image.jpg"
+          style={{ borderRadius: "8px", objectFit: "cover" }}
+        />
+      );
+    }
+
+    return (
+      <div style={{ position: "relative", width: 50, height: 50 }}>
+        <Image
+          width={50}
+          height={50}
+          src={images[0] || "/placeholder-image.jpg"}
+          fallback="/placeholder-image.jpg"
+          style={{ borderRadius: "8px", objectFit: "cover" }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            backgroundColor: "rgba(0,0,0,0.7)",
+            color: "white",
+            borderRadius: "50%",
+            width: 18,
+            height: 18,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "10px",
+            fontWeight: "bold",
+          }}
+        >
+          +{images.length - 1}
+        </div>
+      </div>
+    );
+  };
+
   // Table columns
   const columns = [
     {
@@ -329,15 +424,7 @@ const GoodsPage = () => {
       dataIndex: "image",
       key: "image",
       width: 100,
-      render: (image) => (
-        <Image
-          width={50}
-          height={50}
-          src={image || "/placeholder-image.jpg"}
-          fallback="/placeholder-image.jpg"
-          style={{ borderRadius: "8px", objectFit: "cover" }}
-        />
-      ),
+      render: (image) => renderMultipleImages(image),
     },
     {
       title: "CODE",
@@ -436,7 +523,6 @@ const GoodsPage = () => {
         </Space>
       ),
     },
-
     {
       title: "ACTIONS",
       key: "actions",
@@ -458,7 +544,6 @@ const GoodsPage = () => {
               onClick={() => showEditModal(record)}
             />
           </Tooltip>
-
           <Tooltip title="Delete">
             <Popconfirm
               title="Are you sure you want to delete this item?"
@@ -474,7 +559,7 @@ const GoodsPage = () => {
     },
   ];
 
-  // Upload props
+  // Upload props for multiple images
   const uploadProps = {
     beforeUpload: (file) => {
       const isJpgOrPng =
@@ -486,7 +571,15 @@ const GoodsPage = () => {
       if (!isLt2M) {
         message.error("Image must smaller than 2MB!");
       }
-      return false; // Prevent auto upload
+      return isJpgOrPng && isLt2M ? false : Upload.LIST_IGNORE;
+    },
+    onChange: ({ fileList }) => {
+      // Limit to 3 images
+      if (fileList.length > 3) {
+        message.warning("You can only upload maximum 3 images!");
+        return;
+      }
+      form.setFieldsValue({ images: fileList });
     },
   };
 
@@ -520,17 +613,7 @@ const GoodsPage = () => {
                   Manage your product inventory and pricing
                 </Text>
               </Col>
-              <Col>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={showCreateModal}
-                  className="create-goods-button"
-                  size="large"
-                >
-                  Add New Goods
-                </Button>
-              </Col>
+              <Col></Col>
             </Row>
           </div>
 
@@ -545,6 +628,16 @@ const GoodsPage = () => {
                   onChange={(e) => handleSearch(e.target.value)}
                   allowClear
                 />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={showCreateModal}
+                  className="create-goods-button"
+                >
+                  Add New Goods
+                </Button>
               </Col>
             </Row>
           </Card>
@@ -642,7 +735,6 @@ const GoodsPage = () => {
               }}
               rowKey="_id"
               loading={loading}
-              // scroll={{ x: 1400 }}
               locale={{
                 emptyText: (
                   <Empty
@@ -698,7 +790,6 @@ const GoodsPage = () => {
                     <Input
                       placeholder="Enter goods code"
                       prefix={<BarcodeOutlined />}
-                      // disabled={!!editingGoods} // Disable editing code for existing goods
                     />
                   </Form.Item>
                 </Col>
@@ -768,13 +859,22 @@ const GoodsPage = () => {
                 </Col>
               </Row>
 
-              <Form.Item name="image" label="Product Image">
-                <Upload {...uploadProps} listType="picture-card" maxCount={1}>
+              <Form.Item name="images" label="Product Images (Max 3)">
+                <Upload
+                  {...uploadProps}
+                  listType="picture-card"
+                  maxCount={3}
+                  multiple
+                >
                   <div>
                     <UploadOutlined />
                     <div style={{ marginTop: 8 }}>Upload</div>
                   </div>
                 </Upload>
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  You can upload maximum 3 images. Each image must be less than
+                  2MB.
+                </Text>
               </Form.Item>
 
               <Divider />
@@ -883,20 +983,55 @@ const GoodsPage = () => {
                 Close
               </Button>,
             ]}
-            width={700}
+            width={800}
           >
             {viewingGoods && (
               <div>
                 <Row gutter={16}>
-                  <Col span={8}>
-                    <Image
-                      width="100%"
-                      src={viewingGoods.image || "/placeholder-image.jpg"}
-                      fallback="/placeholder-image.jpg"
-                      style={{ borderRadius: "8px" }}
-                    />
+                  <Col span={12}>
+                    {/* Multiple Images Display */}
+                    {viewingGoods.image &&
+                    Array.isArray(viewingGoods.image) &&
+                    viewingGoods.image.length > 0 ? (
+                      <div style={{ width: "100%" }}>
+                        <Carousel
+                          arrows={viewingGoods.image.length > 1}
+                          prevArrow={<LeftOutlined />}
+                          nextArrow={<RightOutlined />}
+                          dots={viewingGoods.image.length > 1}
+                        >
+                          {viewingGoods.image.map((img, index) => (
+                            <div key={index}>
+                              <Image
+                                width="100%"
+                                height={200}
+                                src={img || "/placeholder-image.jpg"}
+                                fallback="/placeholder-image.jpg"
+                                style={{
+                                  borderRadius: "8px",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </Carousel>
+                        <div style={{ marginTop: 8, textAlign: "center" }}>
+                          <Text type="secondary" style={{ fontSize: "12px" }}>
+                            {viewingGoods.image.length} image(s)
+                          </Text>
+                        </div>
+                      </div>
+                    ) : (
+                      <Image
+                        width="100%"
+                        height={200}
+                        src="/placeholder-image.jpg"
+                        fallback="/placeholder-image.jpg"
+                        style={{ borderRadius: "8px", objectFit: "cover" }}
+                      />
+                    )}
                   </Col>
-                  <Col span={16}>
+                  <Col span={12}>
                     <Space
                       direction="vertical"
                       size="middle"

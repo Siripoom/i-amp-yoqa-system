@@ -88,25 +88,6 @@ const parsePromotionData = (promotionString) => {
   }
 };
 
-// Helper function to upload file to Supabase
-const uploadFileToSupabase = async (file) => {
-  const ext = path.extname(file.originalname);
-  const fileName = `${Date.now()}${ext}`;
-  const folderPath = "goods";
-
-  const { data, error } = await supabase.storage
-    .from("store")
-    .upload(`${folderPath}/${fileName}`, file.buffer, {
-      contentType: file.mimetype,
-    });
-
-  if (error) {
-    throw new Error(`File upload failed: ${error.message}`);
-  }
-
-  return `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-};
-
 // Helper function to delete file from Supabase
 const deleteFileFromSupabase = async (imageUrl) => {
   try {
@@ -128,31 +109,106 @@ const deleteFileFromSupabase = async (imageUrl) => {
   }
 };
 
+// Helper function to upload multiple files
+const uploadMultipleFilesToSupabase = async (files) => {
+  const uploadPromises = files.map(async (file) => {
+    const ext = path.extname(file.originalname);
+    const fileName = `${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}${ext}`;
+    const folderPath = "goods";
+
+    const { data, error } = await supabase.storage
+      .from("store")
+      .upload(`${folderPath}/${fileName}`, file.buffer, {
+        contentType: file.mimetype,
+      });
+
+    if (error) {
+      throw new Error(`File upload failed: ${error.message}`);
+    }
+
+    return `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+  });
+
+  return Promise.all(uploadPromises);
+};
+
+// Helper function to delete multiple files
+const deleteMultipleFilesFromSupabase = async (imageUrls) => {
+  if (!imageUrls || imageUrls.length === 0) return;
+
+  const deletePromises = imageUrls.map(async (imageUrl) => {
+    await deleteFileFromSupabase(imageUrl);
+  });
+
+  return Promise.all(deletePromises);
+};
+
 // Product creation (with Supabase file upload)
 exports.createGoods = async (req, res) => {
   try {
-    let imageUrl = req.body.image;
+    let imageUrls = [];
+    console.log("Creating goods:", req.body.goods);
 
-    // If a file is uploaded, upload it to Supabase Storage
-    if (req.file) {
-      imageUrl = await uploadFileToSupabase(req.file);
+    // Handle multiple file uploads
+    if (req.files && req.files.length > 0) {
+      if (req.files.length > 3) {
+        return res.status(400).json({ message: "Maximum 3 images allowed" });
+      }
+      imageUrls = await uploadMultipleFilesToSupabase(req.files);
+    }
+
+    // Validate required fields
+    if (!req.body.goods || req.body.goods.trim() === "") {
+      return res.status(400).json({ message: "Goods name is required" });
+    }
+
+    if (!req.body.code || req.body.code.trim() === "") {
+      return res.status(400).json({ message: "Goods code is required" });
+    }
+
+    // Validate and convert numeric values
+    const stock =
+      req.body.stock !== undefined &&
+      req.body.stock !== null &&
+      req.body.stock !== ""
+        ? Number(req.body.stock)
+        : 0;
+
+    const price =
+      req.body.price !== undefined &&
+      req.body.price !== null &&
+      req.body.price !== ""
+        ? Number(req.body.price)
+        : 0;
+
+    // Check if conversion resulted in NaN
+    if (isNaN(stock)) {
+      return res.status(400).json({ message: "Stock must be a valid number" });
+    }
+
+    if (isNaN(price) || price <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Price must be a valid number greater than 0" });
     }
 
     const goodsData = {
-      goods: req.body.goods,
-      code: req.body.code,
-      detail: req.body.detail,
-      stock: Number(req.body.stock),
-      unit: req.body.unit,
-      size: req.body.size,
-      color: req.body.color,
-      price: Number(req.body.price),
-      image: imageUrl,
-      hotSale: req.body.hotSale === "true",
+      goods: req.body.goods.trim(),
+      code: req.body.code.trim(),
+      detail: req.body.detail || "",
+      stock: stock,
+      unit: req.body.unit || "ชิ้น",
+      size: req.body.size || "",
+      color: req.body.color || "",
+      price: price,
+      image: imageUrls,
+      hotSale: req.body.hotSale === "true" || req.body.hotSale === true,
     };
 
     let promotionData = null;
-    if (req.body.promotion) {
+    if (req.body.promotion && req.body.promotion !== "null") {
       promotionData = parsePromotionData(req.body.promotion);
 
       // Validate promotion data if provided
@@ -167,6 +223,7 @@ exports.createGoods = async (req, res) => {
     const goods = new Goods(goodsData);
     await goods.save();
 
+    console.log("Goods created successfully:", goods._id);
     res.status(201).json({ status: "success", data: goods });
   } catch (error) {
     console.error("Error creating product:", error);
@@ -269,44 +326,74 @@ exports.updateGoods = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    let imageUrl = existingGoods.image;
+    let imageUrls = existingGoods.image || [];
 
-    // If a new file is uploaded, upload it to Supabase Storage
-    if (req.file) {
-      // Delete old image if exists
-      if (existingGoods.image) {
-        await deleteFileFromSupabase(existingGoods.image);
+    // Handle multiple file uploads
+    if (req.files && req.files.length > 0) {
+      if (req.files.length > 3) {
+        return res.status(400).json({ message: "Maximum 3 images allowed" });
       }
 
-      imageUrl = await uploadFileToSupabase(req.file);
+      // Delete old images
+      if (existingGoods.image && existingGoods.image.length > 0) {
+        await deleteMultipleFilesFromSupabase(existingGoods.image);
+      }
+
+      imageUrls = await uploadMultipleFilesToSupabase(req.files);
+    }
+
+    // Validate and convert numeric values
+    const stock =
+      req.body.stock !== undefined &&
+      req.body.stock !== null &&
+      req.body.stock !== ""
+        ? Number(req.body.stock)
+        : existingGoods.stock;
+
+    const price =
+      req.body.price !== undefined &&
+      req.body.price !== null &&
+      req.body.price !== ""
+        ? Number(req.body.price)
+        : existingGoods.price;
+
+    // Check if conversion resulted in NaN
+    if (isNaN(stock)) {
+      return res.status(400).json({ message: "Stock must be a valid number" });
+    }
+
+    if (isNaN(price)) {
+      return res.status(400).json({ message: "Price must be a valid number" });
     }
 
     const updateData = {
       goods: req.body.goods || existingGoods.goods,
       code: req.body.code || existingGoods.code,
-      detail: req.body.detail || existingGoods.detail,
-      stock:
-        req.body.stock !== undefined
-          ? Number(req.body.stock)
-          : existingGoods.stock,
+      detail:
+        req.body.detail !== undefined ? req.body.detail : existingGoods.detail,
+      stock: stock,
       unit: req.body.unit || existingGoods.unit,
-      size: req.body.size || existingGoods.size,
-      color: req.body.color || existingGoods.color,
-      price:
-        req.body.price !== undefined
-          ? Number(req.body.price)
-          : existingGoods.price,
-      image: imageUrl,
+      size: req.body.size !== undefined ? req.body.size : existingGoods.size,
+      color:
+        req.body.color !== undefined ? req.body.color : existingGoods.color,
+      price: price,
+      image: imageUrls,
       hotSale:
         req.body.hotSale !== undefined
-          ? req.body.hotSale === "true"
+          ? req.body.hotSale === "true" || req.body.hotSale === true
           : existingGoods.hotSale,
     };
 
     // Handle promotion update
     if (req.body.promotion !== undefined) {
-      if (req.body.promotion === "null" || req.body.promotion === null) {
-        updateData.promotion = undefined;
+      if (
+        req.body.promotion === "null" ||
+        req.body.promotion === null ||
+        req.body.removePromotion === "true"
+      ) {
+        // Explicitly remove promotion when turned off
+        updateData.promotion = null;
+        updateData.$unset = { promotion: 1 }; // Remove the field completely from MongoDB
       } else {
         const promotionData = parsePromotionData(req.body.promotion);
         if (promotionData) {
@@ -316,11 +403,24 @@ exports.updateGoods = async (req, res) => {
       }
     }
 
-    const updatedGoods = await Goods.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    // Handle update with special case for promotion removal
+    let updatedGoods;
+    if (updateData.$unset) {
+      // Use $unset to completely remove promotion field
+      updatedGoods = await Goods.findByIdAndUpdate(
+        req.params.id,
+        {
+          $set: { ...updateData, promotion: undefined },
+          $unset: updateData.$unset,
+        },
+        { new: true, runValidators: true }
+      );
+    } else {
+      updatedGoods = await Goods.findByIdAndUpdate(req.params.id, updateData, {
+        new: true,
+        runValidators: true,
+      });
+    }
 
     res.json({ status: "success", data: updatedGoods });
   } catch (error) {
@@ -338,9 +438,9 @@ exports.deleteGoods = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Delete image from Supabase if exists
-    if (goods.image) {
-      await deleteFileFromSupabase(goods.image);
+    // Delete multiple images from Supabase
+    if (goods.image && goods.image.length > 0) {
+      await deleteMultipleFilesFromSupabase(goods.image);
     }
 
     await Goods.findByIdAndDelete(req.params.id);

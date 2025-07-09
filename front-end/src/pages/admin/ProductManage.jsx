@@ -20,6 +20,7 @@ import {
   Card,
   Row,
   Col,
+  Typography,
   Divider,
 } from "antd";
 import {
@@ -49,7 +50,7 @@ import dayjs from "dayjs";
 const { Sider, Content } = Layout;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-
+const { Title, Text } = Typography;
 const ProductPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -156,6 +157,8 @@ const ProductPage = () => {
 
       // Prepare promotion data
       let promotionData = null;
+
+      // ตรวจสอบว่ามีข้อมูลโปรโมชั่นหรือไม่
       if (values.promotionPrice && values.promotionDateRange) {
         promotionData = {
           price: values.promotionPrice,
@@ -169,9 +172,11 @@ const ProductPage = () => {
         price: values.price,
         duration: values.duration,
         hotSale: values.hotSale || false,
-        promotion: promotionData,
+        promotion: promotionData, // จะเป็น null ถ้าไม่มีโปรโมชั่น
         image: values.image,
       };
+
+      console.log("Sending product data:", productData); // Debug log
 
       if (editingProduct) {
         await updateProduct(editingProduct._id, productData);
@@ -373,17 +378,21 @@ const ProductPage = () => {
       </Sider>
 
       <Layout>
-        <Header title="Promotion Management" />
+        <Header title="Product Management" />
 
         <Content className="product-container p-6">
           <div className="product-header mb-6">
-            <Row justify="space-between" align="middle">
-              <Col>
-                <h2 className="text-2xl font-bold">
-                  Promotions ({filteredProducts.length})
-                </h2>
-              </Col>
-            </Row>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Title level={2} style={{ margin: 0 }}>
+                Products ({filteredProducts.length})
+              </Title>
+            </div>
           </div>
 
           <Card className="mb-6">
@@ -397,67 +406,18 @@ const ProductPage = () => {
                   allowClear
                 />
               </Col>
-
-              {/* <Col xs={24} sm={12} md={4}>
-                <Select
-                  placeholder="Hot Sale"
-                  value={filterOptions.hotSale}
-                  onChange={(value) => handleFilterChange("hotSale", value)}
-                  allowClear
-                  style={{ width: "100%" }}
-                >
-                  <Option value={true}>Hot Sale Only</Option>
-                  <Option value={false}>Regular Only</Option>
-                </Select>
-              </Col> */}
-
-              <Col xs={24} sm={12} md={4}>
-                <Select
-                  placeholder="Promotion"
-                  value={filterOptions.onPromotion}
-                  onChange={(value) => handleFilterChange("onPromotion", value)}
-                  allowClear
-                  style={{ width: "100%" }}
-                >
-                  <Option value={true}>On Promotion</Option>
-                  <Option value={false}>Regular Price</Option>
-                </Select>
-              </Col>
-
-              <Col xs={24} sm={12} md={4}>
-                <Select
-                  value={`${filterOptions.sortBy}-${filterOptions.sortOrder}`}
-                  onChange={(value) => {
-                    const [sortBy, sortOrder] = value.split("-");
-                    handleFilterChange("sortBy", sortBy);
-                    handleFilterChange("sortOrder", sortOrder);
-                  }}
-                  style={{ width: "100%" }}
-                >
-                  <Option value="price-asc">Price: Low to High</Option>
-                  <Option value="price-desc">Price: High to Low</Option>
-                  <Option value="sessions-asc">Sessions: Low to High</Option>
-                  <Option value="sessions-desc">Sessions: High to Low</Option>
-                  <Option value="duration-asc">Duration: Short to Long</Option>
-                  <Option value="duration-desc">Duration: Long to Short</Option>
-                </Select>
-              </Col>
-
               <Col xs={24} sm={12} md={2}>
                 <Button onClick={resetFilters} type="default">
                   Reset
                 </Button>
               </Col>
-              <Col xs={24} sm={12} md={4}>
-                <Button
-                  type="primary"
-                  size=""
-                  icon={<PlusOutlined />}
-                  onClick={showCreateModal}
-                >
-                  Create Product
-                </Button>
-              </Col>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={showCreateModal}
+              >
+                Create Product
+              </Button>
             </Row>
           </Card>
 
@@ -608,7 +568,22 @@ const ProductPage = () => {
                 </Col>
               </Row>
 
-              <Divider orientation="left">Promotion Settings</Divider>
+              <div className="flex justify-between items-center mb-4">
+                <h4>Promotion Settings</h4>
+                <Button
+                  danger
+                  size="small"
+                  onClick={() => {
+                    form.setFieldsValue({
+                      promotionPrice: null,
+                      promotionDateRange: null,
+                    });
+                    message.success("Promotion cleared!");
+                  }}
+                >
+                  Clear Promotion
+                </Button>
+              </div>
 
               <Row gutter={16}>
                 <Col span={12}>

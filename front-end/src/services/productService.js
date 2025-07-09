@@ -31,9 +31,15 @@ const createFormData = (productData) => {
         // If it's already a URL string, append as is
         formData.append(key, productData[key]);
       }
-    } else if (key === "promotion" && productData[key]) {
-      // Handle promotion object - stringify it
-      formData.append(key, JSON.stringify(productData[key]));
+    } else if (key === "promotion") {
+      // Handle promotion object - ส่งเสมอแม้จะเป็น null
+      if (productData[key] === null) {
+        formData.append(key, "null"); // ส่งเป็น string 'null'
+      } else if (productData[key]) {
+        formData.append(key, JSON.stringify(productData[key]));
+      } else {
+        formData.append(key, "null"); // กรณีไม่มีข้อมูลก็ส่ง 'null'
+      }
     } else if (key === "hotSale") {
       // Ensure boolean is properly handled
       formData.append(
@@ -44,6 +50,11 @@ const createFormData = (productData) => {
       formData.append(key, productData[key]);
     }
   });
+
+  console.log("FormData contents:"); // Debug log
+  for (let pair of formData.entries()) {
+    console.log(pair[0] + ": ", pair[1]);
+  }
 
   return formData;
 };
@@ -128,7 +139,6 @@ export const createProduct = async (productData) => {
 export const updateProduct = async (productId, productData) => {
   try {
     const formData = createFormData(productData);
-    console.log("Updating product with ID:", formData);
     const response = await axios.put(
       `${API_BASE_URL}/api/products/${productId}`,
       formData,

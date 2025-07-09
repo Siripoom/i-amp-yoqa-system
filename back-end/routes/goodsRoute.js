@@ -6,7 +6,7 @@ const goodsController = require("../controllers/goodsController");
 const { upload } = goodsController;
 
 // Create new goods (with file upload)
-router.post("/", upload.single("image"), goodsController.createGoods);
+router.post("/", upload.array("images", 3), goodsController.createGoods);
 
 // Get all goods with pagination and filtering
 // Query params: page, limit, goods, code, hotSale, minPrice, maxPrice, inStock, sortBy, sortOrder
@@ -16,7 +16,7 @@ router.get("/", goodsController.getAllGoods);
 router.get("/:id", goodsController.getGoodsById);
 
 // Update goods (with file upload)
-router.put("/:id", upload.single("image"), goodsController.updateGoods);
+router.put("/:id", upload.array("images", 3), goodsController.updateGoods);
 
 // Delete goods
 router.delete("/:id", goodsController.deleteGoods);

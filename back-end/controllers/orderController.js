@@ -15,8 +15,17 @@ const upload = multer({ storage: storage });
 // สร้างคำสั่งซื้อใหม่พร้อมอัปโหลดรูปภาพไปยัง Supabase
 exports.createOrder = async (req, res) => {
   try {
-    const { user_id, product_id, goods_id, order_type, quantity, size, color } =
-      req.body;
+    const {
+      user_id,
+      product_id,
+      goods_id,
+      order_type,
+      quantity,
+      size,
+      color,
+      address,
+      phone_number,
+    } = req.body;
     console.log("Received order data:", req.body);
     // Validate required fields
     if (!user_id || !order_type) {
@@ -74,6 +83,19 @@ exports.createOrder = async (req, res) => {
       // console.log("Image uploaded to Supabase:", imageUrl);
     }
 
+    // checkout user exists address and phone number but not exist or new data in user model save new address and phone number to user instead
+    const user = await User.findById(user_id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    if (address || !user.address) {
+      user.address = address;
+    }
+    if (phone_number || !user.phone) {
+      user.phone = phone_number;
+    }
+    await user.save();
+
     let item = null;
     let orderData = {
       user_id,
@@ -112,6 +134,8 @@ exports.createOrder = async (req, res) => {
       orderData.unit = item.unit;
       orderData.size = size || item.size;
       orderData.color = color || item.color;
+      orderData.address = user.address;
+      orderData.phone_number = user.phone;
 
       // คำนวณราคา (ใช้ promotion price ถ้ามีและยังไม่หมดอายุ)
       let unitPrice = item.price;

@@ -55,8 +55,14 @@ const goods = new mongoose.Schema(
       default: false,
     },
     image: {
-      type: String, // เก็บชื่อไฟล์ที่ใช้ใน GridFS
+      type: [String], // เปลี่ยนจาก String เป็น Array ของ String
       required: false,
+      validate: {
+        validator: function (v) {
+          return v.length <= 3; // จำกัดไม่เกิน 3 ภาพ
+        },
+        message: "Maximum 3 images allowed",
+      },
     },
   },
   { timestamps: true }

@@ -8,6 +8,8 @@ import {
   Space,
   Divider,
   Typography,
+  Image,
+  Carousel,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +20,8 @@ import {
   ShoppingCartOutlined,
   TagsOutlined,
   StockOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
@@ -91,6 +95,42 @@ const Course = () => {
       console.error(error);
     }
     setGoodsLoading(false);
+  };
+
+  // Helper function to get the first image from multiple images
+  const getFirstImage = (images) => {
+    if (!images) return "/placeholder-image.jpg";
+    if (Array.isArray(images) && images.length > 0) {
+      return images[0];
+    }
+    if (typeof images === "string") {
+      return images;
+    }
+    return "/placeholder-image.jpg";
+  };
+
+  // Helper function to get all images as array
+  const getAllImages = (images) => {
+    if (!images) return ["/placeholder-image.jpg"];
+    if (Array.isArray(images)) {
+      return images.length > 0 ? images : ["/placeholder-image.jpg"];
+    }
+    if (typeof images === "string") {
+      return [images];
+    }
+    return ["/placeholder-image.jpg"];
+  };
+
+  // ฟังก์ชันเปิด Image Modal
+  const showImageModal = (images, initialIndex = 0) => {
+    setSelectedImageIndex(initialIndex);
+    setIsImageModalVisible(true);
+  };
+
+  // ฟังก์ชันปิด Image Modal
+  const handleImageModalCancel = () => {
+    setIsImageModalVisible(false);
+    setSelectedImageIndex(0);
   };
 
   // ฟังก์ชันเช็คการล็อกอินและส่ง product ไปหน้า Checkout
@@ -235,10 +275,11 @@ const Course = () => {
     } else if (isHotSale) {
       ribbonText = "🔥 Hot Sale";
       ribbonColor = "orange";
-    } else if (hasActivePromotion) {
-      ribbonText = "💰 Sale!";
-      ribbonColor = "red";
     }
+    // else if (hasActivePromotion) {
+    //   ribbonText = "💰 Sale!";
+    //   ribbonColor = "red";
+    // }
 
     const CardContent = (
       <Card
@@ -344,6 +385,8 @@ const Course = () => {
     const hasActivePromotion = isPromotionActive(goodsItem.promotion);
     const isHotSale = goodsItem.hotSale;
     const isOutOfStock = goodsItem.stock <= 0;
+    const firstImage = getFirstImage(goodsItem.image);
+    const allImages = getAllImages(goodsItem.image);
 
     // กำหนด ribbon text และสี
     let ribbonText = null;
@@ -372,11 +415,19 @@ const Course = () => {
         cover={
           <div className="relative w-full overflow-hidden">
             <img
-              src={goodsItem.image || "/placeholder-image.jpg"}
-              className="rounded-t-lg object-cover h-48"
+              src={firstImage}
+              className="rounded-t-lg object-cover h-48 w-full"
               alt={goodsItem.goods}
               loading="lazy"
             />
+
+            {/* Multiple Images Indicator */}
+            {allImages.length > 1 && (
+              <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                +{allImages.length - 1} more
+              </div>
+            )}
+
             {/* Status badges บนรูปภาพ */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {isHotSale && !isOutOfStock && (
@@ -635,13 +686,42 @@ const Course = () => {
         {selectedGoods && (
           <div className="goods-modal-content">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left side - Image */}
+              {/* Left side - Image Gallery */}
               <div className="image-section">
-                <img
-                  src={selectedGoods.image || "/placeholder-image.jpg"}
-                  alt={selectedGoods.goods}
-                  className="w-full h-80 object-cover rounded-lg shadow-md"
-                />
+                {getAllImages(selectedGoods.image).length > 1 ? (
+                  <div style={{ width: "100%" }}>
+                    <Carousel
+                      arrows={true}
+                      prevArrow={<LeftOutlined />}
+                      nextArrow={<RightOutlined />}
+                      dots={true}
+                      autoplay={false}
+                    >
+                      {getAllImages(selectedGoods.image).map((img, index) => (
+                        <div key={index}>
+                          <img
+                            src={img}
+                            alt={`${selectedGoods.goods} - Image ${index + 1}`}
+                            className="w-full h-80 object-cover rounded-lg shadow-md"
+                          />
+                        </div>
+                      ))}
+                    </Carousel>
+                    <div className="mt-2 text-center">
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {getAllImages(selectedGoods.image).length} image(s)
+                      </Text>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <img
+                      src={getFirstImage(selectedGoods.image)}
+                      alt={selectedGoods.goods}
+                      className="w-full h-80 object-cover rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Right side - Details */}
@@ -748,6 +828,43 @@ const Course = () => {
           </div>
         )}
       </Modal>
+
+      {/* Image Zoom Modal - Removed */}
+
+      {/* Custom CSS for Modal */}
+      <style jsx>{`
+        .goods-detail-modal .ant-modal-body {
+          padding: 24px;
+        }
+
+        .ant-carousel .slick-prev,
+        .ant-carousel .slick-next {
+          z-index: 2;
+          width: 40px;
+          height: 40px;
+          background: rgba(0, 0, 0, 0.5);
+          border-radius: 50%;
+        }
+
+        .ant-carousel .slick-prev:before,
+        .ant-carousel .slick-next:before {
+          color: white;
+          font-size: 16px;
+        }
+
+        .ant-carousel .slick-dots {
+          bottom: 10px;
+        }
+
+        .ant-carousel .slick-dots li button {
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 50%;
+        }
+
+        .ant-carousel .slick-dots li.slick-active button {
+          background: white;
+        }
+      `}</style>
     </>
   );
 };

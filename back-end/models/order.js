@@ -88,6 +88,18 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    address: {
+      type: String,
+      required: function () {
+        return this.order_type === "goods";
+      },
+    },
+    phone_number: {
+      type: String,
+      required: function () {
+        return this.order_type === "goods";
+      },
+    },
 
     // สำหรับ product orders - ข้อมูลเดิม
     total_sessions: {

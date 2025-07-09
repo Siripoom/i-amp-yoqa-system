@@ -16,6 +16,53 @@ const handleError = (error) => {
   throw new Error(error.response?.data?.message || "An error occurred");
 };
 
+// Helper function to create FormData for multiple images
+const createGoodsFormData = (goodsData) => {
+  const formData = new FormData();
+
+  // Add basic fields
+  const basicFields = [
+    "goods",
+    "code",
+    "detail",
+    "stock",
+    "unit",
+    "size",
+    "color",
+    "price",
+    "hotSale",
+  ];
+
+  basicFields.forEach((field) => {
+    if (goodsData[field] !== undefined && goodsData[field] !== null) {
+      formData.append(field, goodsData[field]);
+    }
+  });
+
+  // Handle multiple images
+  if (goodsData.images && Array.isArray(goodsData.images)) {
+    goodsData.images.forEach((image) => {
+      if (image.originFileObj) {
+        formData.append("images", image.originFileObj);
+      }
+    });
+  } else if (goodsData.image && Array.isArray(goodsData.image)) {
+    // Backward compatibility with old 'image' field
+    goodsData.image.forEach((image) => {
+      if (image.originFileObj) {
+        formData.append("images", image.originFileObj);
+      }
+    });
+  }
+
+  // Handle promotion data
+  if (goodsData.promotion) {
+    formData.append("promotion", JSON.stringify(goodsData.promotion));
+  }
+
+  return formData;
+};
+
 const goodsService = {
   // ✅ ดึงสินค้าทั้งหมด (มี pagination และ filtering)
   getAllGoods: async (params = {}) => {
@@ -77,27 +124,13 @@ const goodsService = {
     }
   },
 
-  // ✅ สร้างสินค้าใหม่ (สำหรับ admin)
+  // ✅ สร้างสินค้าใหม่ (รองรับหลายภาพ)
   createGoods: async (goodsData) => {
     try {
-      const formData = new FormData();
+      // Use the new helper function for FormData creation
+      const formData = createGoodsFormData(goodsData);
 
-      // เพิ่มข้อมูลทั่วไป
-      Object.keys(goodsData).forEach((key) => {
-        if (key === "image" && goodsData[key]) {
-          // Handle file upload
-          if (goodsData[key].length > 0) {
-            formData.append(key, goodsData[key][0].originFileObj);
-          }
-        } else if (key === "promotion" && goodsData[key]) {
-          // Handle promotion data as JSON string
-          formData.append(key, JSON.stringify(goodsData[key]));
-        } else {
-          formData.append(key, goodsData[key]);
-        }
-      });
-
-      const response = await axios.post(`${API_URL}/api/goods`, formData, {
+      const response = await axios.post(`${API_URL}/api/goods`, goodsData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return handleResponse(response);
@@ -106,26 +139,19 @@ const goodsService = {
     }
   },
 
-  // ✅ อัปเดตสินค้า (สำหรับ admin)
+  // ✅ อัปเดตสินค้า (รองรับหลายภาพ)
   updateGoods: async (id, goodsData) => {
     try {
-      const formData = new FormData();
+      // Use the new helper function for FormData creation
+      const formData = createGoodsFormData(goodsData);
 
-      Object.keys(goodsData).forEach((key) => {
-        if (key === "image" && goodsData[key]) {
-          if (goodsData[key].length > 0) {
-            formData.append(key, goodsData[key][0].originFileObj);
-          }
-        } else if (key === "promotion" && goodsData[key]) {
-          formData.append(key, JSON.stringify(goodsData[key]));
-        } else {
-          formData.append(key, goodsData[key]);
+      const response = await axios.put(
+        `${API_URL}/api/goods/${id}`,
+        goodsData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
         }
-      });
-
-      const response = await axios.put(`${API_URL}/api/goods/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      );
       return handleResponse(response);
     } catch (error) {
       handleError(error);
@@ -231,6 +257,94 @@ const goodsService = {
     } catch (error) {
       handleError(error);
     }
+  },
+
+  // ✅ ฟังก์ชันเพิ่มเติม - ดึงภาพทั้งหมดของสินค้า
+  getGoodsImages: async (id) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/goods/${id}`);
+      const data = handleResponse(response);
+      return {
+        status: "success",
+        images: data.data.image || [],
+      };
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  // ✅ ฟังก์ชันเพิ่มเติม - ตรวจสอบข้อมูลก่อนส่ง
+  validateGoodsData: (goodsData) => {
+    const errors = [];
+
+    // Required fields validation
+    if (!goodsData.goods || goodsData.goods.trim() === "") {
+      errors.push("Goods name is required");
+    }
+
+    if (!goodsData.code || goodsData.code.trim() === "") {
+      errors.push("Goods code is required");
+    }
+
+    if (!goodsData.price || goodsData.price <= 0) {
+      errors.push("Price must be greater than 0");
+    }
+
+    if (!goodsData.unit || goodsData.unit.trim() === "") {
+      errors.push("Unit is required");
+    }
+
+    if (goodsData.stock < 0) {
+      errors.push("Stock cannot be negative");
+    }
+
+    // Image validation
+    if (goodsData.images && Array.isArray(goodsData.images)) {
+      if (goodsData.images.length > 3) {
+        errors.push("Maximum 3 images allowed");
+      }
+
+      // Check each image file size and type
+      goodsData.images.forEach((image, index) => {
+        if (image.originFileObj) {
+          const file = image.originFileObj;
+          const maxSize = 2 * 1024 * 1024; // 2MB
+          const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+
+          if (file.size > maxSize) {
+            errors.push(`Image ${index + 1} must be smaller than 2MB`);
+          }
+
+          if (!allowedTypes.includes(file.type)) {
+            errors.push(`Image ${index + 1} must be JPG or PNG format`);
+          }
+        }
+      });
+    }
+
+    // Promotion validation
+    if (goodsData.promotion) {
+      if (
+        goodsData.promotion.price &&
+        goodsData.promotion.price >= goodsData.price
+      ) {
+        errors.push("Promotion price must be lower than regular price");
+      }
+
+      if (goodsData.promotion.startDate && goodsData.promotion.endDate) {
+        const startDate = new Date(goodsData.promotion.startDate);
+        const endDate = new Date(goodsData.promotion.endDate);
+
+        if (startDate >= endDate) {
+          errors.push("Promotion start date must be before end date");
+        }
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
   },
 };
 

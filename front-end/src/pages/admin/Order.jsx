@@ -314,13 +314,7 @@ const OrderPage = () => {
       render: (orderType) => renderOrderTypeBadge(orderType),
       width: 100,
     },
-    {
-      title: "INVOICE",
-      dataIndex: "invoice_number",
-      key: "invoice_number",
-      render: (invoice_number) => invoice_number || "N/A",
-      width: 120,
-    },
+
     {
       title: "USER",
       dataIndex: "user_id",
@@ -386,12 +380,6 @@ const OrderPage = () => {
 
   // ✅ คอลัมน์ของตาราง - Product Orders
   const productOrdersColumns = [
-    {
-      title: "INVOICE",
-      dataIndex: "invoice_number",
-      key: "invoice_number",
-      render: (invoice_number) => invoice_number || "N/A",
-    },
     {
       title: "USER",
       dataIndex: "user_id",
@@ -485,10 +473,10 @@ const OrderPage = () => {
   // ✅ คอลัมน์ของตาราง - Goods Orders
   const goodsOrdersColumns = [
     {
-      title: "INVOICE",
-      dataIndex: "invoice_number",
-      key: "invoice_number",
-      render: (invoice_number) => invoice_number || "N/A",
+      title: "GOODS",
+      dataIndex: "goods_id",
+      key: "goods",
+      render: (goods) => (goods ? goods.goods : "N/A"),
     },
     {
       title: "USER",
@@ -497,10 +485,30 @@ const OrderPage = () => {
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
     },
     {
-      title: "GOODS",
-      dataIndex: "goods_id",
-      key: "goods",
-      render: (goods) => (goods ? goods.goods : "N/A"),
+      title: "SHIPPING INFO",
+      key: "address_phone",
+      render: (record) => {
+        const address = record.shipping_address || record.address;
+        const phone = record.shipping_phone || record.phone_number;
+
+        if (!address && !phone)
+          return <span className="text-gray-400">N/A</span>;
+
+        return (
+          <div className="text-sm">
+            {address && (
+              <div>
+                <strong>Address:</strong> {address}
+              </div>
+            )}
+            {phone && (
+              <div>
+                <strong>Phone:</strong> {phone}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "CODE",
