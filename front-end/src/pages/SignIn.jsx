@@ -1,18 +1,16 @@
 import { Button, Checkbox, Form, Input, Typography, message, Alert } from "antd";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { login } from "../services/authService";
+import { LockOutlined, UserOutlined, LineOutlined } from "@ant-design/icons";
+import { login, lineLogin } from "../services/authService";
 import { useEffect, useState } from "react";
 import liff from "@line/liff";
-
 const { Title, Text } = Typography;
 
 const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const [form] = Form.useForm();
 
   useEffect(() => {
     liff.init({ liffId: "2007091295-9VRjXwVY" });
@@ -29,8 +27,7 @@ const SignIn = () => {
 
   const onFinish = async (values) => {
     setLoading(true);
-    setError(""); // Clear previous errors
-    
+    setError("");
     try {
       const { username, password } = values;
       const response = await login(username, password);
@@ -44,8 +41,7 @@ const SignIn = () => {
       );
       localStorage.setItem("role", response.data.role_id);
 
-      // Show success message
-      message.success("เข้าสู่ระบบสำเร็จ!");
+      message.success("Login successful!");
 
       // Redirect based on role
       if (response.data.role_id === "Admin") {
@@ -59,41 +55,33 @@ const SignIn = () => {
       // Handle different types of errors
       if (error.response) {
         const statusCode = error.response.status;
-        const errorMessage = error.response.data?.message;
         
         switch (statusCode) {
           case 404:
-            setError("ไม่พบอีเมลนี้ในระบบ กรุณาตรวจสอบอีเมลหรือสมัครสมาชิกใหม่");
-            message.error("ไม่พบอีเมลนี้ในระบบ");
+            setError("Email not found. Please check your email or sign up.");
+            message.error("Email not found");
             break;
           case 401:
-            setError("รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบรหัสผ่านอีกครั้ง");
-            message.error("รหัสผ่านไม่ถูกต้อง");
+            setError("Incorrect password. Please try again.");
+            message.error("Incorrect password");
             break;
           case 400:
-            setError("ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีเมลและรหัสผ่าน");
-            message.error("ข้อมูลไม่ถูกต้อง");
+            setError("Invalid email or password format.");
+            message.error("Invalid credentials");
             break;
           default:
-            setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง");
-            message.error("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+            setError("Login failed. Please try again.");
+            message.error("Login failed");
         }
       } else if (error.request) {
-        setError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
-        message.error("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+        setError("Cannot connect to server. Please check your internet connection.");
+        message.error("Connection error");
       } else {
-        setError("เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง");
-        message.error("เกิดข้อผิดพลาดที่ไม่คาดคิด");
+        setError("An unexpected error occurred. Please try again.");
+        message.error("Login error");
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Clear error when user starts typing
-  const handleInputChange = () => {
-    if (error) {
-      setError("");
     }
   };
 
@@ -114,99 +102,79 @@ const SignIn = () => {
         <Title level={2} className="text-center text-blue-900 font-bold">
           Sign-In
         </Title>
-        
-        {/* Error Alert */}
         {error && (
           <Alert
             message={error}
             type="error"
             showIcon
+            className="mb-4"
             closable
             onClose={() => setError("")}
-            style={{ marginBottom: 16 }}
           />
         )}
-
-        <Form 
-          form={form}
-          layout="vertical" 
-          onFinish={onFinish}
-          autoComplete="off"
-        >
+        <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="username"
-            rules={[
-              { required: true, message: "กรุณากรอกอีเมล!" },
-              { type: "email", message: "กรุณากรอกอีเมลให้ถูกต้อง!" }
-            ]}
+            rules={[{ required: true, message: "Please enter your username!" }]}
           >
-            <Input 
-              prefix={<UserOutlined />} 
-              placeholder="อีเมล" 
-              size="large"
-              onChange={handleInputChange}
-              autoComplete="email"
-            />
+            <Input prefix={<UserOutlined />} placeholder="Email" size="large" />
           </Form.Item>
 
           <Form.Item
             name="password"
-            rules={[
-              { required: true, message: "กรุณากรอกรหัสผ่าน!" },
-              { min: 6, message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร!" }
-            ]}
+            rules={[{ required: true, message: "Please enter your password!" }]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="รหัสผ่าน"
+              placeholder="Password"
               size="large"
-              onChange={handleInputChange}
-              autoComplete="current-password"
             />
           </Form.Item>
 
           <div className="flex justify-between items-center mb-4">
-            <Checkbox>จำฉันไว้</Checkbox>
-            <Link className="text-blue-600 hover:text-blue-800">ลืมรหัสผ่าน?</Link>
+            <Checkbox>Remember Me</Checkbox>
+            <Link className="text-blue-600">Forget Password</Link>
           </div>
 
           <Button
             type="primary"
             htmlType="submit"
             loading={loading}
-            className="w-full bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white text-lg flex justify-center items-center py-2 rounded-3xl border-0"
-            size="large"
+            className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white text-lg flex justify-center items-center py-2 rounded-3xl"
           >
-            {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ →"}
+            {loading ? "Signing in..." : "Sign In →"}
           </Button>
         </Form>
 
         {/* Centered LINE login button */}
-        <div className="flex justify-center mt-4">
+        <div
+          className="flex justify-center mt-4"
+          style={{ alignItems: "center" }}
+        >
           <Button
             type="primary"
+            // icon={<LineOutlined />} // Adds the LINE icon
             onClick={handleLiffLogin}
-            disabled={loading}
             style={{
-              backgroundColor: "#00C300",
-              borderColor: "#00C300",
-              color: "white",
-              fontWeight: "bold",
-              padding: "12px 24px",
-              fontSize: "16px",
-              display: "flex",
-              alignItems: "center",
+              backgroundColor: "#00C300", // LINE's signature green color
+              borderColor: "#00C300", // Keep the border the same as the button
+              color: "white", // Text color
+              fontWeight: "bold", // Makes the text bold
+              padding: "12px 24px", // Gives the button some padding
+              fontSize: "16px", // Ensures text size is large enough
+              display: "flex", // For centering the icon and text
+              alignItems: "center", // Centering icon and text vertically
             }}
           >
-            เข้าสู่ระบบด้วย LINE
+            Login with LINE
           </Button>
         </div>
 
         {/* Sign up link */}
         <div className="text-center mt-4">
-          <Text>ยังไม่มีบัญชี?</Text>{" "}
-          <Link to="/auth/signup" className="text-blue-600 hover:text-blue-800">
-            สมัครสมาชิก
+          <Text>Don&apos;t have an account?</Text>{" "}
+          <Link to="/auth/signup" className="text-blue-600">
+            Sign Up
           </Link>
         </div>
       </motion.div>

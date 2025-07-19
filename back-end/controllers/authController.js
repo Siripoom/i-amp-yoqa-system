@@ -9,15 +9,17 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ตรวจสอบว่ามีผู้ใช้หรือไม่
+    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // ตรวจสอบรหัสผ่าน
-    const isPasswordValid = bcrypt.compare(password, user.password);
-    // console.log("isPasswordValid", isPasswordValid);
+    // Check password - using await for bcrypt.compare
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Log for debugging
+    console.log("Password validation result:", isPasswordValid);
+    
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
