@@ -157,6 +157,12 @@ const Contact = () => {
                       <UserOutlined className="mr-2" />
                       {instructor.mastername}
                     </Title>
+                    {/* Description */}
+                    {instructor.description && (
+                      <Paragraph className="text-start text-gray-600 ">
+                        {instructor.description}
+                      </Paragraph>
+                    )}
 
                     {/* Specialization */}
                     {instructor.specialization && (

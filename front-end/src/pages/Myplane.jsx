@@ -292,86 +292,64 @@ const Myplane = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                {bookedClasses.map((classItem) => (
-                  <Card
-                    key={classItem.reservationId}
-                    className="p-4 rounded-lg shadow-md"
-                    title={classItem.title}
-                    extra={
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-500 font-semibold">
-                          จองแล้ว ✅
-                        </span>
-                      </div>
-                    }
-                  >
-                    <p>
-                      <strong>Instructor:</strong> {classItem.instructor}
-                    </p>
-                    {/* <p>
-                      <strong>Class Date:</strong>{" "}
-                      {moment(classItem.date).format("MMMM Do YYYY, h:mm A")}
-                    </p> */}
-                    <p>
-                      <strong>Booked Date:</strong>{" "}
-                      {moment(classItem.reservationDate).format("MMMM Do YYYY")}
-                    </p>
-                    {/* {classItem.description && (
-                      <p>
-                        <strong>Description:</strong> {classItem.description}
-                      </p>
-                    )} */}
-
-                    {/* แสดงข้อมูลคลาสที่จองแล้วเสมอ */}
-                    {/* <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-                      <h4 className="text-purple-700 font-semibold mb-2">
-                        Class Details:
-                      </h4>
-                      {classItem.roomNumber && (
-                        <p>
-                          <strong>📌 Room Number:</strong>{" "}
-                          <span className="text-purple-600">
-                            {classItem.roomNumber}
-                          </span>
-                        </p>
-                      )}
-                      {classItem.passcode && (
-                        <p>
-                          <strong>🔑 Passcode:</strong>{" "}
-                          <span className="text-purple-600">
-                            {classItem.passcode}
-                          </span>
-                        </p>
-                      )}
-                      {classItem.zoomLink && (
-                        <p>
-                          <strong>🔗 Zoom Link:</strong>{" "}
-                          <a
-                            href={classItem.zoomLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 underline"
-                          >
-                            Join Zoom Class
-                          </a>
-                        </p>
-                      )}
-                    </div> */}
-
-                    {/* <div className="mt-4 text-center">
-                      <Button
-                        danger
-                        onClick={() =>
-                          handleCancelReservation(
-                            classItem.reservationId,
-                            classItem.title
-                          )
+                  {bookedClasses.map((classItem) => (
+                  <div key={classItem.reservationId} className="relative">
+                    <Link to="/booking" className="block">
+                      <Card
+                        className="p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                        title={classItem.title}
+                        extra={
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-500 font-semibold">
+                              จองแล้ว ✅
+                            </span>
+                          </div>
                         }
                       >
-                        Cancel Reservation
-                      </Button>
-                    </div> */}
-                  </Card>
+                        <p>
+                          <strong>Instructor:</strong> {classItem.instructor}
+                        </p>
+                        <p>
+                          <strong>Class Date:</strong>{" "}
+                          {moment(classItem.date).format("MMMM Do YYYY, h:mm a")}
+                        </p>
+                        <p>
+                          <strong>Booked Date:</strong>{" "}
+                          {moment(classItem.reservationDate).format("MMMM Do YYYY")}
+                        </p>
+                        {classItem.zoomLink && (
+                          <p>
+                            <strong>Zoom Link:</strong>{" "}
+                            <a 
+                              href={classItem.zoomLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-600 hover:text-blue-800"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Join Class
+                            </a>
+                          </p>
+                        )}
+                        {classItem.roomNumber && (
+                          <p>
+                            <strong>Room:</strong> {classItem.roomNumber}
+                          </p>
+                        )}
+                        {/* <div className="mt-4">
+                          <Button
+                            danger
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleCancelReservation(classItem.reservationId, classItem.title);
+                            }}
+                          >
+                            Cancel Reservation
+                          </Button>
+                        </div> */}
+                      </Card>
+                    </Link>
+                  </div>
                 ))}
               </div>
             )}

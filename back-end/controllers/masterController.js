@@ -81,6 +81,7 @@ exports.createMaster = async (req, res) => {
       image: imageUrl, // Store the public URL of the image
       videoUrl: videoUrl, // Store the YouTube embed URL
       bio: req.body.bio,
+      description: req.body.description,
       specialization: req.body.specialization,
     };
 
@@ -157,6 +158,7 @@ exports.updateMaster = async (req, res) => {
     master.mastername = req.body.mastername || master.mastername;
     master.image = imageUrl;
     master.videoUrl = videoUrl;
+    master.description = req.body.description || master.description;
     master.bio = req.body.bio || master.bio;
     master.specialization = req.body.specialization || master.specialization;
 

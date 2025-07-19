@@ -386,6 +386,7 @@ const ImageSetup = () => {
     formData.append("bio", masterFormData.bio || "");
     formData.append("specialization", masterFormData.specialization || "");
     formData.append("videoUrl", masterFormData.videoUrl || "");
+    formData.append("description", masterFormData.description || "");
 
     // Append files if they exist
     if (masterFormData.image) {
@@ -431,6 +432,7 @@ const ImageSetup = () => {
       mastername: "",
       bio: "",
       specialization: "",
+      description: "",
       image: null,
       videoUrl: "",
     });
@@ -445,6 +447,7 @@ const ImageSetup = () => {
       mastername: record.mastername || "",
       bio: record.bio || "",
       specialization: record.specialization || "",
+       description: "",
       image: null,
       videoUrl: record.videoUrl || "",
     });
@@ -750,17 +753,12 @@ const ImageSetup = () => {
         ),
     },
     {
-      title: "Biography",
-      dataIndex: "bio",
-      key: "bio",
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
       ellipsis: true,
     },
-    {
-      title: "Specialization",
-      dataIndex: "specialization",
-      key: "specialization",
-      ellipsis: true,
-    },
+   
     {
       title: "Action",
       key: "action",
@@ -1092,6 +1090,22 @@ const ImageSetup = () => {
                   })
                 }
                 placeholder="Enter master's name"
+              />
+            </Form.Item>
+            <Form.Item
+              label="description"
+              
+              tooltip="The description of the yoga master"
+            >
+              <Input
+                value={masterFormData.description}
+                onChange={(e) =>
+                  setMasterFormData({
+                    ...masterFormData,
+                    description: e.target.value,
+                  })
+                }
+                placeholder="Enter description"
               />
             </Form.Item>
 

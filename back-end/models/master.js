@@ -5,7 +5,7 @@ const masterSchema = new mongoose.Schema(
     mastername: { type: String, required: true },
     image: { type: String, required: false }, // เก็บ URL ของรูปภาพ
     videoUrl: { type: String, required: false }, // เก็บลิงก์วิดีโอจาก YouTube
-  
+    description: { type: String, required: false },
   },
   { timestamps: true }
 );
