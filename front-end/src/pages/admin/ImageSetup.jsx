@@ -447,8 +447,8 @@ const ImageSetup = () => {
       mastername: record.mastername || "",
       bio: record.bio || "",
       specialization: record.specialization || "",
-       description: "",
-      image: null,
+       description: record.description || "",
+      image: record.image || null,
       videoUrl: record.videoUrl || "",
     });
     setIsMasterModalVisible(true);

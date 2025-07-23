@@ -159,9 +159,15 @@ const Contact = () => {
                     </Title>
                     {/* Description */}
                     {instructor.description && (
-                      <Paragraph className="text-start text-gray-600 ">
-                        {instructor.description}
-                      </Paragraph>
+                      <div className="text-start text-gray-600 mb-3">
+                        {instructor.description.split(',').map((item, index) => (
+                          <div key={index} className="mb-1">
+                            <Text strong className="text-purple-700">
+                              • {item.trim()}
+                            </Text>
+                          </div>
+                        ))}
+                      </div>
                     )}
 
                     {/* Specialization */}

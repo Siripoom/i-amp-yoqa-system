@@ -371,13 +371,13 @@ const Checkout = () => {
 
           {/* Tags */}
           <div className="mb-2 flex flex-wrap gap-1">
-            {/* Show original item tags if no multiple options */}
-            {item.size && !item.size.includes(",") && (
+            {/* Show original item tags if no multiple options and no selection made */}
+            {item.size && !item.size.includes(",") && !selectedSize && (
               <Tag color="geekblue" size="small">
                 {item.size}
               </Tag>
             )}
-            {item.color && !item.color.includes(",") && (
+            {item.color && !item.color.includes(",") && !selectedColor && (
               <Tag color="orange" size="small">
                 {item.color}
               </Tag>
@@ -463,10 +463,19 @@ const Checkout = () => {
               <Text>{item.unit}</Text>
             </div>
 
-            <div className="flex justify-between mb-2">
-              <Text>ขนาดที่เลือก:</Text>
-              <Text>{item.size}</Text>
-            </div>
+            {selectedSize && (
+              <div className="flex justify-between mb-2">
+                <Text>ขนาดที่เลือก:</Text>
+                <Text>{selectedSize}</Text>
+              </div>
+            )}
+
+            {!selectedSize && item.size && !item.size.includes(",") && (
+              <div className="flex justify-between mb-2">
+                <Text>ขนาด:</Text>
+                <Text>{item.size}</Text>
+              </div>
+            )}
 
             {selectedColor && (
               <div className="flex justify-between mb-2">
@@ -683,6 +692,31 @@ const Checkout = () => {
                 {/* Color and Size Selection for Goods */}
                 {orderType === "goods" && item && (
                   <div className="mt-4 space-y-3">
+                    {/* Size Selection */}
+                    {item.size && (
+                      <div>
+                        <Text strong className="block mb-2">
+                          เลือกขนาด:
+                        </Text>
+                        <Select
+                          value={selectedSize}
+                          onChange={setSelectedSize}
+                          placeholder="เลือกขนาด"
+                          style={{ width: "100%" }}
+                          allowClear
+                        >
+                          {item.size.split(",").map((size, index) => (
+                            <Option key={index} value={size.trim()}>
+                              <Space>
+                                <TagsOutlined />
+                                {size.trim()}
+                              </Space>
+                            </Option>
+                          ))}
+                        </Select>
+                      </div>
+                    )}
+
                     {/* Color Selection */}
                     {item.color && (
                       <div>
