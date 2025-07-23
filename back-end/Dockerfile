@@ -1,5 +1,5 @@
 # ใช้ Node.js version 18 เป็น base image
-FROM node:18
+FROM node:20
 
 # ตั้งค่า working directory ภายใน container
 WORKDIR /app
