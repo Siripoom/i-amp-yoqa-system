@@ -106,14 +106,23 @@ exports.getClassById = async (req, res) => {
 // แก้ไขข้อมูลคลาส
 exports.updateClass = async (req, res) => {
   try {
+    const course = await Course.findOne({ course_name: req.body.title });
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const difficulty = course.difficulty;
+
     const updatedClass = await Class.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { ...req.body, difficulty },
       { new: true }
     );
     if (!updatedClass) {
       return res.status(404).json({ message: "Class not found" });
     }
+
     res
       .status(200)
       .json({ message: "Class updated successfully", data: updatedClass });
