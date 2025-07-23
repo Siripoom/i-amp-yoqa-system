@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import PageNotFound from "./pages/404page";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import { ResetPassword } from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Myplane from "./pages/Myplane";
 import MyOrders from "./pages/MyOder";
@@ -39,6 +40,7 @@ const AppRouter = () => (
         <Route path="/" element={<HomePage />} />
         <Route path="/auth/signin" element={<SignIn />} />
         <Route path="/auth/signup" element={<SignUp />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/term" element={<Term />} />
         <Route path="/auth/line" element={<Line />} />
         <Route path="/course" element={<Course />} />

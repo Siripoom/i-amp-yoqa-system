@@ -96,7 +96,7 @@ exports.getUserReservations = async (req, res) => {
       status: "Reserved",
     })
       .sort({ reservation_date: -1 })
-      .populate("class_id", "title start_date end_date instructor");
+      .populate("class_id", "title start_time end_time instructor");
 
     res.status(200).json({ reservations });
   } catch (error) {

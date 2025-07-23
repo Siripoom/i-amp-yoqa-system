@@ -1,17 +1,13 @@
-import { Button, Checkbox, Form, Input, Typography, message, Alert } from "antd";
+import { Button, Checkbox, Form, Input, Typography, message } from "antd";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { LockOutlined, UserOutlined, LineOutlined } from "@ant-design/icons";
 import { login, lineLogin } from "../services/authService";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import liff from "@line/liff";
 const { Title, Text } = Typography;
 
 const SignIn = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-
   useEffect(() => {
     liff.init({ liffId: "2007091295-9VRjXwVY" });
   }, []);
@@ -25,9 +21,9 @@ const SignIn = () => {
     }
   };
 
+  const navigate = useNavigate();
+
   const onFinish = async (values) => {
-    setLoading(true);
-    setError("");
     try {
       const { username, password } = values;
       const response = await login(username, password);
@@ -39,9 +35,7 @@ const SignIn = () => {
         "username",
         `${response.data.first_name} ${response.data.last_name}`
       );
-      localStorage.setItem("role", response.data.role_id);
-
-      message.success("Login successful!");
+      localStorage.setItem("role", response.data.role_id); // Store user role
 
       // Redirect based on role
       if (response.data.role_id === "Admin") {
@@ -52,36 +46,35 @@ const SignIn = () => {
     } catch (error) {
       console.error("Login failed:", error);
       
-      // Handle different types of errors
+      // Handle different error scenarios and show user-friendly messages
       if (error.response) {
+        // Server responded with error status
         const statusCode = error.response.status;
+        const errorMessage = error.response.data?.message || "Login failed";
         
         switch (statusCode) {
           case 404:
-            setError("Email not found. Please check your email or sign up.");
-            message.error("Email not found");
+            message.error("Email not found. Please check your email or sign up for an account.");
             break;
           case 401:
-            setError("Incorrect password. Please try again.");
-            message.error("Incorrect password");
+            message.error("Incorrect password. Please try again.");
             break;
           case 400:
-            setError("Invalid email or password format.");
-            message.error("Invalid credentials");
+            message.error("Invalid email or password format. Please check your credentials.");
+            break;
+          case 500:
+            message.error("Server error. Please try again later.");
             break;
           default:
-            setError("Login failed. Please try again.");
-            message.error("Login failed");
+            message.error(`Login failed: ${errorMessage}`);
         }
       } else if (error.request) {
-        setError("Cannot connect to server. Please check your internet connection.");
-        message.error("Connection error");
+        // Network error
+        message.error("Unable to connect to server. Please check your internet connection.");
       } else {
-        setError("An unexpected error occurred. Please try again.");
-        message.error("Login error");
+        // Other error
+        message.error("An unexpected error occurred. Please try again.");
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -102,16 +95,6 @@ const SignIn = () => {
         <Title level={2} className="text-center text-blue-900 font-bold">
           Sign-In
         </Title>
-        {error && (
-          <Alert
-            message={error}
-            type="error"
-            showIcon
-            className="mb-4"
-            closable
-            onClose={() => setError("")}
-          />
-        )}
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="username"
@@ -131,18 +114,17 @@ const SignIn = () => {
             />
           </Form.Item>
 
-          <div className="flex justify-between items-center mb-4">
+          {/* <div className="flex justify-between items-center mb-4">
             <Checkbox>Remember Me</Checkbox>
             <Link className="text-blue-600">Forget Password</Link>
-          </div>
+          </div> */}
 
           <Button
             type="primary"
             htmlType="submit"
-            loading={loading}
             className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white text-lg flex justify-center items-center py-2 rounded-3xl"
           >
-            {loading ? "Signing in..." : "Sign In →"}
+            Sign In →
           </Button>
         </Form>
 
@@ -175,6 +157,13 @@ const SignIn = () => {
           <Text>Don&apos;t have an account?</Text>{" "}
           <Link to="/auth/signup" className="text-blue-600">
             Sign Up
+          </Link>
+        </div>
+
+        {/* Forgot password link */}
+        <div className="text-center mt-2">
+          <Link to="/auth/reset-password" className="text-gray-600 hover:text-blue-600">
+            Forgot Password?
           </Link>
         </div>
       </motion.div>

@@ -68,6 +68,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // ฟิลด์สำหรับเก็บข้อมูลการยอมรับเง
   },
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordExpiry: {
+    type: Date,
+  },
 
   deleted: { type: Boolean, default: false }, // ฟิลด์สำหรับ soft delete
 });
