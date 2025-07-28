@@ -15,7 +15,12 @@ export const getUserTerms = async () => {
 export const createUserTerms = async (userTermsData) => {
   const fullName = userTermsData;
   try {
-    const response = await axios.post(`${API_URL}/api/user-terms`, fullName);
+    const token = localStorage.getItem("token");
+    const response = await axios.post(`${API_URL}/api/user-terms`, fullName, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating user terms:", error);

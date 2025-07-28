@@ -7,9 +7,10 @@ const {
   deleteUserTerms,
   getAllUserTerms,
 } = require("../controllers/userTermsController");
+const { authenticate } = require("../middlewares/auth");
 
-// เส้นทางสำหรับสร้าง User Terms
-router.post("/user-terms", createUserTerms);
+// เส้นทางสำหรับสร้าง User Terms (ต้องมี auth)
+router.post("/user-terms", authenticate, createUserTerms);
 // เส้นทางสำหรับดึงข้อมูล User Terms ตาม userId
 router.get("/user-terms/:userId", getUserTerms);
 // เส้นทางสำหรับอัปเดต User Terms ตาม userId

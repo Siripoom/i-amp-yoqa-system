@@ -1,8 +1,12 @@
 const UserTerms = require("../models/userTerms");
+const User = require("../models/user");
 
 exports.createUserTerms = async (req, res) => {
   try {
     const { fullName } = req.body;
+
+    // Get user ID from middleware (req.user is set by authenticate middleware)
+    const userId = req.user.userId;
 
     const userTermsData = new UserTerms({
       fullName,
@@ -12,6 +16,9 @@ exports.createUserTerms = async (req, res) => {
 
     // Save to database
     await userTermsData.save();
+
+    // Update user's userTerms field to true
+    await User.findByIdAndUpdate(userId, { userTerms: true });
 
     res.status(201).json({
       status: "success",

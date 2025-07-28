@@ -72,8 +72,9 @@ exports.loginLine = async (req, res) => {
       username: userId,
       first_name: displayName,
       role_id: "Member",
+      userTerms: false, // Default to false for new users
     };
-    var user = await User.findOneAndUpdate({ username: userId }, { new: true });
+    var user = await User.findOne({ username: userId });
     if (user) {
       console.log("User found:", user);
     } else {

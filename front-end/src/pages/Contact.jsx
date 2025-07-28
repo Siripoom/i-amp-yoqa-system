@@ -159,10 +159,13 @@ const Contact = () => {
                     </Title>
                     {/* Description */}
                     {instructor.description && (
-                      <div className="text-start text-gray-600 mb-3">
+                      <div className="text-start mb-3">
+                        <Text strong className="text-black text-base block mb-2">
+                          Certificate
+                        </Text>
                         {instructor.description.split(',').map((item, index) => (
                           <div key={index} className="mb-1">
-                            <Text strong className="text-purple-700">
+                            <Text className="text-black font-normal">
                               • {item.trim()}
                             </Text>
                           </div>

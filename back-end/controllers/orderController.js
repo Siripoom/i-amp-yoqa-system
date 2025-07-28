@@ -108,6 +108,8 @@ exports.createOrder = async (req, res) => {
     // ดึงข้อมูลและตั้งค่าตาม order_type
     if (order_type === "product") {
       item = await Product.findById(product_id);
+      console.log("Product item:", item);
+
       if (!item) {
         return res.status(404).json({ message: "Product not found." });
       }
@@ -115,8 +117,24 @@ exports.createOrder = async (req, res) => {
       orderData.product_id = product_id;
       orderData.total_sessions = item.sessions * orderQuantity;
       orderData.total_duration = item.duration * orderQuantity;
-      orderData.unit_price = item.price;
-      orderData.total_price = item.price * orderQuantity;
+
+      // คำนวณราคา (ใช้ promotion price ถ้ามีและยังไม่หมดอายุ)
+      let unitPrice = item.price;
+      if (
+        item.promotion &&
+        item.promotion.price &&
+        item.promotion.startDate &&
+        item.promotion.endDate
+      ) {
+        const now = new Date();
+        if (now >= item.promotion.startDate && now <= item.promotion.endDate) {
+          unitPrice = item.promotion.price;
+          console.log("Using promotion price:", unitPrice);
+        }
+      }
+
+      orderData.unit_price = unitPrice;
+      orderData.total_price = unitPrice * orderQuantity;
     } else if (order_type === "goods") {
       item = await Goods.findById(goods_id);
       if (!item) {

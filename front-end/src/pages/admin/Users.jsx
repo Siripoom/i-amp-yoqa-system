@@ -123,9 +123,15 @@ const UserPage = () => {
 
     setExpiryDays(daysLeft);
 
+    // Format birth date for input field (YYYY-MM-DD format)
+    const formattedBirthDate = record.birth_date 
+      ? moment(record.birth_date).format("YYYY-MM-DD")
+      : null;
+
     // ตั้งค่าฟอร์มเริ่มต้น
     form.setFieldsValue({
       ...record,
+      birth_date: formattedBirthDate,
       expiry_days: daysLeft,
     });
 
@@ -252,15 +258,15 @@ const UserPage = () => {
       dataIndex: ["role_id"], // Access nested field
       key: "role_id",
     },
-    {
-      title: "Status",
-      key: "status",
-      render: (record) => (
-        <Tag color={record.deleted ? "red" : "green"}>
-          {record.deleted ? "Deleted" : "Active"}
-        </Tag>
-      ),
-    },
+    // {
+    //   title: "Status",
+    //   key: "status",
+    //   render: (record) => (
+    //     <Tag color={record.deleted ? "red" : "green"}>
+    //       {record.deleted ? "Deleted" : "Active"}
+    //     </Tag>
+    //   ),
+    // },
     {
       title: "Action",
       key: "action",

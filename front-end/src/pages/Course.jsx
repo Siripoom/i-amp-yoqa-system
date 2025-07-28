@@ -12,7 +12,7 @@ import {
   Carousel,
 } from "antd";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FireOutlined,
   PercentageOutlined,
@@ -407,7 +407,9 @@ const Course = () => {
     }
 
     const CardContent = (
+     
       <Card
+      onClick={() => handleGoodsCheckout(goodsItem)}
         hoverable={!isOutOfStock}
         className={`rounded-lg shadow-lg overflow-hidden h-full ${
           isOutOfStock ? "opacity-75" : ""

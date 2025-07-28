@@ -65,7 +65,23 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
 
       await createUserTerms(termData);
       message.success("ยืนยันข้อกำหนดและเงื่อนไขเรียบร้อยแล้ว");
-      setTimeout(() => navigate("/auth/signin"), 1000);
+      
+      // Check if user came from LINE login
+      const loginMethod = localStorage.getItem("loginMethod");
+      const userRole = localStorage.getItem("role");
+      
+      if (loginMethod === "line") {
+        // Redirect based on role for LINE users
+        if (userRole === "Admin") {
+          setTimeout(() => navigate("/admin/dashboard"), 1000);
+        } else {
+          setTimeout(() => navigate("/"), 1000);
+        }
+      } else {
+        // Default redirect to sign in for regular users
+        setTimeout(() => navigate("/auth/signin"), 1000);
+      }
+      
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error submitting user terms:", error);
@@ -473,9 +489,7 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
             เพื่อสอบถามรายละเอียดเพิ่มเติมหรือใช้สิทธิตามกฎหมายได้ผ่านช่องทางต่อไปนี้
           </Paragraph>
           <Space direction="vertical">
-            <Text strong style={{ color: "#1890ff" }}>
-              Facebook: ไอแอมป์โยคะ : I'amp yoqa
-            </Text>
+           
             <Text strong style={{ color: "#1890ff" }}>
               Email: iampyoqa@gmail.com
             </Text>

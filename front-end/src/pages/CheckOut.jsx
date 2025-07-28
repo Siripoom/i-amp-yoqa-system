@@ -664,7 +664,11 @@ const Checkout = () => {
 
               <div className="flex items-center gap-4 mb-4">
                 <img
-                  src={item.image || image}
+                  src={
+                    Array.isArray(item.image) 
+                      ? item.image[0] || image 
+                      : item.image || image
+                  }
                   alt={orderType === "product" ? "Course" : "Goods"}
                   className="w-24 h-24 rounded-md object-cover"
                 />

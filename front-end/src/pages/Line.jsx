@@ -49,11 +49,17 @@ const Line = () => {
 
       message.success("LINE login successful!");
 
-      // Redirect based on role
-      if (response.data.role_id === "Admin") {
-        navigate("/admin/dashboard");
+      // Check if user has accepted terms
+      if (!response.data.userTerms) {
+        // Redirect to terms page for first-time LINE users
+        navigate("/term");
       } else {
-        navigate("/");
+        // Redirect based on role for users who have already accepted terms
+        if (response.data.role_id === "Admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
       }
 
       setLoading(false);
