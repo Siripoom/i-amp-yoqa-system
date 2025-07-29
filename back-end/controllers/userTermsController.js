@@ -111,9 +111,9 @@ exports.deleteUserTerms = async (req, res) => {
 };
 exports.getAllUserTerms = async (req, res) => {
   try {
-    const userTermsData = await UserTerms.find().sort({ 
-      acceptedAt: -1, 
-      createdAt: -1 
+    const userTermsData = await UserTerms.find().sort({
+      acceptedAt: -1,
+      createdAt: -1,
     });
 
     res.status(200).json({
