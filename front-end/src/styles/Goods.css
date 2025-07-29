@@ -1,24 +1,98 @@
-.Goods-container {
+.goods-container {
   padding: 20px;
   background-color: #f4f5f7;
 }
 
-.Goods-header {
+/* Responsive container adjustments */
+@media (max-width: 768px) {
+  .goods-container {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .goods-container {
+    padding: 8px;
+  }
+}
+
+.goods-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.create-Goods-button {
+/* Responsive header */
+@media (max-width: 640px) {
+  .goods-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+.create-goods-button {
   background-color: #fa7e1e;
   border-color: #fa7e1e;
 }
 
-.Goods-filters {
+.goods-filters {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+/* Responsive filters */
+@media (max-width: 640px) {
+  .goods-filters {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Responsive table */
+.responsive-table {
+  overflow-x: auto;
+}
+
+.responsive-table .ant-table {
+  min-width: 800px;
+}
+
+@media (max-width: 768px) {
+  .responsive-table .ant-table {
+    font-size: 12px;
+  }
+  
+  .responsive-table .ant-table-thead > tr > th,
+  .responsive-table .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-table .ant-table {
+    font-size: 11px;
+  }
+  
+  .responsive-table .ant-table-thead > tr > th,
+  .responsive-table .ant-table-tbody > tr > td {
+    padding: 6px 2px;
+  }
+}
+
+/* Statistics cards responsive */
+@media (max-width: 640px) {
+  .ant-card-body {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ant-card-body {
+    padding: 8px;
+  }
 }
 
 .ant-table-thead > tr > th {
@@ -30,10 +104,25 @@
   padding: 16px;
 }
 
+/* Responsive table cells */
+@media (max-width: 768px) {
+  .ant-table-tbody > tr > td {
+    padding: 12px 8px;
+  }
+}
+
 .ant-tag {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.875em;
+}
+
+/* Responsive tags */
+@media (max-width: 640px) {
+  .ant-tag {
+    padding: 2px 6px;
+    font-size: 0.75em;
+  }
 }
 
 /* Pagination styling */
@@ -41,4 +130,95 @@
   display: flex;
   justify-content: center;
   padding: 20px 0;
+}
+
+/* Responsive pagination */
+@media (max-width: 640px) {
+  .ant-pagination {
+    padding: 16px 0;
+  }
+  
+  .ant-pagination-item {
+    min-width: 28px;
+    height: 28px;
+    line-height: 26px;
+    font-size: 12px;
+  }
+}
+
+/* Modal responsive adjustments */
+@media (max-width: 640px) {
+  .ant-modal {
+    margin: 0;
+    max-width: 100vw;
+  }
+  
+  .ant-modal-content {
+    border-radius: 0;
+  }
+  
+  .ant-modal-footer {
+    padding: 16px;
+  }
+  
+  .ant-modal-footer .ant-btn {
+    margin-bottom: 8px;
+    width: 100%;
+  }
+  
+  .ant-modal-footer .ant-btn:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Form responsive adjustments */
+@media (max-width: 640px) {
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+  
+  .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+}
+
+/* Upload area responsive */
+@media (max-width: 640px) {
+  .ant-upload.ant-upload-select-picture-card {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .ant-upload-list-picture-card .ant-upload-list-item {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Image display responsive */
+@media (max-width: 640px) {
+  .ant-image {
+    max-width: 100%;
+  }
+}
+
+/* Carousel responsive */
+@media (max-width: 640px) {
+  .ant-carousel .slick-prev,
+  .ant-carousel .slick-next {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .ant-carousel .slick-dots li button {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* Space component responsive */
+@media (max-width: 640px) {
+  .ant-space-item {
+    margin-bottom: 4px;
+  }
 }

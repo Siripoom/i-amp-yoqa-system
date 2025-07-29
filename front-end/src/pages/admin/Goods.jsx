@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Layout,
   Table,
@@ -123,7 +123,7 @@ const GoodsPage = () => {
   };
 
   // Filter functions
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...goods];
 
     // Filter by status
@@ -155,7 +155,7 @@ const GoodsPage = () => {
     }
 
     setFilteredGoods(filtered);
-  };
+  }, [goods, filterStatus, filterUnit, priceRange]);
 
   const clearFilters = () => {
     setFilterStatus("all");
@@ -425,6 +425,7 @@ const GoodsPage = () => {
       key: "image",
       width: 100,
       render: (image) => renderMultipleImages(image),
+      responsive: ["sm"],
     },
     {
       title: "CODE",
@@ -436,9 +437,10 @@ const GoodsPage = () => {
           {code}
         </Text>
       ),
+      responsive: ["md"],
     },
     {
-      title: "GOODS NAME",
+      title: "NAME",
       dataIndex: "goods",
       key: "goods",
       width: 200,
@@ -454,19 +456,20 @@ const GoodsPage = () => {
       key: "sizeColor",
       width: 140,
       render: (record) => (
-        <Space direction="vertical" size="small">
+        <Space direction="vertical" size="small" wrap>
           {record.size && (
-            <Tag color="geekblue" style={{ margin: 0 }}>
+            <Tag color="geekblue" style={{ margin: 0 }} size="small">
               {record.size}
             </Tag>
           )}
           {record.color && (
-            <Tag color="orange" style={{ margin: 0 }}>
+            <Tag color="orange" style={{ margin: 0 }} size="small">
               {record.color}
             </Tag>
           )}
         </Space>
       ),
+      responsive: ["lg"],
     },
     {
       title: "PRICE",
@@ -483,8 +486,9 @@ const GoodsPage = () => {
               strong
               style={{
                 color: isOnPromotion ? "#ff4d4f" : "#fa7e1e",
-                fontSize: "14px",
+                fontSize: "12px",
               }}
+              className="sm:text-sm"
             >
               {displayPrice?.toLocaleString()} THB
             </Text>
@@ -493,8 +497,9 @@ const GoodsPage = () => {
                 delete
                 style={{
                   color: "#999",
-                  fontSize: "12px",
+                  fontSize: "10px",
                 }}
+                className="sm:text-xs"
               >
                 {price?.toLocaleString()} THB
               </Text>
@@ -517,11 +522,12 @@ const GoodsPage = () => {
             }}
             showZero
           />
-          <Text type="secondary" style={{ fontSize: "12px" }}>
+          <Text type="secondary" style={{ fontSize: "10px" }} className="sm:text-xs">
             {record.unit}
           </Text>
         </Space>
       ),
+      responsive: ["sm"],
     },
     {
       title: "ACTIONS",
@@ -529,12 +535,13 @@ const GoodsPage = () => {
       fixed: "right",
       width: 160,
       render: (record) => (
-        <Space size="small">
+        <Space size="small" wrap>
           <Tooltip title="View Details">
             <Button
               type="text"
               icon={<EyeOutlined />}
               onClick={() => showViewModal(record)}
+              size="small"
             />
           </Tooltip>
           <Tooltip title="Edit">
@@ -542,6 +549,7 @@ const GoodsPage = () => {
               type="text"
               icon={<EditOutlined />}
               onClick={() => showEditModal(record)}
+              size="small"
             />
           </Tooltip>
           <Tooltip title="Delete">
@@ -551,7 +559,7 @@ const GoodsPage = () => {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button type="text" danger icon={<DeleteOutlined />} size="small" />
             </Popconfirm>
           </Tooltip>
         </Space>
@@ -590,53 +598,63 @@ const GoodsPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [filterStatus, filterUnit, priceRange, goods]);
+  }, [applyFilters]);
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
-      <Sider width={220} className="lg:block hidden">
+      <Sider 
+        width={220} 
+        className="lg:block hidden"
+        breakpoint="lg"
+        collapsedWidth="0"
+      >
         <Sidebar />
       </Sider>
 
       <Layout>
         <Header title="Goods Management" />
 
-        <Content className="goods-container p-6">
+        <Content className="goods-container p-2 sm:p-4 lg:p-6">
           {/* Header Section */}
-          <div className="goods-header mb-6">
+          <div className="goods-header mb-4 sm:mb-6">
             <Row justify="space-between" align="middle">
-              <Col>
-                <Title level={2} style={{ margin: 0 }}>
+              <Col xs={24} sm={16}>
+                <Title level={2} className="text-xl sm:text-2xl" style={{ margin: 0 }}>
                   Goods Management
                 </Title>
-                <Text type="secondary">
+                <Text type="secondary" className="text-sm sm:text-base">
                   Manage your product inventory and pricing
                 </Text>
               </Col>
-              <Col></Col>
+              <Col xs={24} sm={8} className="mt-4 sm:mt-0">
+                <div className="text-right"></div>
+              </Col>
             </Row>
           </div>
 
           {/* Filters Section */}
           <Card className="mb-4">
             <Row gutter={[16, 16]} align="middle">
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={24} sm={12} lg={8}>
                 <Input
                   placeholder="Search goods..."
                   prefix={<SearchOutlined />}
                   value={searchText}
                   onChange={(e) => handleSearch(e.target.value)}
                   allowClear
+                  size="large"
                 />
               </Col>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={24} sm={12} lg={8}>
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={showCreateModal}
-                  className="create-goods-button"
+                  className="create-goods-button w-full sm:w-auto"
+                  size="large"
                 >
-                  Add New Goods
+                  <span className="hidden sm:inline">Add New Goods</span>
+                  <span className="sm:hidden">Add Goods</span>
                 </Button>
               </Col>
             </Row>
@@ -647,13 +665,14 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary">Total Goods</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">Total Goods</Text>
                   <div
                     style={{
-                      fontSize: "24px",
+                      fontSize: "18px",
                       fontWeight: "bold",
                       color: "#1890ff",
                     }}
+                    className="sm:text-2xl"
                   >
                     {total}
                   </div>
@@ -663,13 +682,14 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary">In Stock</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">In Stock</Text>
                   <div
                     style={{
-                      fontSize: "24px",
+                      fontSize: "18px",
                       fontWeight: "bold",
                       color: "#52c41a",
                     }}
+                    className="sm:text-2xl"
                   >
                     {filteredGoods.filter((item) => item.stock > 0).length}
                   </div>
@@ -679,13 +699,14 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary">Promotional</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">Promotional</Text>
                   <div
                     style={{
-                      fontSize: "24px",
+                      fontSize: "18px",
                       fontWeight: "bold",
                       color: "#fa7e1e",
                     }}
+                    className="sm:text-2xl"
                   >
                     {
                       filteredGoods.filter(
@@ -700,13 +721,14 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary">Hot Sale</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">Hot Sale</Text>
                   <div
                     style={{
-                      fontSize: "24px",
+                      fontSize: "18px",
                       fontWeight: "bold",
                       color: "#ff4d4f",
                     }}
+                    className="sm:text-2xl"
                   >
                     {filteredGoods.filter((item) => item.hotSale).length}
                   </div>
@@ -717,33 +739,39 @@ const GoodsPage = () => {
 
           {/* Table */}
           <Card>
-            <Table
-              columns={columns}
-              dataSource={filteredGoods}
-              pagination={{
-                current: currentPage,
-                pageSize: pageSize,
-                total: total,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} of ${total} items`,
-                onChange: (page, size) => {
-                  setCurrentPage(page);
-                  setPageSize(size);
-                },
-              }}
-              rowKey="_id"
-              loading={loading}
-              locale={{
-                emptyText: (
-                  <Empty
-                    description="No goods found"
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  />
-                ),
-              }}
-            />
+            <div className="overflow-x-auto">
+              <Table
+                columns={columns}
+                dataSource={filteredGoods}
+                pagination={{
+                  current: currentPage,
+                  pageSize: pageSize,
+                  total: total,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                  showTotal: (total, range) =>
+                    `${range[0]}-${range[1]} of ${total} items`,
+                  onChange: (page, size) => {
+                    setCurrentPage(page);
+                    setPageSize(size);
+                  },
+                  responsive: true,
+                }}
+                rowKey="_id"
+                loading={loading}
+                scroll={{ x: 1000 }}
+                size="small"
+                className="responsive-table"
+                locale={{
+                  emptyText: (
+                    <Empty
+                      description="No goods found"
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    />
+                  ),
+                }}
+              />
+            </div>
           </Card>
 
           {/* Create/Edit Modal */}
@@ -752,7 +780,7 @@ const GoodsPage = () => {
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={[
-              <Button key="cancel" onClick={handleCancel}>
+              <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
                 Cancel
               </Button>,
               <Button
@@ -764,11 +792,12 @@ const GoodsPage = () => {
                 {editingGoods ? "Update" : "Create"}
               </Button>,
             ]}
-            width={800}
+            width="95%"
+            style={{ maxWidth: 800, top: 20 }}
           >
             <Form form={form} layout="vertical" requiredMark="optional">
               <Row gutter={16}>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item
                     name="goods"
                     label="Goods Name"
@@ -779,7 +808,7 @@ const GoodsPage = () => {
                     <Input placeholder="Enter goods name" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item
                     name="code"
                     label="Goods Code"
@@ -800,7 +829,7 @@ const GoodsPage = () => {
               </Form.Item>
 
               <Row gutter={16}>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item
                     name="price"
                     label="Price (THB)"
@@ -817,7 +846,7 @@ const GoodsPage = () => {
                     />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item
                     name="stock"
                     label="Stock Quantity"
@@ -835,7 +864,7 @@ const GoodsPage = () => {
                     />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item
                     name="unit"
                     label="Unit"
@@ -847,12 +876,12 @@ const GoodsPage = () => {
               </Row>
 
               <Row gutter={16}>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="size" label="Size">
                     <Input placeholder="Enter size (optional)" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="color" label="Color">
                     <Input placeholder="Enter color (optional)" />
                   </Form.Item>
@@ -880,7 +909,7 @@ const GoodsPage = () => {
               <Divider />
 
               <Row gutter={16}>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item
                     name="hotSale"
                     label="Hot Sale"
@@ -889,7 +918,7 @@ const GoodsPage = () => {
                     <Switch />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item
                     name="hasPromotion"
                     label="Has Promotion"
@@ -910,7 +939,7 @@ const GoodsPage = () => {
                   getFieldValue("hasPromotion") ? (
                     <>
                       <Row gutter={16}>
-                        <Col span={8}>
+                        <Col xs={24} sm={8}>
                           <Form.Item
                             name="promotionPrice"
                             label="Promotion Price (THB)"
@@ -937,7 +966,7 @@ const GoodsPage = () => {
                             />
                           </Form.Item>
                         </Col>
-                        <Col span={8}>
+                        <Col xs={24} sm={8}>
                           <Form.Item
                             name="promotionStartDate"
                             label="Start Date"
@@ -951,7 +980,7 @@ const GoodsPage = () => {
                             <DatePicker style={{ width: "100%" }} showTime />
                           </Form.Item>
                         </Col>
-                        <Col span={8}>
+                        <Col xs={24} sm={8}>
                           <Form.Item
                             name="promotionEndDate"
                             label="End Date"
@@ -983,12 +1012,13 @@ const GoodsPage = () => {
                 Close
               </Button>,
             ]}
-            width={800}
+            width="95%"
+            style={{ maxWidth: 800, top: 20 }}
           >
             {viewingGoods && (
               <div>
                 <Row gutter={16}>
-                  <Col span={12}>
+                  <Col xs={24} md={12}>
                     {/* Multiple Images Display */}
                     {viewingGoods.image &&
                     Array.isArray(viewingGoods.image) &&
@@ -1031,7 +1061,7 @@ const GoodsPage = () => {
                       />
                     )}
                   </Col>
-                  <Col span={12}>
+                  <Col xs={24} md={12}>
                     <Space
                       direction="vertical"
                       size="middle"
@@ -1200,7 +1230,7 @@ const GoodsPage = () => {
             visible={isStockModalVisible}
             onCancel={handleCancel}
             footer={[
-              <Button key="cancel" onClick={handleCancel}>
+              <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
                 Cancel
               </Button>,
               <Button
@@ -1212,6 +1242,8 @@ const GoodsPage = () => {
                 Update Stock
               </Button>,
             ]}
+            width="90%"
+            style={{ maxWidth: 500, top: 20 }}
           >
             {stockGoods && (
               <Form form={stockForm} layout="vertical">

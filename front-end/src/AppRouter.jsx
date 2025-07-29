@@ -30,6 +30,7 @@ import Line from "./pages/Line";
 import InstructorReport from "./pages/admin/InstructorReport";
 import AutoLogoutProvider from "./components/AutoLogoutProvider";
 import Term from "./pages/Term";
+import UserTerms from "./pages/admin/Terms"
 import GoodsPages from "./pages/admin/Goods";
 
 const AppRouter = () => (
@@ -122,6 +123,14 @@ const AppRouter = () => (
           element={
             <AdminRoute>
               <ImageSetup />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/terms"
+          element={
+            <AdminRoute>
+              <UserTerms />
             </AdminRoute>
           }
         />

@@ -283,6 +283,7 @@ const Course = () => {
 
     const CardContent = (
       <Card
+      onClick={() => handleProductCheckout(product)}
         hoverable
         className="rounded-lg shadow-lg overflow-hidden h-full"
         cover={

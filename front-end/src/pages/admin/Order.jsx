@@ -313,6 +313,7 @@ const OrderPage = () => {
       key: "order_type",
       render: (orderType) => renderOrderTypeBadge(orderType),
       width: 100,
+      responsive: ["sm"],
     },
 
     {
@@ -321,12 +322,15 @@ const OrderPage = () => {
       key: "user_id",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
       width: 150,
+      ellipsis: true,
     },
     {
       title: "ITEM",
       key: "item",
       render: (record) => renderItemInfo(record),
       width: 150,
+      ellipsis: true,
+      responsive: ["md"],
     },
     {
       title: "PRICE",
@@ -340,6 +344,7 @@ const OrderPage = () => {
       key: "quantity",
       render: (quantity) => quantity || 1,
       width: 60,
+      responsive: ["sm"],
     },
     {
       title: "TOTAL",
@@ -363,6 +368,7 @@ const OrderPage = () => {
       key: "order_date",
       render: (date) => new Date(date).toLocaleDateString(),
       width: 100,
+      responsive: ["lg"],
     },
     {
       title: "ACTION",
@@ -372,9 +378,11 @@ const OrderPage = () => {
           icon={<EditOutlined />}
           shape="circle"
           onClick={() => showModal(record)}
+          size="small"
         />
       ),
       width: 80,
+      fixed: "right",
     },
   ];
 
@@ -385,18 +393,21 @@ const OrderPage = () => {
       dataIndex: "user_id",
       key: "user_id",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+      ellipsis: true,
     },
     {
       title: "SESSIONS",
       dataIndex: "product_id",
       key: "sessions",
       render: (product) => (product ? `${product.sessions} Sessions` : "N/A"),
+      responsive: ["md"],
     },
     {
       title: "DURATION",
       dataIndex: "product_id",
       key: "duration",
       render: (product) => (product ? `${product.duration} Days` : "N/A"),
+      responsive: ["lg"],
     },
     {
       title: "PRICE",
@@ -439,6 +450,7 @@ const OrderPage = () => {
       dataIndex: "quantity",
       key: "quantity",
       render: (quantity) => quantity || 1,
+      responsive: ["sm"],
     },
     {
       title: "TOTAL",
@@ -456,6 +468,7 @@ const OrderPage = () => {
       dataIndex: "order_date",
       key: "order_date",
       render: (date) => new Date(date).toLocaleDateString(),
+      responsive: ["lg"],
     },
     {
       title: "ACTION",
@@ -465,8 +478,10 @@ const OrderPage = () => {
           icon={<EditOutlined />}
           shape="circle"
           onClick={() => showModal(record)}
+          size="small"
         />
       ),
+      fixed: "right",
     },
   ];
 
@@ -477,12 +492,15 @@ const OrderPage = () => {
       dataIndex: "goods_id",
       key: "goods",
       render: (goods) => (goods ? goods.goods : "N/A"),
+      ellipsis: true,
     },
     {
       title: "USER",
       dataIndex: "user_id",
       key: "user_id",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+      ellipsis: true,
+      responsive: ["md"],
     },
     {
       title: "SHIPPING INFO",
@@ -497,7 +515,7 @@ const OrderPage = () => {
         return (
           <div className="text-sm">
             {address && (
-              <div>
+              <div className="truncate max-w-xs">
                 <strong>Address:</strong> {address}
               </div>
             )}
@@ -509,6 +527,7 @@ const OrderPage = () => {
           </div>
         );
       },
+      responsive: ["lg"],
     },
     {
       title: "CODE",
@@ -522,12 +541,13 @@ const OrderPage = () => {
         ) : (
           "N/A"
         ),
+      responsive: ["md"],
     },
     {
       title: "SIZE/COLOR",
       key: "size_color",
       render: (record) => (
-        <Space size="small">
+        <Space size="small" wrap>
           {record.size && (
             <Tag color="blue" size="small">
               {record.size}
@@ -540,6 +560,7 @@ const OrderPage = () => {
           )}
         </Space>
       ),
+      responsive: ["sm"],
     },
     {
       title: "PRICE",
@@ -582,6 +603,7 @@ const OrderPage = () => {
       dataIndex: "quantity",
       key: "quantity",
       render: (quantity) => quantity || 1,
+      responsive: ["sm"],
     },
     {
       title: "TOTAL",
@@ -599,6 +621,7 @@ const OrderPage = () => {
       dataIndex: "order_date",
       key: "order_date",
       render: (date) => new Date(date).toLocaleDateString(),
+      responsive: ["lg"],
     },
     {
       title: "ACTION",
@@ -608,8 +631,10 @@ const OrderPage = () => {
           icon={<EditOutlined />}
           shape="circle"
           onClick={() => showModal(record)}
+          size="small"
         />
       ),
+      fixed: "right",
     },
   ];
 
@@ -629,23 +654,30 @@ const OrderPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
-      <Sider width={220} className="lg:block hidden">
+      <Sider 
+        width={220} 
+        className="lg:block hidden"
+        breakpoint="lg"
+        collapsedWidth="0"
+      >
         <Sidebar />
       </Sider>
 
       <Layout>
         <Header title="Order Management" />
 
-        <Content className="order-container">
-          <div className="order-header">
-            <h2>Orders</h2>
+        <Content className="order-container p-2 sm:p-4 lg:p-6">
+          <div className="order-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold m-0">Orders</h2>
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={showCreateOrderModal}
-              className="create-order-button"
+              className="create-order-button w-full sm:w-auto"
+              size="large"
             >
-              Create Order
+              <span className="hidden sm:inline">Create Order</span>
+              <span className="sm:hidden">New Order</span>
             </Button>
           </div>
 
@@ -654,13 +686,20 @@ const OrderPage = () => {
             activeKey={activeTab}
             onChange={setActiveTab}
             style={{ marginBottom: 16 }}
+            size="large"
+            className="order-tabs"
+            tabBarStyle={{ 
+              overflow: "auto",
+              whiteSpace: "nowrap"
+            }}
           >
             <TabPane
               tab={
-                <Badge count={allOrders.length} offset={[10, 0]}>
-                  <Space>
+                <Badge count={allOrders.length} offset={[10, 0]} size="small">
+                  <Space size="small">
                     <ShoppingCartOutlined />
-                    All Orders
+                    <span className="hidden sm:inline">All Orders</span>
+                    <span className="sm:hidden">All</span>
                   </Space>
                 </Badge>
               }
@@ -668,10 +707,11 @@ const OrderPage = () => {
             />
             <TabPane
               tab={
-                <Badge count={productOrders.length} offset={[10, 0]}>
-                  <Space>
+                <Badge count={productOrders.length} offset={[10, 0]} size="small">
+                  <Space size="small">
                     <AppstoreOutlined />
-                    Course Orders
+                    <span className="hidden sm:inline">Course Orders</span>
+                    <span className="sm:hidden">Courses</span>
                   </Space>
                 </Badge>
               }
@@ -679,10 +719,11 @@ const OrderPage = () => {
             />
             <TabPane
               tab={
-                <Badge count={goodsOrders.length} offset={[10, 0]}>
-                  <Space>
+                <Badge count={goodsOrders.length} offset={[10, 0]} size="small">
+                  <Space size="small">
                     <ShopOutlined />
-                    Goods Orders
+                    <span className="hidden sm:inline">Goods Orders</span>
+                    <span className="sm:hidden">Goods</span>
                   </Space>
                 </Badge>
               }
@@ -691,34 +732,51 @@ const OrderPage = () => {
           </Tabs>
 
           {/* ตารางแสดงคำสั่งซื้อ */}
-          <Table
-            columns={currentColumns}
-            dataSource={currentData}
-            pagination={{ position: ["bottomCenter"], pageSize: 10 }}
-            rowKey="_id"
-            loading={loading}
-            scroll={{ x: 1200 }}
-          />
+          <div className="overflow-x-auto">
+            <Table
+              columns={currentColumns}
+              dataSource={currentData}
+              pagination={{ 
+                position: ["bottomCenter"], 
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                responsive: true
+              }}
+              rowKey="_id"
+              loading={loading}
+              scroll={{ x: 1200 }}
+              size="small"
+              className="responsive-table"
+            />
+          </div>
 
           {/* Modal แก้ไข / ลบคำสั่งซื้อ */}
           <Modal
             title="Manage Order"
             visible={isModalVisible}
             onCancel={handleCancel}
+            width="90%"
+            style={{ maxWidth: 600 }}
             footer={[
               <Button
                 key="delete"
                 type="danger"
                 icon={<DeleteOutlined />}
                 onClick={handleDeleteOrder}
+                size="small"
+                className="mb-2 sm:mb-0"
               >
-                Delete Order
+                <span className="hidden sm:inline">Delete Order</span>
+                <span className="sm:hidden">Delete</span>
               </Button>,
-              <Button key="cancel" onClick={handleCancel}>
+              <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
                 Cancel
               </Button>,
               <Button key="update" type="primary" onClick={handleUpdateStatus}>
-                Update Status
+                <span className="hidden sm:inline">Update Status</span>
+                <span className="sm:hidden">Update</span>
               </Button>,
             ]}
           >
@@ -820,6 +878,8 @@ const OrderPage = () => {
                         maxWidth: "100%",
                         height: "auto",
                         borderRadius: "8px",
+                        maxHeight: "300px",
+                        objectFit: "contain"
                       }}
                     />
                   </div>
@@ -860,7 +920,8 @@ const OrderPage = () => {
             visible={createOrderModalVisible}
             onCancel={() => setCreateOrderModalVisible(false)}
             footer={null}
-            width={700}
+            width="95%"
+            style={{ maxWidth: 700, top: 20 }}
           >
             <Form
               form={createOrderForm}
@@ -868,7 +929,7 @@ const OrderPage = () => {
               onFinish={handleCreateOrder}
             >
               <Row gutter={16}>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item
                     name="user_id"
                     label="Select User"
@@ -876,7 +937,7 @@ const OrderPage = () => {
                       { required: true, message: "Please select a user" },
                     ]}
                   >
-                    <Select placeholder="Select a user">
+                    <Select placeholder="Select a user" showSearch>
                       {users.map((user) => (
                         <Option key={user._id} value={user._id}>
                           {user.first_name} {user.last_name}
@@ -885,7 +946,7 @@ const OrderPage = () => {
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item
                     label="Order Type"
                     rules={[
@@ -947,12 +1008,12 @@ const OrderPage = () => {
               {/* Goods specific fields */}
               {selectedOrderType === "goods" && (
                 <Row gutter={16}>
-                  <Col span={12}>
+                  <Col xs={24} sm={12}>
                     <Form.Item name="size" label="Size (Optional)">
                       <Input placeholder="Enter size" />
                     </Form.Item>
                   </Col>
-                  <Col span={12}>
+                  <Col xs={24} sm={12}>
                     <Form.Item name="color" label="Color (Optional)">
                       <Input placeholder="Enter color" />
                     </Form.Item>
@@ -981,10 +1042,10 @@ const OrderPage = () => {
 
               <Divider />
 
-              <div style={{ textAlign: "right" }}>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 <Button
-                  style={{ marginRight: 8 }}
                   onClick={() => setCreateOrderModalVisible(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -992,6 +1053,7 @@ const OrderPage = () => {
                   type="primary"
                   htmlType="submit"
                   loading={createOrderLoading}
+                  className="w-full sm:w-auto"
                 >
                   Create Order
                 </Button>

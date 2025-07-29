@@ -33,7 +33,9 @@ exports.getUserTerms = async (req, res) => {
     const userId = req.params.userId;
 
     // ตรวจสอบว่ามี UserTerms สำหรับ userId นี้หรือไม่
-    const userTermsData = await userTerms.findOne({ userId });
+    const userTermsData = await UserTerms.findOne({ userId }).sort({
+      acceptedAt: 1,
+    });
 
     if (!userTermsData) {
       return res.status(404).json({ message: "User terms not found" });
@@ -49,31 +51,28 @@ exports.getUserTerms = async (req, res) => {
 };
 exports.updateUserTerms = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const {
-      accepted,
-      agreement1,
-      agreement2,
-      agreement3,
-      agreement4,
-      agreement5,
-    } = req.body;
+    const userTermsId = req.params.userId; // This can be either userId or document _id
+    const { fullName, accepted } = req.body;
 
-    // ตรวจสอบว่ามี UserTerms สำหรับ userId นี้หรือไม่
-    const userTermsData = await userTerms.findOne({ userId });
+    // Try to find by _id first, then by userId
+    let userTermsData = await UserTerms.findById(userTermsId);
+
+    if (!userTermsData) {
+      userTermsData = await UserTerms.findOne({ userId: userTermsId });
+    }
 
     if (!userTermsData) {
       return res.status(404).json({ message: "User terms not found" });
     }
 
     // อัปเดตข้อมูล UserTerms
-    userTermsData.accepted = accepted;
-    userTermsData.agreement1 = agreement1;
-    userTermsData.agreement2 = agreement2;
-    userTermsData.agreement3 = agreement3;
-    userTermsData.agreement4 = agreement4;
-    userTermsData.agreement5 = agreement5;
-    userTermsData.acceptedAt = new Date();
+    if (fullName !== undefined) userTermsData.fullName = fullName;
+    if (accepted !== undefined) {
+      userTermsData.accepted = accepted;
+      if (accepted) {
+        userTermsData.acceptedAt = new Date();
+      }
+    }
 
     // บันทึกการเปลี่ยนแปลง
     await userTermsData.save();
@@ -89,10 +88,14 @@ exports.updateUserTerms = async (req, res) => {
 };
 exports.deleteUserTerms = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userTermsId = req.params.userId; // This can be either userId or document _id
 
-    // ลบ UserTerms สำหรับ userId นี้
-    const userTermsData = await userTerms.findOneAndDelete({ userId });
+    // Try to delete by _id first, then by userId
+    let userTermsData = await UserTerms.findByIdAndDelete(userTermsId);
+
+    if (!userTermsData) {
+      userTermsData = await UserTerms.findOneAndDelete({ userId: userTermsId });
+    }
 
     if (!userTermsData) {
       return res.status(404).json({ message: "User terms not found" });
@@ -108,15 +111,15 @@ exports.deleteUserTerms = async (req, res) => {
 };
 exports.getAllUserTerms = async (req, res) => {
   try {
-    const userTermsData = await userTerms.find();
-
-    if (!userTermsData || userTermsData.length === 0) {
-      return res.status(404).json({ message: "No user terms found" });
-    }
+    const userTermsData = await UserTerms.find().sort({ 
+      acceptedAt: -1, 
+      createdAt: -1 
+    });
 
     res.status(200).json({
       status: "success",
       data: userTermsData,
+      count: userTermsData.length,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

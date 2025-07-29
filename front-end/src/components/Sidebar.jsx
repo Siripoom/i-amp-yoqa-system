@@ -71,6 +71,13 @@ const Sidebar = () => {
           <UserOutlined /> <span>Users</span>
         </NavLink>
         <NavLink
+          to="/admin/terms"
+          activeClassName="active"
+          className="nav-item"
+        >
+          <ReadOutlined /> <span>Terms</span>
+        </NavLink>
+        <NavLink
           to="/admin/schedule"
           activeClassName="active"
           className="nav-item"
