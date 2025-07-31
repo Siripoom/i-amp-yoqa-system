@@ -8,6 +8,7 @@ import {
   Modal,
   Form,
   message,
+  Upload,
   Tag,
   Tooltip,
   InputNumber,
@@ -18,14 +19,13 @@ import {
   Empty,
   Spin,
   Divider,
-  Row,
-  Col,
 } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   PlusOutlined,
   DeleteOutlined,
+  UploadOutlined,
   CalendarOutlined,
   HistoryOutlined,
   UserOutlined,
@@ -219,87 +219,63 @@ const UserPage = () => {
   };
 
   const columns = [
-    { 
-      title: "Code", 
-      dataIndex: "code", 
-      key: "code",
-      responsive: ["md"],
-      ellipsis: true,
-    },
-    { 
-      title: "First Name", 
-      dataIndex: "first_name", 
-      key: "first_name",
-      ellipsis: true,
-    },
-    { 
-      title: "Last Name", 
-      dataIndex: "last_name", 
-      key: "last_name",
-      responsive: ["sm"],
-      ellipsis: true,
-    },
-    { 
-      title: "Email", 
-      dataIndex: "email", 
-      key: "email",
-      responsive: ["lg"],
-      ellipsis: true,
-    },
+    { title: "Code", dataIndex: "code", key: "code" },
+    { title: "First Name", dataIndex: "first_name", key: "first_name" },
+    { title: "Last Name", dataIndex: "last_name", key: "last_name" },
+    { title: "Email", dataIndex: "email", key: "email" },
     {
       title: "Birth Date",
       dataIndex: "birth_date",
       key: "birth_date",
       render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : null),
-      responsive: ["xl"],
     },
     {
-      title: "Sessions",
+      title: "Remaining Session",
       dataIndex: "remaining_session",
       key: "remaining_session",
       render: (sessions) => (
         <Tag color={sessions > 0 ? "green" : "red"}>{sessions || 0}</Tag>
       ),
-      width: 80,
     },
     {
-      title: "Expiry",
+      title: "Expiration Date",
       dataIndex: "sessions_expiry_date",
       key: "sessions_expiry_date",
       render: (date) => {
         const { text, daysLeft, status } = formatExpiryInfo(date);
         return (
           <Tooltip title={daysLeft !== null ? `${daysLeft} days left` : ""}>
-            <Tag icon={date ? <CalendarOutlined /> : null} color={status} size="small">
-              <span className="hidden sm:inline">{text}</span>
-              <span className="sm:hidden">{daysLeft !== null && daysLeft > 0 ? `${daysLeft}d` : text}</span>
-              {daysLeft !== null && daysLeft > 0 && (
-                <span className="hidden sm:inline"> ({daysLeft} days)</span>
-              )}
+            <Tag icon={date ? <CalendarOutlined /> : null} color={status}>
+              {text}
+              {daysLeft !== null && daysLeft > 0 ? ` (${daysLeft} days)` : ""}
             </Tag>
           </Tooltip>
         );
       },
-      responsive: ["sm"],
     },
     {
       title: "Role",
       dataIndex: ["role_id"], // Access nested field
       key: "role_id",
-      responsive: ["md"],
     },
+    // {
+    //   title: "Status",
+    //   key: "status",
+    //   render: (record) => (
+    //     <Tag color={record.deleted ? "red" : "green"}>
+    //       {record.deleted ? "Deleted" : "Active"}
+    //     </Tag>
+    //   ),
+    // },
     {
       title: "Action",
       key: "action",
       render: (record) => (
-        <Space size="small" className="action-buttons">
+        <Space>
           <Button
             icon={<EditOutlined />}
             shape="circle"
-            size="small"
             onClick={() => showEditModal(record)}
-            title="Edit User"
-            className="edit-btn"
           />
           <Button
             type="primary"
@@ -311,30 +287,11 @@ const UserPage = () => {
               )
             }
             title="View Reservation History"
-            size="small"
-            className="hidden sm:inline-flex history-btn"
           >
-            <span className="hidden md:inline">History</span>
+            History
           </Button>
-          <Button
-            type="primary"
-            icon={<HistoryOutlined />}
-            onClick={() =>
-              fetchUserHistory(
-                record._id,
-                `${record.first_name} ${record.last_name}`
-              )
-            }
-            title="View Reservation History"
-            size="small"
-            shape="circle"
-            className="sm:hidden history-btn-mobile"
-          />
         </Space>
       ),
-      fixed: "right",
-      width: 100,
-      responsive: ["xs"],
     },
   ];
 
@@ -432,78 +389,55 @@ const UserPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
-      <Sider 
-        width={220} 
-        className="lg:block hidden"
-        breakpoint="lg"
-        collapsedWidth="0"
-      >
+      <Sider width={220} className="lg:block hidden">
         <Sidebar />
       </Sider>
 
       <Layout>
         <Header title="Users" />
 
-        <Content className="user-container p-2 sm:p-4 lg:p-6">
-          <div className="user-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold m-0">Users</h2>
+        <Content className="user-container">
+          <div className="user-header">
+            <h2>Users</h2>
             <Button
               type="primary"
-              className="create-user-button w-full sm:w-auto"
+              className="create-user-button"
               icon={<PlusOutlined />}
               onClick={showCreateModal}
-              size="large"
             >
-              <span className="hidden sm:inline">Create User</span>
-              <span className="sm:hidden">New User</span>
+              Create User
             </Button>
           </div>
 
-          <div className="user-filters mb-4 flex flex-col sm:flex-row gap-2">
+          <div className="user-filters mb-4">
             <Select
               defaultValue="User Name"
-              style={{ width: "100%" }}
-              className="sm:w-40"
+              style={{ width: 150, marginRight: 10 }}
             >
               <Option value="User Name">User Name</Option>
             </Select>
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
-              style={{ width: "100%" }}
-              className="sm:w-48"
+              style={{ width: 200, marginRight: 10 }}
               onChange={handleSearch}
             />
           </div>
 
-          <div className="overflow-x-auto">
-            <Table
-              columns={columns}
-              dataSource={users.filter((user) =>
-                user.first_name?.toLowerCase().includes(searchText)
-              )}
-              pagination={{ 
-                position: ["bottomCenter"], 
-                pageSize: 10,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                responsive: true
-              }}
-              rowKey="_id"
-              scroll={{ x: 1000 }}
-              size="small"
-              className="responsive-table"
-            />
-          </div>
+          <Table
+            columns={columns}
+            dataSource={users.filter((user) =>
+              user.first_name?.toLowerCase().includes(searchText)
+            )}
+            pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+            rowKey="_id"
+          />
 
           {/* Modal สำหรับเพิ่ม/แก้ไขข้อมูลผู้ใช้ */}
           <Modal
             title={editingUser ? "Edit User" : "Create User"}
             visible={isModalVisible}
             onCancel={handleCancel}
-            width="95%"
-            style={{ maxWidth: 600, top: 20 }}
             footer={[
               editingUser && (
                 <Button
@@ -511,14 +445,11 @@ const UserPage = () => {
                   type="danger"
                   icon={<DeleteOutlined />}
                   onClick={handleDelete}
-                  size="small"
-                  className="mb-2 sm:mb-0"
                 >
-                  <span className="hidden sm:inline">Delete</span>
-                  <span className="sm:hidden">Del</span>
+                  Delete
                 </Button>
               ),
-              <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
+              <Button key="cancel" onClick={handleCancel}>
                 Cancel
               </Button>,
               <Button key="save" type="primary" onClick={handleSave}>
@@ -527,119 +458,84 @@ const UserPage = () => {
             ]}
           >
             <Form form={form} layout="vertical">
-              <Row gutter={[16, 0]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item name="email" label="Email">
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item name="password" label="Password">
-                    <Input.Password />
-                  </Form.Item>
-                </Col>
-              </Row>
-              
-              <Row gutter={[16, 0]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="first_name"
-                    label="First Name"
-                    rules={[
-                      { required: true, message: "Please enter the first name" },
-                    ]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="last_name"
-                    label="Last Name"
-                    rules={[
-                      { required: true, message: "Please enter the last name" },
-                    ]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              
-              <Row gutter={[16, 0]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item name="code" label="Code">
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="phone"
-                    label="Phone"
-                    rules={[
-                      { required: true, message: "Please enter the phone number" },
-                    ]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              
-              <Row gutter={[16, 0]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="birth_date"
-                    label="Birth Date"
-                    rules={[{ message: "Please enter the birth date" }]}
-                  >
-                    <Input type="date" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="role_id"
-                    label="Role"
-                    rules={[{ required: true, message: "Please select the role" }]}
-                  >
-                    <Select>
-                      <Option value="Member">Member</Option>
-                      <Option value="Instructor">Instructor</Option>
-                      <Option value="Admin">Admin</Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-              
+              <Form.Item name="email" label="Email">
+                <Input />
+              </Form.Item>
+              <Form.Item name="password" label="Password">
+                <Input.Password />
+              </Form.Item>
+              <Form.Item
+                name="first_name"
+                label="First Name"
+                rules={[
+                  { required: true, message: "Please enter the first name" },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="last_name"
+                label="Last Name"
+                rules={[
+                  { required: true, message: "Please enter the last name" },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item name="code" label="code">
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="phone"
+                label="Phone"
+                rules={[
+                  { required: true, message: "Please enter the phone number" },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="birth_date"
+                label="Birth Date"
+                rules={[{ message: "Please enter the birth date" }]}
+              >
+                <Input type="date" />
+              </Form.Item>
+              <Form.Item
+                name="role_id"
+                label="Role"
+                rules={[{ required: true, message: "Please select the role" }]}
+              >
+                <Select>
+                  <Option value="Member">Member</Option>
+                  <Option value="Instructor">Instructor</Option>
+                  <Option value="Admin">Admin</Option>
+                </Select>
+              </Form.Item>
               <Form.Item name="referrer_id" label="Referrer ID">
                 <Input />
               </Form.Item>
-              
-              <Row gutter={[16, 0]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="total_classes"
-                    label="Total Classes"
-                    rules={[
-                      { required: false, message: "Please enter total classes" },
-                    ]}
-                  >
-                    <Input type="number" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="remaining_session"
-                    label="Remaining Session"
-                    rules={[
-                      {
-                        required: false,
-                        message: "Please enter remaining classes",
-                      },
-                    ]}
-                  >
-                    <Input type="number" />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <Form.Item
+                name="total_classes"
+                label="Total Classes"
+                rules={[
+                  { required: false, message: "Please enter total classes" },
+                ]}
+              >
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item
+                name="remaining_session"
+                label="Remaining Session"
+                rules={[
+                  {
+                    required: false,
+                    message: "Please enter remaining classes",
+                  },
+                ]}
+              >
+                <Input type="number" />
+              </Form.Item>
 
               {/* Changed to Days Until Expiration field */}
               <Form.Item
@@ -684,23 +580,21 @@ const UserPage = () => {
             title={
               <Space>
                 <UserOutlined />
-                <span className="text-sm sm:text-base">
+                <span>
                   {selectedUserHistory
-                    ? `${selectedUserHistory}'s History`
+                    ? `${selectedUserHistory}'s Reservation History`
                     : "Reservation History"}
                 </span>
               </Space>
             }
             placement="right"
-            width="95%"
-            style={{ maxWidth: 600 }}
+            width={600}
             onClose={() => setHistoryDrawerVisible(false)}
             visible={historyDrawerVisible}
             extra={
               <Button
                 type="primary"
                 onClick={() => setHistoryDrawerVisible(false)}
-                size="small"
               >
                 Close
               </Button>
