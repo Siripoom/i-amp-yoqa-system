@@ -292,12 +292,14 @@ const UserPage = () => {
       title: "Action",
       key: "action",
       render: (record) => (
-        <Space size="small">
+        <Space size="small" className="action-buttons">
           <Button
             icon={<EditOutlined />}
             shape="circle"
             size="small"
             onClick={() => showEditModal(record)}
+            title="Edit User"
+            className="edit-btn"
           />
           <Button
             type="primary"
@@ -310,7 +312,7 @@ const UserPage = () => {
             }
             title="View Reservation History"
             size="small"
-            className="hidden sm:inline-flex"
+            className="hidden sm:inline-flex history-btn"
           >
             <span className="hidden md:inline">History</span>
           </Button>
@@ -326,12 +328,13 @@ const UserPage = () => {
             title="View Reservation History"
             size="small"
             shape="circle"
-            className="sm:hidden"
+            className="sm:hidden history-btn-mobile"
           />
         </Space>
       ),
       fixed: "right",
-      width: 120,
+      width: 100,
+      responsive: ["xs"],
     },
   ];
 
