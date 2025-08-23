@@ -52,7 +52,7 @@ const ReceiptManagement = () => {
     try {
       const endDate = dayjs().format('YYYY-MM-DD');
       const startDate = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
-      
+
       const data = await receiptService.getReceiptsByDateRange(startDate, endDate);
       setReceipts(data);
       setFilteredReceipts(data);
@@ -113,7 +113,7 @@ const ReceiptManagement = () => {
     try {
       const startDate = dates[0].format('YYYY-MM-DD');
       const endDate = dates[1].format('YYYY-MM-DD');
-      
+
       const data = await receiptService.getReceiptsByDateRange(startDate, endDate);
       setFilteredReceipts(data);
     } catch (error) {
@@ -368,9 +368,9 @@ const ReceiptManagement = () => {
                 columns={[
                   { title: 'ชื่อสินค้า', dataIndex: 'name', key: 'name' },
                   { title: 'จำนวน', dataIndex: 'quantity', key: 'quantity' },
-                  { 
-                    title: 'ราคา', 
-                    dataIndex: 'price', 
+                  {
+                    title: 'ราคา',
+                    dataIndex: 'price',
                     key: 'price',
                     render: (price) => `฿${price?.toLocaleString()}`
                   },

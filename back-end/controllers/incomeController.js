@@ -9,9 +9,8 @@ const createIncomeFromOrder = async (orderData, session = null) => {
   try {
     const incomeData = {
       amount: orderData.total_amount || orderData.amount,
-      description: `รายรับจากการขาย ${
-        orderData.order_type === "product" ? "แพ็คเกจ" : "สินค้า"
-      } - Order #${orderData._id}`,
+      description: `รายรับจากการขาย ${orderData.order_type === "product" ? "แพ็คเกจ" : "สินค้า"
+        } - Order #${orderData._id}`,
       income_type: orderData.order_type === "product" ? "package" : "goods",
       income_date: orderData.createdAt || new Date(),
       order_id: orderData._id,
@@ -364,6 +363,9 @@ const createManualIncome = async (req, res) => {
 };
 
 // ดึงรายการรายรับทั้งหมด
+// ในไฟล์ /controllers/incomeController.js
+
+// ดึงรายการรายรับทั้งหมด
 const getAllIncome = async (req, res) => {
   try {
     const {
@@ -378,32 +380,48 @@ const getAllIncome = async (req, res) => {
 
     const matchConditions = {};
 
-    // ช่วงวันที่เป็น optional - ถ้าไม่ส่งมาจะแสดงทั้งหมด
+    // ===================================================================
+    // =======================   จุดที่แก้ไข   ===========================
+    // ===================================================================
+    // Logic การกรองวันที่ (แก้ไขให้ครอบคลุมเวลาทั้งหมดของวัน)
     if (start_date && end_date) {
+      // สร้าง Object วันที่เริ่มต้น ให้เป็นเวลา 00:00:00 ของวันนั้น
+      const startDateObj = new Date(start_date);
+      startDateObj.setHours(0, 0, 0, 0);
+
+      // สร้าง Object วันที่สิ้นสุด ให้เป็นเวลา 23:59:59.999 ของวันนั้น
+      const endDateObj = new Date(end_date);
+      endDateObj.setHours(23, 59, 59, 999); // <-- นี่คือหัวใจของการแก้ไข
+
       matchConditions.income_date = {
-        $gte: new Date(start_date),
-        $lte: new Date(end_date),
+        $gte: startDateObj,
+        $lte: endDateObj,
       };
     } else if (start_date) {
-      // ถ้ามีแค่วันที่เริ่มต้น
-      matchConditions.income_date = {
-        $gte: new Date(start_date),
-      };
+      const startDateObj = new Date(start_date);
+      startDateObj.setHours(0, 0, 0, 0);
+      matchConditions.income_date = { $gte: startDateObj };
     } else if (end_date) {
-      // ถ้ามีแค่วันที่สิ้นสุด
-      matchConditions.income_date = {
-        $lte: new Date(end_date),
-      };
+      const endDateObj = new Date(end_date);
+      endDateObj.setHours(23, 59, 59, 999);
+      matchConditions.income_date = { $lte: endDateObj };
     }
+    // ===================================================================
+    // ===================================================================
 
+    // Logic การกรองประเภทรายรับ
     if (income_type) {
       matchConditions.income_type = income_type;
     }
 
+    // Logic การกรองสถานะ (จากรอบที่แล้ว)
     if (status) {
       matchConditions.status = status;
+    } else {
+      matchConditions.status = { $in: ["confirmed", "pending"] };
     }
 
+    // Logic การค้นหา
     if (search) {
       matchConditions.$or = [
         { description: { $regex: search, $options: "i" } },
@@ -414,7 +432,6 @@ const getAllIncome = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // เรียงจากรายการล่าสุดไปเก่าสุด (income_date desc, createdAt desc)
     const incomes = await Income.find(matchConditions)
       .populate("created_by", "name email")
       .populate("order_id")
@@ -424,35 +441,17 @@ const getAllIncome = async (req, res) => {
 
     const total = await Income.countDocuments(matchConditions);
 
-    // ถ้าไม่มีการกรองวันที่ ให้ดึงข้อมูลสรุปพิเศษ
-    let summary = null;
-    if (!start_date && !end_date) {
-      const summaryData = await Income.aggregate([
-        { $match: matchConditions },
-        {
-          $group: {
-            _id: null,
-            total_amount: { $sum: "$amount" },
-            total_transactions: { $sum: 1 },
-            latest_date: { $max: "$income_date" },
-            earliest_date: { $min: "$income_date" },
-          },
+    const summaryData = await Income.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: null,
+          total_amount: { $sum: "$amount" },
         },
-      ]);
+      },
+    ]);
 
-      if (summaryData.length > 0) {
-        summary = {
-          total_amount: summaryData[0].total_amount,
-          total_transactions: summaryData[0].total_transactions,
-          latest_date: summaryData[0].latest_date,
-          earliest_date: summaryData[0].earliest_date,
-          formatted_total: summaryData[0].total_amount.toLocaleString("th-TH", {
-            style: "currency",
-            currency: "THB",
-          }),
-        };
-      }
-    }
+    const totalAmount = summaryData.length > 0 ? summaryData[0].total_amount : 0;
 
     res.json({
       success: true,
@@ -464,12 +463,18 @@ const getAllIncome = async (req, res) => {
           total_records: total,
           per_page: parseInt(limit),
         },
-        summary,
+        summary: {
+          total_amount: totalAmount,
+          formatted_total: totalAmount.toLocaleString("th-TH", {
+            style: "currency",
+            currency: "THB",
+          }),
+        },
         filters: {
           start_date: start_date || null,
           end_date: end_date || null,
           income_type: income_type || null,
-          status: status || null,
+          status: status || "all (confirmed, pending)",
           search: search || null,
         },
       },
@@ -520,12 +525,18 @@ const updateIncome = async (req, res) => {
   }
 };
 
-// ลบรายรับ
 const deleteIncome = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const income = await Income.findById(id);
+    const income = await Income.findById(id)
+      .populate({
+        path: 'order_id',
+        populate: [
+          { path: 'product_id' },
+          { path: 'goods_id' }
+        ]
+      });
 
     if (!income) {
       return res.status(404).json({
@@ -534,21 +545,41 @@ const deleteIncome = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่าเป็นรายรับที่มาจาก order หรือไม่
     if (income.order_id) {
-      return res.status(400).json({
-        success: false,
-        message: "ไม่สามารถลบรายรับที่มาจากการสั่งซื้อได้",
+      console.log(`Income is linked to Order ID: ${income.order_id._id}. Reverting actions...`);
+      const associatedOrder = income.order_id;
+
+      if (associatedOrder.status === 'อนุมัติ') {
+        if (associatedOrder.order_type === 'product' && associatedOrder.product_id) {
+          // คืน Session ให้ User
+          await User.findByIdAndUpdate(associatedOrder.user_id, {
+            $inc: { remaining_session: - (associatedOrder.product_id.sessions * associatedOrder.quantity) }
+          });
+          console.log(`Reverted sessions for user ${associatedOrder.user_id}`);
+        } else if (associatedOrder.order_type === 'goods' && associatedOrder.goods_id) {
+          // คืน Stock ให้สินค้า
+          await Goods.findByIdAndUpdate(associatedOrder.goods_id._id, {
+            $inc: { stock: associatedOrder.quantity }
+          });
+          console.log(`Reverted stock for goods ${associatedOrder.goods_id._id}`);
+        }
+      }
+
+      await Order.findByIdAndUpdate(associatedOrder._id, {
+        status: 'ยกเลิก',
+        notes: `ถูกยกเลิกอัตโนมัติเนื่องจากรายรับ ID: ${income._id} ถูกลบโดยตรงจากระบบ Finance`
       });
+      console.log(`Order status updated to 'ยกเลิก' for Order ID: ${associatedOrder._id}`);
     }
 
     await Income.findByIdAndDelete(id);
 
     res.json({
       success: true,
-      message: "ลบรายรับสำเร็จ",
+      message: "ลบรายรับสำเร็จ และได้ทำการปรับปรุง Order ที่เกี่ยวข้อง (ถ้ามี) เรียบร้อยแล้ว",
     });
   } catch (error) {
+    console.error("Error deleting income:", error);
     res.status(500).json({
       success: false,
       message: "เกิดข้อผิดพลาดในการลบรายรับ",

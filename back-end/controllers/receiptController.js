@@ -195,8 +195,7 @@ exports.downloadReceiptPDF = async (req, res) => {
       totalAmount += lineTotal;
       doc.text(`${index + 1}. ${item.name}`);
       doc.text(
-        `   จำนวน: ${
-          item.quantity
+        `   จำนวน: ${item.quantity
         } ราคา: ${item.price.toLocaleString()} รวม: ${lineTotal.toLocaleString()}`
       );
     });

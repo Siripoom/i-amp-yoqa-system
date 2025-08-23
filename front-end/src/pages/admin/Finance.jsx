@@ -47,6 +47,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { TextArea } = Input;
 
+
 const Finance = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('income'); // Changed from 'dashboard' to 'income'
@@ -54,7 +55,7 @@ const Finance = () => {
     dayjs().subtract(30, 'day'),
     dayjs()
   ]);
-  
+
   // Income data
   const [incomes, setIncomes] = useState([]);
   const [incomeLoading, setIncomeLoading] = useState(false);
@@ -136,6 +137,127 @@ const Finance = () => {
     }
   }, [activeTab, dateRange]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ฟังก์ชัน handleSubmit สำหรับรายรับ (Income)
+  const handleIncomeSubmit = async (values) => {
+    try {
+      if (editingIncome) {
+        // โหมดแก้ไข: เรียกใช้ service update
+        const response = await financeService.updateIncome(editingIncome._id, values);
+        if (response.success) {
+          message.success("อัปเดตรายรับเรียบร้อยแล้ว");
+        }
+      } else {
+        // โหมดสร้างใหม่: เรียกใช้ service create
+        const response = await financeService.createManualIncome(values);
+        if (response.success) {
+          message.success("เพิ่มรายรับเรียบร้อยแล้ว");
+        }
+      }
+      setIncomeModalVisible(false);
+      incomeForm.resetFields();
+      setEditingIncome(null);
+      fetchIncomes(); // ดึงข้อมูลใหม่
+    } catch (error) {
+      console.error("Error submitting income:", error);
+      const errorMessage = error?.response?.data?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+      message.error(errorMessage);
+    }
+  };
+
+  const handleDownloadReceipt = async (record) => {
+    if (!record.receipt_url) {
+      message.error("ไม่มีใบเสร็จสำหรับรายการนี้");
+      return;
+    }
+    try {
+      message.loading({ content: 'กำลังดาวน์โหลด...', key: 'download' });
+
+      // 1. เรียก service เพื่อเอาข้อมูลไฟล์ (blob)
+      const blob = await financeService.downloadReceipt(record._id);
+
+      // 2. สร้าง URL ชั่วคราวจาก blob
+      const url = window.URL.createObjectURL(new Blob([blob]));
+
+      // 3. สร้าง element <a> ที่มองไม่เห็นขึ้นมา
+      const link = document.createElement('a');
+      link.href = url;
+
+      // 4. ตั้งชื่อไฟล์ที่จะดาวน์โหลด (ดึงจาก record หรือตั้งชื่อ default)
+      const fileName = record.receipt_filename || `receipt-${record._id}.pdf`;
+      link.setAttribute('download', fileName);
+
+      // 5. เพิ่ม element นี้เข้าไปในหน้าเว็บ
+      document.body.appendChild(link);
+
+      // 6. "คลิก" ที่ link นี้โดยอัตโนมัติเพื่อเริ่มการดาวน์โหลด
+      link.click();
+
+      // 7. ลบ element และ URL ชั่วคราวทิ้งไปหลังจากดาวน์โหลดเสร็จ
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success({ content: 'ดาวน์โหลดสำเร็จ!', key: 'download', duration: 2 });
+
+    } catch (error) {
+      console.error("Error downloading receipt:", error);
+      message.error({ content: 'ดาวน์โหลดล้มเหลว!', key: 'download', duration: 2 });
+    }
+  };
+
+  const handleExpenseSubmit = async (values) => {
+    try {
+      // 1. สร้าง FormData object ขึ้นมาใหม่
+      const formData = new FormData();
+
+      // 2. วนลูปเพื่อใส่ข้อมูลทั้งหมดจาก Form ลงใน FormData
+      for (const key in values) {
+        if (key === 'receipt') {
+          // 3. จัดการข้อมูลไฟล์เป็นพิเศษ
+          // ตรวจสอบว่ามีไฟล์อัปโหลดมาจริง และเป็น fileList
+          if (values.receipt && values.receipt.length > 0) {
+            // ดึงไฟล์จริงๆ ออกมาจาก antd upload component
+            const file = values.receipt[0].originFileObj;
+            formData.append('receipt', file);
+          }
+        } else if (key === 'expense_date') {
+          // 4. จัดการข้อมูลวันที่ (dayjs object)
+          // แปลงเป็น ISO String เพื่อให้ Backend จัดการง่าย
+          if (values.expense_date) {
+            formData.append(key, values.expense_date.toISOString());
+          }
+        } else if (values[key] !== undefined && values[key] !== null) {
+          // 5. ใส่ข้อมูลอื่นๆ ที่เหลือลงไป
+          formData.append(key, values[key]);
+        }
+      }
+
+      // 6. เรียกใช้ service โดยส่ง formData ที่สร้างเสร็จแล้วไป
+      if (editingExpense) {
+        // โหมดแก้ไข
+        const response = await financeService.updateExpense(editingExpense._id, formData);
+        if (response.success) {
+          message.success("อัปเดตรายจ่ายเรียบร้อยแล้ว");
+        }
+      } else {
+        // โหมดสร้างใหม่
+        const response = await financeService.createExpense(formData);
+        if (response.success) {
+          message.success("เพิ่มรายจ่ายเรียบร้อยแล้ว");
+        }
+      }
+
+      // 7. ปิด Modal, รีเซ็ตฟอร์ม, และดึงข้อมูลใหม่ (เหมือนเดิม)
+      setExpenseModalVisible(false);
+      expenseForm.resetFields();
+      setEditingExpense(null);
+      fetchExpenses();
+    } catch (error) {
+      console.error("Error submitting expense:", error);
+      const errorMessage = error?.response?.data?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+      message.error(errorMessage);
+    }
+  };
+
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
@@ -166,7 +288,7 @@ const Finance = () => {
       };
 
       const response = await financeService.getAllIncome(params);
-      
+
       if (response.success) {
         setIncomes(response.data.incomes || []);
         setIncomeTotal(response.data.summary?.total_amount || 0);
@@ -194,7 +316,7 @@ const Finance = () => {
       };
 
       const response = await financeService.getAllExpenses(params);
-      
+
       if (response.success) {
         setExpenses(response.data.expenses || []);
         setExpenseTotal(response.data.summary?.total_amount || 0);
@@ -215,7 +337,7 @@ const Finance = () => {
     setLoading(true);
     try {
       // Reports functionality removed - will be handled in reports tab if needed
-      
+
     } catch (error) {
       console.error('Error fetching reports:', error);
       message.error('เกิดข้อผิดพลาดในการโหลดข้อมูลรายงาน');
@@ -314,9 +436,9 @@ const Finance = () => {
     try {
       const startDate = dateRange[0].format('YYYY-MM-DD');
       const endDate = dateRange[1].format('YYYY-MM-DD');
-      
+
       const blob = await financeService.exportFinancialReportToExcel(reportType, startDate, endDate);
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -325,7 +447,7 @@ const Finance = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       message.success('ส่งออกรายงานเรียบร้อยแล้ว');
     } catch (error) {
       console.error('Error exporting report:', error);
@@ -600,7 +722,7 @@ const Finance = () => {
             </Space>
           </Col>
         </Row>
-        
+
         <Table
           columns={incomeColumns}
           dataSource={incomes}
@@ -652,7 +774,7 @@ const Finance = () => {
             </Space>
           </Col>
         </Row>
-        
+
         <Table
           columns={expenseColumns}
           dataSource={expenses}
@@ -730,8 +852,8 @@ const Finance = () => {
                     value={profitLossData.net_profit || 0}
                     precision={2}
                     prefix="฿"
-                    valueStyle={{ 
-                      color: (profitLossData.net_profit || 0) >= 0 ? '#3f8600' : '#cf1322' 
+                    valueStyle={{
+                      color: (profitLossData.net_profit || 0) >= 0 ? '#3f8600' : '#cf1322'
                     }}
                   />
                 </Card>
@@ -816,7 +938,7 @@ const Finance = () => {
             <Form
               form={incomeForm}
               layout="vertical"
-              onFinish={handleCreateIncome}
+              onFinish={handleIncomeSubmit}
               initialValues={{
                 income_date: dayjs(),
                 income_type: 'manual',
@@ -927,7 +1049,7 @@ const Finance = () => {
             <Form
               form={expenseForm}
               layout="vertical"
-              onFinish={handleCreateExpense}
+              onFinish={handleExpenseSubmit}
               initialValues={{
                 expense_date: dayjs(),
                 category: 'other',

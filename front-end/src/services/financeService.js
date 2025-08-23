@@ -95,14 +95,8 @@ export const financeService = {
     return response.data;
   },
 
-  createExpense: async (expenseData) => {
-    const formData = new FormData();
-    Object.keys(expenseData).forEach((key) => {
-      if (expenseData[key] !== null && expenseData[key] !== undefined) {
-        formData.append(key, expenseData[key]);
-      }
-    });
-
+  // ใน services/financeService.js
+  createExpense: async (formData) => { // รับ formData ที่สร้างเสร็จแล้วมาเลย
     const response = await axios.post(`${API_URL}/api/expenses`, formData, {
       headers: {
         ...getAuthHeaders(),
@@ -112,14 +106,7 @@ export const financeService = {
     return response.data;
   },
 
-  updateExpense: async (id, expenseData) => {
-    const formData = new FormData();
-    Object.keys(expenseData).forEach((key) => {
-      if (expenseData[key] !== null && expenseData[key] !== undefined) {
-        formData.append(key, expenseData[key]);
-      }
-    });
-
+  updateExpense: async (id, formData) => { // รับ formData ที่สร้างเสร็จแล้วมาเลย
     const response = await axios.put(
       `${API_URL}/api/expenses/${id}`,
       formData,

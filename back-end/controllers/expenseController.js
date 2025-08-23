@@ -231,7 +231,7 @@ const getAllExpenses = async (req, res) => {
       start_date,
       end_date,
       category,
-      status,
+      status, // รับ status จาก query
       search,
       vendor,
       sort_by = "expense_date",
@@ -240,19 +240,20 @@ const getAllExpenses = async (req, res) => {
 
     const matchConditions = {};
 
+    // Logic การกรองวันที่ (ปรับปรุงให้แม่นยำ)
     if (start_date && end_date) {
+      const startDateObj = new Date(start_date);
+      startDateObj.setHours(0, 0, 0, 0);
+      const endDateObj = new Date(end_date);
+      endDateObj.setHours(23, 59, 59, 999);
       matchConditions.expense_date = {
-        $gte: new Date(start_date),
-        $lte: new Date(end_date),
+        $gte: startDateObj,
+        $lte: endDateObj,
       };
     }
 
     if (category) {
       matchConditions.category = category;
-    }
-
-    if (status) {
-      matchConditions.status = status;
     }
 
     if (vendor) {
@@ -267,6 +268,21 @@ const getAllExpenses = async (req, res) => {
         { vendor: { $regex: search, $options: "i" } },
       ];
     }
+
+    // ===================================================================
+    // =======================   จุดที่เป็นปัญหา   =========================
+    // ===================================================================
+    // Logic การกรองสถานะ (เพิ่ม Default case)
+    if (status) {
+      // ถ้า Frontend ส่งค่า status มา, ให้ใช้ค่านั้นในการกรอง
+      matchConditions.status = status;
+    } else {
+      // ถ้าไม่ได้ส่ง status มา (Default)
+      // ให้ดึงข้อมูลทั้ง 'approved' (อนุมัติแล้ว) และ 'pending' (รออนุมัติ)
+      matchConditions.status = { $in: ["approved", "pending"] };
+    }
+    // ===================================================================
+    // ===================================================================
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sortOrder = sort_order === "desc" ? -1 : 1;
@@ -283,6 +299,12 @@ const getAllExpenses = async (req, res) => {
 
     const total = await Expense.countDocuments(matchConditions);
 
+    // คำนวณยอดรวมของข้อมูลที่ดึงมา
+    const summary = await Expense.aggregate([
+      { $match: matchConditions },
+      { $group: { _id: null, total_amount: { $sum: "$amount" } } }
+    ]);
+
     res.json({
       success: true,
       data: {
@@ -293,6 +315,7 @@ const getAllExpenses = async (req, res) => {
           total_records: total,
           per_page: parseInt(limit),
         },
+        summary: summary[0] || { total_amount: 0 } // ส่งยอดรวมไปด้วย
       },
     });
   } catch (error) {
