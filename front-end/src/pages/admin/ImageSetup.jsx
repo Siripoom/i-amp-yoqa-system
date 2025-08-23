@@ -52,6 +52,14 @@ const ImageSetup = () => {
     useState(false);
   const [selectedHeroImage, setSelectedHeroImage] = useState(null);
 
+  // Get user role from localStorage for permission control
+  const userRole = localStorage.getItem("role");
+  
+  // Define permissions based on role
+  const canCreate = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
+  const canEdit = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
+  const canDelete = userRole === "SuperAdmin";
+
   const [masterFormData, setMasterFormData] = useState({
     mastername: "",
     bio: "",
@@ -207,16 +215,26 @@ const ImageSetup = () => {
   };
 
   const deleteSliderImage = async (id) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete slider images.");
+      return;
+    }
+    
     try {
       await SliderImage.deleteSliderImage(id);
       message.success("Slider image deleted successfully");
       fetchSliderImages();
-    } catch (err) {
+    } catch {
       message.error("Delete failed");
     }
   };
 
   const createSliderImage = () => {
+    if (!canCreate) {
+      message.warning("You don't have permission to create slider images.");
+      return;
+    }
+    
     setIsSliderCreateMode(true);
     setSelectedSliderImage(null);
     sliderForm.resetFields();
@@ -232,6 +250,11 @@ const ImageSetup = () => {
   };
 
   const updateSliderImage = (record) => {
+    if (!canEdit) {
+      message.warning("You don't have permission to edit slider images.");
+      return;
+    }
+    
     setIsSliderCreateMode(false);
     setSelectedSliderImage(record);
 
@@ -289,22 +312,35 @@ const ImageSetup = () => {
       title: "Action",
       key: "action",
       render: (record) => (
-        <>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => updateSliderImage(record)}
-            style={{ marginRight: 8 }}
-          >
-            Update
-          </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => deleteSliderImage(record._id)}
-          >
-            Delete
-          </Button>
-        </>
+        <Space>
+          {canEdit && (
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => updateSliderImage(record)}
+            >
+              Update
+            </Button>
+          )}
+          {canDelete ? (
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => deleteSliderImage(record._id)}
+            >
+              Delete
+            </Button>
+          ) : (
+            <Tooltip title="No permission to delete">
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                disabled
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
+        </Space>
       ),
     },
   ];
@@ -330,7 +366,7 @@ const ImageSetup = () => {
       } else {
         message.error("Failed to fetch QR Code images");
       }
-    } catch (err) {
+    } catch {
       message.error("Error fetching QR Code images");
     }
   };
@@ -361,7 +397,7 @@ const ImageSetup = () => {
         console.error("Fetched data is not in the expected format:", response);
         message.error("Failed to fetch master images");
       }
-    } catch (err) {
+    } catch {
       message.error("Failed to fetch master images");
     }
   };
@@ -426,6 +462,11 @@ const ImageSetup = () => {
 
   // Open modal for creating a new master
   const createMaster = () => {
+    if (!canCreate) {
+      message.warning("You don't have permission to create master profiles.");
+      return;
+    }
+    
     setIsEditingMaster(false);
     setSelectedMasterImage(null);
     setMasterFormData({
@@ -441,6 +482,11 @@ const ImageSetup = () => {
 
   // Open modal for updating an existing master
   const updateMaster = (record) => {
+    if (!canEdit) {
+      message.warning("You don't have permission to edit master profiles.");
+      return;
+    }
+    
     setIsEditingMaster(true);
     setSelectedMasterImage(record);
     setMasterFormData({
@@ -485,8 +531,8 @@ const ImageSetup = () => {
       form.resetFields();
       fetchClassCatalogs();
       setIsClassModalVisible(false);
-    } catch (err) {
-      console.error("Error with class catalog operation:", err);
+    } catch {
+      console.error("Error with class catalog operation:", "Operation failed");
       message.error(
         "Operation failed. Please check if all required fields are filled."
       );
@@ -497,17 +543,27 @@ const ImageSetup = () => {
 
   // Delete Class Catalog
   const deleteClassCatalog = async (id) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete class catalogs.");
+      return;
+    }
+    
     try {
       await ImageCatalog.deleteImageCatalog(id);
       message.success("Class catalog deleted successfully");
       fetchClassCatalogs();
-    } catch (err) {
+    } catch {
       message.error("Delete failed");
     }
   };
 
   // Open modal for creating a new class catalog
   const createClassCatalog = () => {
+    if (!canCreate) {
+      message.warning("You don't have permission to create class catalogs.");
+      return;
+    }
+    
     setIsClassCreateMode(true);
     setSelectedClassCatalog(null);
     form.resetFields();
@@ -516,6 +572,11 @@ const ImageSetup = () => {
 
   // Open modal for updating an existing class catalog
   const updateClassCatalog = (record) => {
+    if (!canEdit) {
+      message.warning("You don't have permission to edit class catalogs.");
+      return;
+    }
+    
     setIsClassCreateMode(false);
     setSelectedClassCatalog(record);
     form.setFieldsValue({
@@ -543,7 +604,7 @@ const ImageSetup = () => {
       }
       fetchQrcodeImages();
       setIsQrcodeModalVisible(false);
-    } catch (err) {
+    } catch {
       message.error("QR Code upload failed");
     } finally {
       setUploadingQrcode(false);
@@ -551,16 +612,26 @@ const ImageSetup = () => {
   };
 
   const deleteQrcodeImage = async (id) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete QR codes.");
+      return;
+    }
+    
     try {
       await QrcodePayment.deleteQrcodePayment(id);
       message.success("QR Code deleted");
       fetchQrcodeImages();
-    } catch (err) {
+    } catch {
       message.error("QR Code delete failed");
     }
   };
 
   const updateQrcodeImage = (record) => {
+    if (!canEdit) {
+      message.warning("You don't have permission to edit QR codes.");
+      return;
+    }
+    
     setSelectedQrcodeImage(record);
     setIsQrcodeModalVisible(true);
   };
@@ -581,7 +652,7 @@ const ImageSetup = () => {
       }
       fetchHeroImages();
       setIsHeroUpdateModalVisible(false);
-    } catch (err) {
+    } catch {
       message.error("Hero image upload failed");
     } finally {
       setUploadingHero(false);
@@ -590,28 +661,43 @@ const ImageSetup = () => {
 
   // Delete Hero Image
   const deleteHeroImage = async (id) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete hero images.");
+      return;
+    }
+    
     try {
       await HeroImage.deleteHeroImage(id);
       message.success("Hero image deleted");
       fetchHeroImages();
-    } catch (err) {
+    } catch {
       message.error("Delete failed");
     }
   };
 
   // Delete Master Image
   const deleteMasterImage = async (id) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete master profiles.");
+      return;
+    }
+    
     try {
       await MasterImage.deleteMasterImage(id);
       message.success("Master deleted successfully");
       fetchMasterImages();
-    } catch (err) {
+    } catch {
       message.error("Delete failed");
     }
   };
 
   // Update Hero Image (opens the modal)
   const updateHeroImage = (record) => {
+    if (!canEdit) {
+      message.warning("You don't have permission to edit hero images.");
+      return;
+    }
+    
     setSelectedHeroImage(record);
     setIsHeroUpdateModalVisible(true);
   };
@@ -639,22 +725,35 @@ const ImageSetup = () => {
       title: "Action",
       key: "action",
       render: (record) => (
-        <>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => updateClassCatalog(record)}
-            style={{ marginRight: 8 }}
-          >
-            Update
-          </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => deleteClassCatalog(record._id)}
-          >
-            Delete
-          </Button>
-        </>
+        <Space>
+          {canEdit && (
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => updateClassCatalog(record)}
+            >
+              Update
+            </Button>
+          )}
+          {canDelete ? (
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => deleteClassCatalog(record._id)}
+            >
+              Delete
+            </Button>
+          ) : (
+            <Tooltip title="No permission to delete">
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                disabled
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
+        </Space>
       ),
     },
   ];
@@ -670,22 +769,35 @@ const ImageSetup = () => {
       title: "Action",
       key: "action",
       render: (record) => (
-        <>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => onUpdate(record)}
-            style={{ marginRight: 8 }}
-          >
-            Update
-          </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => onDelete(record._id)}
-          >
-            Delete
-          </Button>
-        </>
+        <Space>
+          {canEdit && (
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => onUpdate(record)}
+            >
+              Update
+            </Button>
+          )}
+          {canDelete ? (
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onDelete(record._id)}
+            >
+              Delete
+            </Button>
+          ) : (
+            <Tooltip title="No permission to delete">
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                disabled
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
+        </Space>
       ),
     },
   ];
@@ -702,22 +814,35 @@ const ImageSetup = () => {
       title: "Action",
       key: "action",
       render: (record) => (
-        <>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => onUpdate(record)}
-            style={{ marginRight: 8 }}
-          >
-            Update
-          </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => onDelete(record._id)}
-          >
-            Delete
-          </Button>
-        </>
+        <Space>
+          {canEdit && (
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => onUpdate(record)}
+            >
+              Update
+            </Button>
+          )}
+          {canDelete ? (
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onDelete(record._id)}
+            >
+              Delete
+            </Button>
+          ) : (
+            <Tooltip title="No permission to delete">
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                disabled
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
+        </Space>
       ),
     },
   ];
@@ -764,16 +889,30 @@ const ImageSetup = () => {
       key: "action",
       render: (record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => updateMaster(record)}>
-            Edit
-          </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => deleteMasterImage(record._id)}
-          >
-            Delete
-          </Button>
+          {canEdit && (
+            <Button icon={<EditOutlined />} onClick={() => updateMaster(record)}>
+              Edit
+            </Button>
+          )}
+          {canDelete ? (
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => deleteMasterImage(record._id)}
+            >
+              Delete
+            </Button>
+          ) : (
+            <Tooltip title="No permission to delete">
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                disabled
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -789,20 +928,51 @@ const ImageSetup = () => {
         <Header title="Image Setup" />
 
         <Content className="user-container">
+          {/* แสดงข้อความแจ้งเตือนสำหรับ role ที่มีข้อจำกัด */}
+          {userRole === "Admin" && (
+            <div style={{ 
+              background: "#fff3cd", 
+              border: "1px solid #ffeaa7", 
+              borderRadius: "4px",
+              padding: "12px 16px",
+              marginBottom: "16px",
+              fontSize: "14px",
+              color: "#856404"
+            }}>
+              <strong>⚠️ Admin Role:</strong> You can view, create, and edit image content but cannot delete images.
+            </div>
+          )}
+          
+          {userRole === "Accounting" && (
+            <div style={{ 
+              background: "#d1ecf1", 
+              border: "1px solid #bee5eb", 
+              borderRadius: "4px",
+              padding: "12px 16px",
+              marginBottom: "16px",
+              fontSize: "14px",
+              color: "#0c5460"
+            }}>
+              <strong>ℹ️ Accounting Role:</strong> You can view, create, and edit image content but cannot delete images.
+            </div>
+          )}
+
           <Tabs defaultActiveKey="1">
             <TabPane tab="Hero Images" key="1">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2>Hero Images</h2>
-                  <Upload
-                    customRequest={handleHeroUpload}
-                    showUploadList={false}
-                    accept="image/*"
-                  >
-                    <Button icon={<UploadOutlined />} loading={uploadingHero}>
-                      Upload Hero Image
-                    </Button>
-                  </Upload>
+                  {canCreate && (
+                    <Upload
+                      customRequest={handleHeroUpload}
+                      showUploadList={false}
+                      accept="image/*"
+                    >
+                      <Button icon={<UploadOutlined />} loading={uploadingHero}>
+                        Upload Hero Image
+                      </Button>
+                    </Upload>
+                  )}
                 </div>
 
                 <Table
@@ -818,13 +988,15 @@ const ImageSetup = () => {
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2>Master Profiles</h2>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={createMaster}
-                  >
-                    Add New Master
-                  </Button>
+                  {canCreate && (
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={createMaster}
+                    >
+                      Add New Master
+                    </Button>
+                  )}
                 </div>
 
                 <Table
@@ -840,15 +1012,17 @@ const ImageSetup = () => {
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2>QR Code Payment</h2>
-                  <Upload
-                    customRequest={handleQrcodeUpload}
-                    showUploadList={false}
-                    accept="image/*"
-                  >
-                    <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
-                      Upload QR Code
-                    </Button>
-                  </Upload>
+                  {canCreate && (
+                    <Upload
+                      customRequest={handleQrcodeUpload}
+                      showUploadList={false}
+                      accept="image/*"
+                    >
+                      <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
+                        Upload QR Code
+                      </Button>
+                    </Upload>
+                  )}
                 </div>
 
                 <Table
@@ -867,13 +1041,15 @@ const ImageSetup = () => {
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2>Class Catalogs</h2>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={createClassCatalog}
-                  >
-                    Add New Class
-                  </Button>
+                  {canCreate && (
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={createClassCatalog}
+                    >
+                      Add New Class
+                    </Button>
+                  )}
                 </div>
 
                 <Table
@@ -888,13 +1064,15 @@ const ImageSetup = () => {
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2>Slider Images</h2>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={createSliderImage}
-                  >
-                    Add New Slider Image
-                  </Button>
+                  {canCreate && (
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={createSliderImage}
+                    >
+                      Add New Slider Image
+                    </Button>
+                  )}
                 </div>
 
                 <Table

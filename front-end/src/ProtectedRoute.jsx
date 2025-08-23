@@ -70,7 +70,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
 // Admin-only routes
 const AdminRoute = ({ children }) => (
-  <ProtectedRoute allowedRoles={["Admin"]}>{children}</ProtectedRoute>
+  <ProtectedRoute allowedRoles={["Admin", "SuperAdmin", "Accounting"]}>{children}</ProtectedRoute>
 );
 
 // Member-only routes (accessible by Member and Admin)

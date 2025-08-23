@@ -4,7 +4,6 @@ import {
   Table,
   Input,
   Button,
-  Select,
   Modal,
   Form,
   message,
@@ -21,7 +20,6 @@ import {
   Row,
   Col,
   Typography,
-  Divider,
 } from "antd";
 import {
   SearchOutlined,
@@ -31,26 +29,23 @@ import {
   UploadOutlined,
   FireOutlined,
   PercentageOutlined,
-  EyeOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import "../../styles/Products.css";
 import {
-  getProducts,
+  getProductsWithComputedFields,
   createProduct,
   updateProduct,
   deleteProduct,
   toggleHotSale,
-  getProductsWithComputedFields,
 } from "../../services/productService";
 import dayjs from "dayjs";
 
 const { Sider, Content } = Layout;
-const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const ProductPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -65,6 +60,15 @@ const ProductPage = () => {
     sortBy: "price",
     sortOrder: "asc",
   });
+
+  // Get user role from localStorage for permission control
+  const userRole = localStorage.getItem("role");
+  
+  // Define permissions based on role
+  const canCreate = userRole === "SuperAdmin" || userRole === "Admin";
+  const canEdit = userRole === "SuperAdmin" || userRole === "Admin";
+  const canDelete = userRole === "SuperAdmin";
+  const canToggleHotSale = userRole === "SuperAdmin" || userRole === "Admin";
 
   useEffect(() => {
     fetchProducts();
@@ -115,12 +119,20 @@ const ProductPage = () => {
   };
 
   const showCreateModal = () => {
+    if (!canCreate) {
+      message.warning("You don't have permission to create products.");
+      return;
+    }
     setEditingProduct(null);
     form.resetFields();
     setIsModalVisible(true);
   };
 
   const showEditModal = (record) => {
+    if (!canEdit && userRole !== "Accounting") {
+      message.warning("You don't have permission to edit products.");
+      return;
+    }
     setEditingProduct(record);
 
     // Prepare form values
@@ -151,6 +163,22 @@ const ProductPage = () => {
   };
 
   const handleSave = async () => {
+    // Check permissions
+    if (userRole === "Accounting") {
+      message.warning("You don't have permission to modify product data.");
+      return;
+    }
+    
+    if (editingProduct && !canEdit) {
+      message.warning("You don't have permission to edit products.");
+      return;
+    }
+    
+    if (!editingProduct && !canCreate) {
+      message.warning("You don't have permission to create products.");
+      return;
+    }
+
     try {
       const values = await form.validateFields();
       setLoading(true);
@@ -196,6 +224,11 @@ const ProductPage = () => {
   };
 
   const handleDelete = async () => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete products.");
+      return;
+    }
+    
     try {
       await deleteProduct(editingProduct._id);
       message.success("Product deleted successfully");
@@ -207,6 +240,11 @@ const ProductPage = () => {
   };
 
   const handleToggleHotSale = async (productId, currentStatus) => {
+    if (!canToggleHotSale) {
+      message.warning("You don't have permission to modify hot sale status.");
+      return;
+    }
+    
     try {
       await toggleHotSale(productId);
       message.success(
@@ -220,13 +258,6 @@ const ProductPage = () => {
 
   const handleSearch = (e) => {
     setSearchText(e.target.value);
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilterOptions((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
   };
 
   const resetFilters = () => {
@@ -333,39 +364,43 @@ const ProductPage = () => {
       width: 150,
       render: (record) => (
         <Space size="small">
-          <Tooltip title="Edit Product">
-            <Button
-              type="primary"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => showEditModal(record)}
-            />
-          </Tooltip>
-
-          <Popconfirm
-            title={`${record.hotSale ? "Remove from" : "Add to"} Hot Sale?`}
-            description={`Are you sure you want to ${
-              record.hotSale
-                ? "remove this product from"
-                : "add this product to"
-            } hot sale?`}
-            onConfirm={() => handleToggleHotSale(record._id, record.hotSale)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Tooltip
-              title={
-                record.hotSale ? "Remove from Hot Sale" : "Add to Hot Sale"
-              }
-            >
+          {canEdit && (
+            <Tooltip title="Edit Product">
               <Button
+                type="primary"
                 size="small"
-                icon={<FireOutlined />}
-                type={record.hotSale ? "primary" : "default"}
-                danger={record.hotSale}
+                icon={<EditOutlined />}
+                onClick={() => showEditModal(record)}
               />
             </Tooltip>
-          </Popconfirm>
+          )}
+
+          {canToggleHotSale && (
+            <Popconfirm
+              title={`${record.hotSale ? "Remove from" : "Add to"} Hot Sale?`}
+              description={`Are you sure you want to ${
+                record.hotSale
+                  ? "remove this product from"
+                  : "add this product to"
+              } hot sale?`}
+              onConfirm={() => handleToggleHotSale(record._id, record.hotSale)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Tooltip
+                title={
+                  record.hotSale ? "Remove from Hot Sale" : "Add to Hot Sale"
+                }
+              >
+                <Button
+                  size="small"
+                  icon={<FireOutlined />}
+                  type={record.hotSale ? "primary" : "default"}
+                  danger={record.hotSale}
+                />
+              </Tooltip>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -381,6 +416,18 @@ const ProductPage = () => {
         <Header title="Product Management" />
 
         <Content className="product-container p-6">
+          {userRole === "Accounting" && (
+            <div style={{ 
+              background: "#fff3cd", 
+              border: "1px solid #ffeaa7", 
+              borderRadius: "4px", 
+              padding: "8px 12px", 
+              marginBottom: "16px",
+              color: "#856404"
+            }}>
+              📖 You are in view-only mode. You can view product information but cannot make changes.
+            </div>
+          )}
           <div className="product-header mb-6">
             <div
               style={{
@@ -411,13 +458,15 @@ const ProductPage = () => {
                   Reset
                 </Button>
               </Col>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={showCreateModal}
-              >
-                Create Product
-              </Button>
+              {canCreate && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={showCreateModal}
+                >
+                  Create Product
+                </Button>
+              )}
             </Row>
           </Card>
 
@@ -448,7 +497,7 @@ const ProductPage = () => {
             onCancel={handleCancel}
             width={800}
             footer={[
-              editingProduct && (
+              editingProduct && canDelete && (
                 <Popconfirm
                   key="delete"
                   title="Delete Product"
@@ -470,15 +519,18 @@ const ProductPage = () => {
               <Button key="cancel" onClick={handleCancel}>
                 Cancel
               </Button>,
-              <Button
-                key="save"
-                type="primary"
-                onClick={handleSave}
-                loading={loading}
-              >
-                {editingProduct ? "Update" : "Create"}
-              </Button>,
-            ]}
+              // Only show Save button if user has permission to create/edit
+              (canCreate || canEdit) && (
+                <Button
+                  key="save"
+                  type="primary"
+                  onClick={handleSave}
+                  loading={loading}
+                >
+                  {editingProduct ? "Update" : "Create"}
+                </Button>
+              ),
+            ].filter(Boolean)} // Remove null/undefined elements
           >
             <Form form={form} layout="vertical" className="mt-4">
               <Row gutter={16}>
@@ -502,6 +554,7 @@ const ProductPage = () => {
                       placeholder="Enter number of sessions"
                       style={{ width: "100%" }}
                       min={1}
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -527,6 +580,7 @@ const ProductPage = () => {
                         `฿ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                       }
                       parser={(value) => value.replace(/฿\s?|(,*)/g, "")}
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -550,6 +604,7 @@ const ProductPage = () => {
                       placeholder="Enter duration in days"
                       style={{ width: "100%" }}
                       min={1}
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -563,6 +618,7 @@ const ProductPage = () => {
                     <Switch
                       checkedChildren="Hot Sale"
                       unCheckedChildren="Regular"
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -570,19 +626,21 @@ const ProductPage = () => {
 
               <div className="flex justify-between items-center mb-4">
                 <h4>Promotion Settings</h4>
-                <Button
-                  danger
-                  size="small"
-                  onClick={() => {
-                    form.setFieldsValue({
-                      promotionPrice: null,
-                      promotionDateRange: null,
-                    });
-                    message.success("Promotion cleared!");
-                  }}
-                >
-                  Clear Promotion
-                </Button>
+                {userRole !== "Accounting" && (
+                  <Button
+                    danger
+                    size="small"
+                    onClick={() => {
+                      form.setFieldsValue({
+                        promotionPrice: null,
+                        promotionDateRange: null,
+                      });
+                      message.success("Promotion cleared!");
+                    }}
+                  >
+                    Clear Promotion
+                  </Button>
+                )}
               </div>
 
               <Row gutter={16}>
@@ -624,6 +682,7 @@ const ProductPage = () => {
                         `฿ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                       }
                       parser={(value) => value.replace(/฿\s?|(,*)/g, "")}
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -652,6 +711,7 @@ const ProductPage = () => {
                       placeholder={["Start Date", "End Date"]}
                       showTime
                       format="YYYY-MM-DD HH:mm"
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -672,13 +732,16 @@ const ProductPage = () => {
                   maxCount={1}
                   showUploadList={{
                     showPreviewIcon: true,
-                    showRemoveIcon: true,
+                    showRemoveIcon: userRole !== "Accounting",
                   }}
+                  disabled={userRole === "Accounting"}
                 >
-                  <div>
-                    <UploadOutlined />
-                    <div style={{ marginTop: 8 }}>Upload Image</div>
-                  </div>
+                  {userRole !== "Accounting" && (
+                    <div>
+                      <UploadOutlined />
+                      <div style={{ marginTop: 8 }}>Upload Image</div>
+                    </div>
+                  )}
                 </Upload>
               </Form.Item>
             </Form>

@@ -224,7 +224,7 @@ exports.restoreUser = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     // ดึงข้อมูลผู้ใช้จาก req.user (ที่ได้จาก token)
-    const user = await User.findById(req.user.id).select("-password"); // ไม่ส่งรหัสผ่านกลับ
+    const user = await User.findById(req.user.userId).select("-password"); // ไม่ส่งรหัสผ่านกลับ
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });

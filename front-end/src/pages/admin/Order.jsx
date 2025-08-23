@@ -26,12 +26,12 @@ import {
   ShoppingCartOutlined,
   ShopOutlined,
   AppstoreOutlined,
-  StockOutlined,
-  TagsOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import orderService from "../../services/orderService";
+import receiptService from "../../services/receiptService";
 import { getUsers } from "../../services/userService";
 import { getProducts } from "../../services/productService";
 import goodsService from "../../services/goods-service"; // Import goods service
@@ -54,6 +54,15 @@ const OrderPage = () => {
   const [newStatus, setNewStatus] = useState("");
   const [newInvoice, setNewInvoice] = useState("");
 
+  // Get user role from localStorage for permission control
+  const userRole = localStorage.getItem("role");
+  
+  // Define permissions based on role
+  const canCreate = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
+  const canEdit = userRole === "SuperAdmin";
+  const canDelete = userRole === "SuperAdmin";
+  const canView = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
+
   // Create order modal states
   const [createOrderModalVisible, setCreateOrderModalVisible] = useState(false);
   const [createOrderForm] = Form.useForm();
@@ -65,6 +74,7 @@ const OrderPage = () => {
 
   useEffect(() => {
     fetchAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAllData = async () => {
@@ -76,7 +86,7 @@ const OrderPage = () => {
         fetchProducts(),
         fetchGoods(),
       ]);
-    } catch (error) {
+    } catch {
       message.error("Failed to load data");
     } finally {
       setLoading(false);
@@ -99,7 +109,7 @@ const OrderPage = () => {
 
       setProductOrders(productOrdersList);
       setGoodsOrders(goodsOrdersList);
-    } catch (error) {
+    } catch {
       message.error("Failed to load orders");
       setAllOrders([]);
       setProductOrders([]);
@@ -113,8 +123,8 @@ const OrderPage = () => {
       if (response.status === "success") {
         setUsers(response.users);
       }
-    } catch (error) {
-      console.error("Error fetching users:", error);
+    } catch {
+      console.error("Error fetching users:", "Failed to fetch users");
     }
   };
 
@@ -124,8 +134,8 @@ const OrderPage = () => {
       if (response.status === "success") {
         setProducts(response.data);
       }
-    } catch (error) {
-      console.error("Error fetching products:", error);
+    } catch {
+      console.error("Error fetching products:", "Failed to fetch products");
     }
   };
 
@@ -135,13 +145,17 @@ const OrderPage = () => {
       if (response.status === "success") {
         setGoods(response.data || []);
       }
-    } catch (error) {
-      console.error("Error fetching goods:", error);
+    } catch {
+      console.error("Error fetching goods:", "Failed to fetch goods");
     }
   };
 
   // ✅ แสดง Modal และตั้งค่าข้อมูล Order
   const showModal = (order) => {
+    if (!canView) {
+      message.warning("You don't have permission to view order details.");
+      return;
+    }
     setSelectedOrder(order);
     setNewStatus(order.status);
     setNewInvoice(order.invoice_number || "");
@@ -157,6 +171,11 @@ const OrderPage = () => {
   const handleUpdateStatus = async () => {
     if (!selectedOrder) return;
 
+    if (!canEdit) {
+      message.warning("You don't have permission to update orders.");
+      return;
+    }
+
     try {
       await orderService.updateOrderStatus(
         selectedOrder._id,
@@ -166,7 +185,7 @@ const OrderPage = () => {
       message.success("Order status updated successfully.");
       fetchOrders();
       setIsModalVisible(false);
-    } catch (error) {
+    } catch {
       message.error("Failed to update order status.");
     }
   };
@@ -175,13 +194,97 @@ const OrderPage = () => {
   const handleDeleteOrder = async () => {
     if (!selectedOrder) return;
 
+    if (!canDelete) {
+      message.warning("You don't have permission to delete orders.");
+      return;
+    }
+
     try {
       await orderService.deleteOrder(selectedOrder._id);
       message.success("Order deleted successfully.");
       fetchOrders();
       setIsModalVisible(false);
-    } catch (error) {
+    } catch {
       message.error("Failed to delete order.");
+    }
+  };
+
+  // ✅ สร้างใบเสร็จสำหรับ Order
+  const handleCreateReceipt = async (order) => {
+    try {
+      // Extract customer name from different possible sources
+      let customerName = "ลูกค้า";
+      if (order.user_id && order.user_id.name) {
+        customerName = order.user_id.name;
+      } else if (order.user_id && order.user_id.first_name && order.user_id.last_name) {
+        customerName = `${order.user_id.first_name} ${order.user_id.last_name}`;
+      } else if (order.user_name) {
+        customerName = order.user_name;
+      } else if (order.customer_name) {
+        customerName = order.customer_name;
+      }
+
+      // Extract customer phone
+      let customerPhone = "";
+      if (order.phone_number) {
+        customerPhone = order.phone_number;
+      } else if (order.user_id && order.user_id.phone) {
+        customerPhone = order.user_id.phone;
+      } else if (order.user_id && order.user_id.phone_number) {
+        customerPhone = order.user_id.phone_number;
+      }
+
+      // Extract customer address
+      let customerAddress = order.address || "";
+      if (!customerAddress && order.user_id && order.user_id.address) {
+        customerAddress = order.user_id.address;
+      }
+
+      // Extract product/item name and total amount
+      let itemName = "สินค้า";
+      let totalAmount = 0;
+      
+      if (order.product_name) {
+        itemName = order.product_name;
+      } else if (order.goods_name) {
+        itemName = order.goods_name;
+      } else if (order.product_id && order.product_id.name) {
+        itemName = order.product_id.name;
+      } else if (order.goods_id && order.goods_id.name) {
+        itemName = order.goods_id.name;
+      }
+
+      totalAmount = order.total_price || order.totalAmount || 0;
+
+      const receiptData = {
+        orderId: order._id,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerAddress: customerAddress,
+        companyInfo: {
+          name: "YOQA Studio",
+          address: "123 ถนนสุขุมวิท กรุงเทพฯ 10110",
+          phone: "02-xxx-xxxx"
+        },
+        items: [{
+          name: itemName,
+          quantity: order.quantity || 1,
+          price: order.unit_price || totalAmount
+        }],
+        totalAmount: totalAmount,
+        template: "default"
+      };
+
+      console.log('Receipt data being sent:', receiptData); // เพื่อ debug
+      console.log('Original order data:', order); // เพื่อ debug
+
+      const receipt = await receiptService.createReceipt(receiptData);
+      message.success(`สร้างใบเสร็จสำเร็จ: ${receipt.receiptNumber}`);
+      
+    } catch (error) {
+      console.error('Error creating receipt:', error);
+      const errorMessage = error?.message || "ไม่สามารถสร้างใบเสร็จได้";
+      message.error(`เกิดข้อผิดพลาด: ${errorMessage}`);
     }
   };
 
@@ -202,6 +305,10 @@ const OrderPage = () => {
 
   // Handle opening create order modal
   const showCreateOrderModal = () => {
+    if (!canCreate) {
+      message.warning("You don't have permission to create orders.");
+      return;
+    }
     createOrderForm.resetFields();
     setSelectedOrderType("product");
     setCreateOrderModalVisible(true);
@@ -374,14 +481,41 @@ const OrderPage = () => {
       title: "ACTION",
       key: "action",
       render: (record) => (
-        <Button
-          icon={<EditOutlined />}
-          shape="circle"
-          onClick={() => showModal(record)}
-          size="small"
-        />
+        <Space size="small">
+          {canView ? (
+            <Tooltip title="แก้ไข">
+              <Button
+                icon={<EditOutlined />}
+                shape="circle"
+                onClick={() => showModal(record)}
+                size="small"
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="No permission">
+              <Button
+                icon={<EditOutlined />}
+                shape="circle"
+                size="small"
+                disabled
+              />
+            </Tooltip>
+          )}
+          {canCreate && (
+            <Tooltip title="สร้างใบเสร็จ">
+              <Button
+                icon={<FileTextOutlined />}
+                shape="circle"
+                onClick={() => handleCreateReceipt(record)}
+                size="small"
+                type="primary"
+                ghost
+              />
+            </Tooltip>
+          )}
+        </Space>
       ),
-      width: 80,
+      width: 120,
       fixed: "right",
     },
   ];
@@ -474,13 +608,41 @@ const OrderPage = () => {
       title: "ACTION",
       key: "action",
       render: (record) => (
-        <Button
-          icon={<EditOutlined />}
-          shape="circle"
-          onClick={() => showModal(record)}
-          size="small"
-        />
+        <Space size="small">
+          {canView ? (
+            <Tooltip title="แก้ไข">
+              <Button
+                icon={<EditOutlined />}
+                shape="circle"
+                onClick={() => showModal(record)}
+                size="small"
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="No permission">
+              <Button
+                icon={<EditOutlined />}
+                shape="circle"
+                size="small"
+                disabled
+              />
+            </Tooltip>
+          )}
+          {canCreate && (
+            <Tooltip title="สร้างใบเสร็จ">
+              <Button
+                icon={<FileTextOutlined />}
+                shape="circle"
+                onClick={() => handleCreateReceipt(record)}
+                size="small"
+                type="primary"
+                ghost
+              />
+            </Tooltip>
+          )}
+        </Space>
       ),
+      width: 120,
       fixed: "right",
     },
   ];
@@ -627,13 +789,41 @@ const OrderPage = () => {
       title: "ACTION",
       key: "action",
       render: (record) => (
-        <Button
-          icon={<EditOutlined />}
-          shape="circle"
-          onClick={() => showModal(record)}
-          size="small"
-        />
+        <Space size="small">
+          {canView ? (
+            <Tooltip title="แก้ไข">
+              <Button
+                icon={<EditOutlined />}
+                shape="circle"
+                onClick={() => showModal(record)}
+                size="small"
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="No permission">
+              <Button
+                icon={<EditOutlined />}
+                shape="circle"
+                size="small"
+                disabled
+              />
+            </Tooltip>
+          )}
+          {canCreate && (
+            <Tooltip title="สร้างใบเสร็จ">
+              <Button
+                icon={<FileTextOutlined />}
+                shape="circle"
+                onClick={() => handleCreateReceipt(record)}
+                size="small"
+                type="primary"
+                ghost
+              />
+            </Tooltip>
+          )}
+        </Space>
       ),
+      width: 120,
       fixed: "right",
     },
   ];
@@ -667,18 +857,49 @@ const OrderPage = () => {
         <Header title="Order Management" />
 
         <Content className="order-container p-2 sm:p-4 lg:p-6">
+          {/* แสดงข้อความแจ้งเตือนสำหรับ role ที่มีข้อจำกัด */}
+          {userRole === "Admin" && (
+            <div style={{ 
+              background: "#fff3cd", 
+              border: "1px solid #ffeaa7", 
+              borderRadius: "4px",
+              padding: "12px 16px",
+              marginBottom: "16px",
+              fontSize: "14px",
+              color: "#856404"
+            }}>
+              <strong>⚠️ Admin Role:</strong> You can view and create orders but cannot edit or delete existing orders.
+            </div>
+          )}
+          
+          {userRole === "Accounting" && (
+            <div style={{ 
+              background: "#d1ecf1", 
+              border: "1px solid #bee5eb", 
+              borderRadius: "4px",
+              padding: "12px 16px",
+              marginBottom: "16px",
+              fontSize: "14px",
+              color: "#0c5460"
+            }}>
+              <strong>ℹ️ Accounting Role:</strong> You can view order information and create new orders.
+            </div>
+          )}
+
           <div className="order-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold m-0">Orders</h2>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={showCreateOrderModal}
-              className="create-order-button w-full sm:w-auto"
-              size="large"
-            >
-              <span className="hidden sm:inline">Create Order</span>
-              <span className="sm:hidden">New Order</span>
-            </Button>
+            {canCreate && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={showCreateOrderModal}
+                className="create-order-button w-full sm:w-auto"
+                size="large"
+              >
+                <span className="hidden sm:inline">Create Order</span>
+                <span className="sm:hidden">New Order</span>
+              </Button>
+            )}
           </div>
 
           {/* Tabs สำหรับแยกประเภท Order */}
@@ -760,24 +981,28 @@ const OrderPage = () => {
             width="90%"
             style={{ maxWidth: 600 }}
             footer={[
-              <Button
-                key="delete"
-                type="danger"
-                icon={<DeleteOutlined />}
-                onClick={handleDeleteOrder}
-                size="small"
-                className="mb-2 sm:mb-0"
-              >
-                <span className="hidden sm:inline">Delete Order</span>
-                <span className="sm:hidden">Delete</span>
-              </Button>,
+              ...(canDelete ? [
+                <Button
+                  key="delete"
+                  type="danger"
+                  icon={<DeleteOutlined />}
+                  onClick={handleDeleteOrder}
+                  size="small"
+                  className="mb-2 sm:mb-0"
+                >
+                  <span className="hidden sm:inline">Delete Order</span>
+                  <span className="sm:hidden">Delete</span>
+                </Button>
+              ] : []),
               <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
                 Cancel
               </Button>,
-              <Button key="update" type="primary" onClick={handleUpdateStatus}>
-                <span className="hidden sm:inline">Update Status</span>
-                <span className="sm:hidden">Update</span>
-              </Button>,
+              ...(canEdit ? [
+                <Button key="update" type="primary" onClick={handleUpdateStatus}>
+                  <span className="hidden sm:inline">Update Status</span>
+                  <span className="sm:hidden">Update</span>
+                </Button>
+              ] : []),
             ]}
           >
             {selectedOrder && (
@@ -899,6 +1124,7 @@ const OrderPage = () => {
                   value={newStatus}
                   onChange={setNewStatus}
                   style={{ width: "100%", marginBottom: "12px" }}
+                  disabled={!canEdit}
                 >
                   <Option value="รออนุมัติ">รออนุมัติ</Option>
                   <Option value="อนุมัติ">อนุมัติ</Option>
@@ -909,6 +1135,7 @@ const OrderPage = () => {
                   value={newInvoice}
                   onChange={(e) => setNewInvoice(e.target.value)}
                   placeholder="Enter invoice number"
+                  disabled={!canEdit}
                 />
               </div>
             )}

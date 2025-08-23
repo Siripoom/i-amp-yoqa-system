@@ -20,6 +20,11 @@ const instructorReportRoutes = require("./routes/instructorReportRoutes");
 const sliderImageRoutes = require("./routes/sliderImageRoutes");
 const userTermsRoutes = require("./routes/userTermsRoutes");
 const goodsRoutes = require("./routes/goodsRoute");
+const incomeRoutes = require("./routes/incomeRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
+const financialReportRoutes = require("./routes/financialReportRoutes");
+
+const receiptRoutes = require("./routes/receiptRoutes");
 
 require("dotenv").config();
 const path = require("path");
@@ -54,6 +59,11 @@ app.use("/api/instructorReports", instructorReportRoutes);
 app.use("/api/sliderImages", sliderImageRoutes);
 app.use("/api", userTermsRoutes);
 app.use("/api/goods", goodsRoutes);
+app.use("/api/income", incomeRoutes);
+app.use("/api/expenses", expenseRoutes);
+app.use("/api/financial-reports", financialReportRoutes);
+
+app.use("/api/receipts", receiptRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

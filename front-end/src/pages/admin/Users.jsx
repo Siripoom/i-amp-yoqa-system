@@ -8,7 +8,6 @@ import {
   Modal,
   Form,
   message,
-  Upload,
   Tag,
   Tooltip,
   InputNumber,
@@ -25,7 +24,6 @@ import {
   EditOutlined,
   PlusOutlined,
   DeleteOutlined,
-  UploadOutlined,
   CalendarOutlined,
   HistoryOutlined,
   UserOutlined,
@@ -59,6 +57,15 @@ const UserPage = () => {
   const [userReservations, setUserReservations] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
+  // Get user role from localStorage for permission control
+  const userRole = localStorage.getItem("role");
+  
+  // Define permissions based on role
+  const canCreate = userRole === "SuperAdmin" || userRole === "Admin";
+  const canEdit = userRole === "SuperAdmin" || userRole === "Admin";
+  const canDelete = userRole === "SuperAdmin";
+  const canViewHistory = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -82,6 +89,11 @@ const UserPage = () => {
 
   // ฟังก์ชันใหม่สำหรับดึงประวัติการจองของผู้ใช้
   const fetchUserHistory = async (userId, userName) => {
+    if (!canViewHistory) {
+      message.warning("You don't have permission to view user history.");
+      return;
+    }
+    
     setLoadingHistory(true);
     setHistoryDrawerVisible(true);
     setSelectedUserHistory(userName);
@@ -103,6 +115,10 @@ const UserPage = () => {
   };
 
   const showCreateModal = () => {
+    if (!canCreate) {
+      message.warning("You don't have permission to create users.");
+      return;
+    }
     setEditingUser(null);
     form.resetFields();
     setExpiryDays(90); // Default to 90 days for new users
@@ -111,6 +127,10 @@ const UserPage = () => {
   };
 
   const showEditModal = (record) => {
+    if (!canEdit && userRole !== "Accounting") {
+      message.warning("You don't have permission to edit users.");
+      return;
+    }
     setEditingUser(record);
 
     // คำนวณวันที่เหลือถ้ามีวันหมดอายุ
@@ -143,6 +163,22 @@ const UserPage = () => {
   };
 
   const handleSave = async () => {
+    // Check permissions
+    if (userRole === "Accounting") {
+      message.warning("You don't have permission to modify user data.");
+      return;
+    }
+    
+    if (editingUser && !canEdit) {
+      message.warning("You don't have permission to edit users.");
+      return;
+    }
+    
+    if (!editingUser && !canCreate) {
+      message.warning("You don't have permission to create users.");
+      return;
+    }
+
     try {
       const values = await form.validateFields();
 
@@ -189,6 +225,11 @@ const UserPage = () => {
   };
 
   const handleDelete = async () => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete users.");
+      return;
+    }
+    
     try {
       await deleteUser(editingUser._id);
       message.success("User deleted successfully");
@@ -272,24 +313,28 @@ const UserPage = () => {
       key: "action",
       render: (record) => (
         <Space>
-          <Button
-            icon={<EditOutlined />}
-            shape="circle"
-            onClick={() => showEditModal(record)}
-          />
-          <Button
-            type="primary"
-            icon={<HistoryOutlined />}
-            onClick={() =>
-              fetchUserHistory(
-                record._id,
-                `${record.first_name} ${record.last_name}`
-              )
-            }
-            title="View Reservation History"
-          >
-            History
-          </Button>
+          {canEdit && (
+            <Button
+              icon={<EditOutlined />}
+              shape="circle"
+              onClick={() => showEditModal(record)}
+            />
+          )}
+          {canViewHistory && (
+            <Button
+              type="primary"
+              icon={<HistoryOutlined />}
+              onClick={() =>
+                fetchUserHistory(
+                  record._id,
+                  `${record.first_name} ${record.last_name}`
+                )
+              }
+              title="View Reservation History"
+            >
+              History
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -397,16 +442,30 @@ const UserPage = () => {
         <Header title="Users" />
 
         <Content className="user-container">
+          {userRole === "Accounting" && (
+            <div style={{ 
+              background: "#fff3cd", 
+              border: "1px solid #ffeaa7", 
+              borderRadius: "4px", 
+              padding: "8px 12px", 
+              marginBottom: "16px",
+              color: "#856404"
+            }}>
+              📖 You are in view-only mode. You can view user information and history but cannot make changes.
+            </div>
+          )}
           <div className="user-header">
             <h2>Users</h2>
-            <Button
-              type="primary"
-              className="create-user-button"
-              icon={<PlusOutlined />}
-              onClick={showCreateModal}
-            >
-              Create User
-            </Button>
+            {canCreate && (
+              <Button
+                type="primary"
+                className="create-user-button"
+                icon={<PlusOutlined />}
+                onClick={showCreateModal}
+              >
+                Create User
+              </Button>
+            )}
           </div>
 
           <div className="user-filters mb-4">
@@ -439,7 +498,7 @@ const UserPage = () => {
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={[
-              editingUser && (
+              editingUser && canDelete && (
                 <Button
                   key="delete"
                   type="danger"
@@ -452,17 +511,20 @@ const UserPage = () => {
               <Button key="cancel" onClick={handleCancel}>
                 Cancel
               </Button>,
-              <Button key="save" type="primary" onClick={handleSave}>
-                Save
-              </Button>,
-            ]}
+              // Only show Save button if user has permission to create/edit
+              (canCreate || canEdit) && (
+                <Button key="save" type="primary" onClick={handleSave}>
+                  Save
+                </Button>
+              ),
+            ].filter(Boolean)} // Remove null/undefined elements
           >
             <Form form={form} layout="vertical">
               <Form.Item name="email" label="Email">
-                <Input />
+                <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item name="password" label="Password">
-                <Input.Password />
+                <Input.Password disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="first_name"
@@ -471,7 +533,7 @@ const UserPage = () => {
                   { required: true, message: "Please enter the first name" },
                 ]}
               >
-                <Input />
+                <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="last_name"
@@ -480,10 +542,10 @@ const UserPage = () => {
                   { required: true, message: "Please enter the last name" },
                 ]}
               >
-                <Input />
+                <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item name="code" label="code">
-                <Input />
+                <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="phone"
@@ -492,28 +554,32 @@ const UserPage = () => {
                   { required: true, message: "Please enter the phone number" },
                 ]}
               >
-                <Input />
+                <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="birth_date"
                 label="Birth Date"
                 rules={[{ message: "Please enter the birth date" }]}
               >
-                <Input type="date" />
+                <Input type="date" disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="role_id"
                 label="Role"
                 rules={[{ required: true, message: "Please select the role" }]}
               >
-                <Select>
+                <Select disabled={userRole === "Accounting"}>
                   <Option value="Member">Member</Option>
                   <Option value="Instructor">Instructor</Option>
                   <Option value="Admin">Admin</Option>
+                  <Option value="Accounting">Accounting</Option>
+                  {userRole === "SuperAdmin" && (
+                    <Option value="SuperAdmin">SuperAdmin</Option>
+                  )}
                 </Select>
               </Form.Item>
               <Form.Item name="referrer_id" label="Referrer ID">
-                <Input />
+                <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="total_classes"
@@ -522,7 +588,7 @@ const UserPage = () => {
                   { required: false, message: "Please enter total classes" },
                 ]}
               >
-                <Input type="number" />
+                <Input type="number" disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="remaining_session"
@@ -534,7 +600,7 @@ const UserPage = () => {
                   },
                 ]}
               >
-                <Input type="number" />
+                <Input type="number" disabled={userRole === "Accounting"} />
               </Form.Item>
 
               {/* Changed to Days Until Expiration field */}
@@ -560,6 +626,7 @@ const UserPage = () => {
                   min={0}
                   placeholder="Enter days (e.g., 90)"
                   onChange={(value) => setExpiryDays(value)}
+                  disabled={userRole === "Accounting"}
                 />
               </Form.Item>
 
@@ -570,7 +637,7 @@ const UserPage = () => {
                   { required: false, message: "Please enter special rights" },
                 ]}
               >
-                <Input.TextArea rows={2} />
+                <Input.TextArea rows={2} disabled={userRole === "Accounting"} />
               </Form.Item>
             </Form>
           </Modal>

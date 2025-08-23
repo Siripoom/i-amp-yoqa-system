@@ -11,7 +11,6 @@ import {
   Space,
   Typography,
   Tag,
-  Tooltip,
   Table,
   Popconfirm,
 } from "antd";
@@ -33,9 +32,7 @@ import classService from "../../services/classService";
 import reservationService from "../../services/reservationService";
 import { getUsers } from "../../services/userService";
 import {
-  CalendarOutlined,
   CopyOutlined,
-  DeleteOutlined,
   PlusOutlined,
   CloseCircleOutlined,
   ExclamationCircleOutlined,
@@ -44,7 +41,6 @@ import {
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 const localizer = momentLocalizer(moment);
 
@@ -60,6 +56,17 @@ const Schedule = () => {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  // Get user role from localStorage for permission control
+  const userRole = localStorage.getItem("role");
+
+  // Define permissions based on role
+  const canCreateClass = userRole === "SuperAdmin" || userRole === "Admin";
+  const canEditClass = userRole === "SuperAdmin" || userRole === "Admin";
+  const canDeleteClass = userRole === "SuperAdmin" || userRole === "Admin";
+  const canDuplicateClass = userRole === "SuperAdmin" || userRole === "Admin";
+  const canManageReservations = userRole === "SuperAdmin" || userRole === "Admin";
+  const canViewOnly = userRole === "Accounting";
   // 📌 โหลดข้อมูลคอร์สและคลาสทั้งหมด
   useEffect(() => {
     fetchData();
@@ -117,6 +124,11 @@ const Schedule = () => {
 
   // Handle reservation cancellation using the admin endpoint
   const handleCancelReservation = async (reservationId) => {
+    if (!canManageReservations) {
+      message.warning("You don't have permission to manage reservations.");
+      return;
+    }
+
     try {
       await reservationService.adminCancelReservation(reservationId);
       message.success("Reservation cancelled successfully");
@@ -133,6 +145,11 @@ const Schedule = () => {
 
   // 📌 เปิด Modal เพื่อเพิ่มหรือแก้ไขคลาส
   const handleOpenModal = (event = null, start = null, end = null) => {
+    if (canViewOnly) {
+      message.warning("You don't have permission to modify classes.");
+      return;
+    }
+
     if (event) {
       setCurrentEvent(event);
       form.setFieldsValue({
@@ -182,6 +199,11 @@ const Schedule = () => {
 
   // 📌 เพิ่มหรือแก้ไขคลาส
   const handleSubmit = async () => {
+    if (!canCreateClass && !canEditClass) {
+      message.warning("You don't have permission to modify classes.");
+      return;
+    }
+
     try {
       const values = await form.validateFields();
       const formattedColor =
@@ -204,9 +226,17 @@ const Schedule = () => {
       };
 
       if (currentEvent) {
+        if (!canEditClass) {
+          message.warning("You don't have permission to edit classes.");
+          return;
+        }
         await classService.updateClass(currentEvent.id, classData);
         message.success("Class updated successfully!");
       } else {
+        if (!canCreateClass) {
+          message.warning("You don't have permission to create classes.");
+          return;
+        }
         await classService.createClass(classData);
         message.success("Class added successfully!");
       }
@@ -220,6 +250,11 @@ const Schedule = () => {
 
   // 📌 ลบคลาส
   const handleDeleteEvent = async () => {
+    if (!canDeleteClass) {
+      message.warning("You don't have permission to delete classes.");
+      return;
+    }
+
     try {
       await classService.deleteClass(currentEvent.id);
       message.success("Class deleted successfully!");
@@ -233,6 +268,11 @@ const Schedule = () => {
 
   // 📌 ลากแล้วเปลี่ยนเวลา
   const handleEventDrop = async ({ event, start, end }) => {
+    if (!canEditClass) {
+      message.warning("You don't have permission to reschedule classes.");
+      return;
+    }
+
     try {
       await classService.updateClass(event.id, {
         start_time: start.toISOString(),
@@ -283,6 +323,11 @@ const Schedule = () => {
 
   // 📌 ทำซ้ำคลาสตามวันที่ที่เลือก
   const handleDuplicateEvent = async () => {
+    if (!canDuplicateClass) {
+      message.warning("You don't have permission to duplicate classes.");
+      return;
+    }
+
     try {
       if (!currentEvent || duplicateDates.length === 0) {
         message.warning("กรุณาเลือกวันที่สำหรับการทำซ้ำคลาสอย่างน้อย 1 วัน");
@@ -320,40 +365,6 @@ const Schedule = () => {
     } catch (error) {
       message.error("เกิดข้อผิดพลาดในการทำซ้ำคลาส");
       console.error(error);
-    }
-  };
-
-  // 📌 ควบคุมการทำซ้ำหลายวัน
-  const handleMultipleDates = (dates) => {
-    if (dates && dates.length > 0) {
-      const startDate = dates[0];
-      const endDate = dates[1];
-
-      if (startDate && endDate) {
-        // สร้างรายการวันที่ระหว่างวันที่เริ่มต้นและวันที่สิ้นสุด
-        const allDates = [];
-        let currentDate = startDate;
-
-        while (
-          currentDate.isBefore(endDate) ||
-          currentDate.isSame(endDate, "day")
-        ) {
-          allDates.push(currentDate);
-          currentDate = currentDate.add(1, "day");
-        }
-
-        // กรองวันที่ที่ซ้ำซ้อนกับที่มีอยู่แล้ว
-        const newDates = allDates.filter(
-          (newDate) =>
-            !duplicateDates.some(
-              (existingDate) =>
-                existingDate.format("YYYY-MM-DD") ===
-                newDate.format("YYYY-MM-DD")
-            )
-        );
-
-        setDuplicateDates([...duplicateDates, ...newDates]);
-      }
     }
   };
 
@@ -450,25 +461,28 @@ const Schedule = () => {
     {
       title: "Action",
       key: "action",
-      render: (_, record) => (
-        <Popconfirm
-          title="Cancel this reservation?"
-          description="Are you sure you want to cancel this reservation? This will return the session to the member."
-          icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
-          onConfirm={() => handleCancelReservation(record.reservationId)}
-          okText="Yes"
-          cancelText="No"
-        >
-          <Button
-            type="text"
-            danger
-            icon={<CloseCircleOutlined />}
-            disabled={record.status !== "Reserved"}
+      render: (_, record) => 
+        canManageReservations ? (
+          <Popconfirm
+            title="Cancel this reservation?"
+            description="Are you sure you want to cancel this reservation? This will return the session to the member."
+            icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
+            onConfirm={() => handleCancelReservation(record.reservationId)}
+            okText="Yes"
+            cancelText="No"
           >
-            Cancel
-          </Button>
-        </Popconfirm>
-      ),
+            <Button
+              type="text"
+              danger
+              icon={<CloseCircleOutlined />}
+              disabled={record.status !== "Reserved"}
+            >
+              Cancel
+            </Button>
+          </Popconfirm>
+        ) : (
+          <Text type="secondary">View Only</Text>
+        )
     },
   ];
 
@@ -484,6 +498,20 @@ const Schedule = () => {
         <Content className="course-container">
           <div className="course-header">
             <h2>Schedule</h2>
+            {canViewOnly && (
+              <div style={{ 
+                marginTop: "8px", 
+                padding: "8px 16px", 
+                backgroundColor: "#fff3cd", 
+                border: "1px solid #ffeaa7", 
+                borderRadius: "4px",
+                color: "#856404"
+              }}>
+                <Text>
+                  <strong>Note:</strong> You have view-only access to this page. You can view class schedules and reservations but cannot make any modifications.
+                </Text>
+              </div>
+            )}
           </div>
           <div style={{ padding: "16px" }}>
             <DragAndDropCalendar
@@ -492,13 +520,36 @@ const Schedule = () => {
               startAccessor="start"
               endAccessor="end"
               style={{ height: 500, padding: "16px", borderRadius: "8px" }}
-              selectable
-              resizable
-              onSelectEvent={(event) => handleOpenModal(event)}
-              onSelectSlot={({ start, end }) =>
-                handleOpenModal(null, start, end)
-              }
-              onEventDrop={handleEventDrop}
+              selectable={!canViewOnly}
+              resizable={!canViewOnly}
+              onSelectEvent={(event) => {
+                if (canViewOnly) {
+                  // For Accounting, show event details in read-only mode
+                  Modal.info({
+                    title: `Class: ${event.title}`,
+                    content: (
+                      <div>
+                        <p><strong>Instructor:</strong> {event.instructor}</p>
+                        <p><strong>Room:</strong> {event.room_number}</p>
+                        <p><strong>Start:</strong> {dayjs(event.start).format("DD/MM/YYYY HH:mm")}</p>
+                        <p><strong>End:</strong> {dayjs(event.end).format("DD/MM/YYYY HH:mm")}</p>
+                        <p><strong>Description:</strong> {event.description}</p>
+                        {event.passcode && <p><strong>Passcode:</strong> {event.passcode}</p>}
+                        {event.zoom_link && <p><strong>Zoom Link:</strong> {event.zoom_link}</p>}
+                      </div>
+                    ),
+                    okText: "Close"
+                  });
+                } else {
+                  handleOpenModal(event);
+                }
+              }}
+              onSelectSlot={({ start, end }) => {
+                if (!canViewOnly) {
+                  handleOpenModal(null, start, end);
+                }
+              }}
+              onEventDrop={canViewOnly ? undefined : handleEventDrop}
               eventPropGetter={(event) => ({
                 style: {
                   backgroundColor: event.color ? `#${event.color}` : "#789DBC",
@@ -526,13 +577,15 @@ const Schedule = () => {
                 allowClear
                 prefix={<SearchOutlined />}
               />
-              <Button
-                onClick={fetchReservations}
-                type="primary"
-                icon={<ReloadOutlined />}
-              >
-                Refresh Reservations
-              </Button>
+              {canManageReservations && (
+                <Button
+                  onClick={fetchReservations}
+                  type="primary"
+                  icon={<ReloadOutlined />}
+                >
+                  Refresh Reservations
+                </Button>
+              )}
             </div>
             <Table
               columns={reservationsColumns}
@@ -558,7 +611,7 @@ const Schedule = () => {
         open={isModalOpen}
         onCancel={handleCloseModal}
         footer={[
-          currentEvent && (
+          currentEvent && canDuplicateClass && (
             <Button
               key="duplicate"
               onClick={() => setIsDuplicating(!isDuplicating)}
@@ -567,15 +620,15 @@ const Schedule = () => {
               {isDuplicating ? "กลับไปแก้ไข" : "ทำซ้ำคลาส"}
             </Button>
           ),
-          currentEvent && !isDuplicating && (
+          currentEvent && !isDuplicating && canDeleteClass && (
             <Button key="delete" danger onClick={handleDeleteEvent}>
               Delete
             </Button>
           ),
           <Button key="cancel" onClick={handleCloseModal}>
-            Cancel
+            {canViewOnly ? "Close" : "Cancel"}
           </Button>,
-          isDuplicating ? (
+          !canViewOnly && (isDuplicating ? (
             <Button
               key="duplicate-confirm"
               type="primary"
@@ -588,8 +641,8 @@ const Schedule = () => {
             <Button key="submit" type="primary" onClick={handleSubmit}>
               {currentEvent ? "Save" : "Add"}
             </Button>
-          ),
-        ]}
+          )),
+        ].filter(Boolean)}
       >
         {isDuplicating && currentEvent ? (
           <div className="duplication-form">

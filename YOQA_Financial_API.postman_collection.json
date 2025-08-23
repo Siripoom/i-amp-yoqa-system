@@ -1,0 +1,690 @@
+{
+  "info": {
+    "name": "YOQA Financial System API",
+    "description": "API Collection สำหรับระบบบัญชีการเงิน YOQA",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Income Management",
+      "item": [
+        {
+          "name": "Create Manual Income",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 2500,\n  \"income_type\": \"package\",\n  \"description\": \"ขายแพ็คเกจโยคะ 10 ครั้ง\",\n  \"income_date\": \"2024-12-15\",\n  \"payment_method\": \"transfer\",\n  \"reference_id\": \"PKG001\",\n  \"notes\": \"ลูกค้าโอนเงินผ่านแอพธนาคาร\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/income/manual",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", "manual"]
+            }
+          }
+        },
+        {
+          "name": "Get All Income",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/income?page=1&limit=10&start_date=2024-12-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Income by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/income/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "INCOME_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Income",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 3000,\n  \"description\": \"ขายแพ็คเกจโยคะ 10 ครั้ง (อัพเดทราคา)\",\n  \"status\": \"confirmed\",\n  \"notes\": \"ปรับราคาตามโปรโมชั่น\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/income/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "INCOME_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Income",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/income/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "INCOME_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Total Income by Period",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/income/total?start_date=2024-12-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", "total"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Income by Type",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/income/by-type?start_date=2024-12-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", "by-type"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Income by Period",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/income/by-period?period_type=monthly&start_date=2024-12-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", "by-period"],
+              "query": [
+                {
+                  "key": "period_type",
+                  "value": "monthly"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expense Management",
+      "item": [
+        {
+          "name": "Create Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1200,\n  \"category\": \"equipment\",\n  \"description\": \"ซื้อเสื่อโยคะใหม่ 5 ผืน\",\n  \"expense_date\": \"2024-12-15\",\n  \"payment_method\": \"cash\",\n  \"vendor\": \"บริษัท โยคะอุปกรณ์ จำกัด\",\n  \"receipt_number\": \"RCP-001\",\n  \"vat_amount\": 84,\n  \"is_recurring\": false,\n  \"notes\": \"เสื่อโยคะแบบพรีเมี่ยม\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses"]
+            }
+          }
+        },
+        {
+          "name": "Create Recurring Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 8000,\n  \"category\": \"rent\",\n  \"description\": \"ค่าเช่าสตูดิโอโยคะประจำเดือน\",\n  \"expense_date\": \"2024-12-01\",\n  \"payment_method\": \"transfer\",\n  \"vendor\": \"บริษัท อสังหาริมทรัพย์ ABC\",\n  \"is_recurring\": true,\n  \"recurring_frequency\": \"monthly\",\n  \"recurring_end_date\": \"2025-11-30\",\n  \"notes\": \"ค่าเช่ารายเดือน ชำระวันที่ 1 ของเดือน\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses"]
+            }
+          }
+        },
+        {
+          "name": "Get All Expenses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/expenses?page=1&limit=10&start_date=2024-12-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Expense by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/expenses/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EXPENSE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1500,\n  \"description\": \"ซื้อเสื่อโยคะใหม่ 5 ผืน (ปรับราคา)\",\n  \"notes\": \"ราคาเพิ่มขึ้นจากการปรับราคาของผู้ขาย\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EXPENSE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Receipt",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "receipt",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses/:id/receipt",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", ":id", "receipt"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EXPENSE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"อนุมัติแล้ว - รายการซื้ออุปกรณ์จำเป็น\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses/:id/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EXPENSE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason\": \"ไม่สามารถอนุมัติได้ - งบประมาณเกินกว่าที่กำหนด\",\n  \"notes\": \"กรุณาปรึกษาผู้จัดการก่อนทำรายการ\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses/:id/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", ":id", "reject"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EXPENSE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/expenses/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EXPENSE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Expenses by Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/expenses/by-category?start_date=2024-12-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", "by-category"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financial Reports",
+      "item": [
+        {
+          "name": "Profit & Loss Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/financial-reports/profit-loss?start_date=2024-12-01&end_date=2024-12-31&period_type=monthly",
+              "host": ["{{base_url}}"],
+              "path": ["api", "financial-reports", "profit-loss"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "period_type",
+                  "value": "monthly"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cash Flow Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/financial-reports/cash-flow?start_date=2024-12-01&end_date=2024-12-31&period_type=monthly",
+              "host": ["{{base_url}}"],
+              "path": ["api", "financial-reports", "cash-flow"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "period_type",
+                  "value": "monthly"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Monthly Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/financial-reports/monthly-summary?year=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "financial-reports", "monthly-summary"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2024"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Financial Comparison",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/financial-reports/comparison?current_year=2024&current_month=12&compare_year=2024&compare_month=11",
+              "host": ["{{base_url}}"],
+              "path": ["api", "financial-reports", "comparison"],
+              "query": [
+                {
+                  "key": "current_year",
+                  "value": "2024"
+                },
+                {
+                  "key": "current_month",
+                  "value": "12"
+                },
+                {
+                  "key": "compare_year",
+                  "value": "2024"
+                },
+                {
+                  "key": "compare_month",
+                  "value": "11"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Profit Loss Excel",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/financial-reports/export?report_type=profit_loss&start_date=2024-12-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "financial-reports", "export"],
+              "query": [
+                {
+                  "key": "report_type",
+                  "value": "profit_loss"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Monthly Summary Excel",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/financial-reports/export?report_type=monthly_summary&year=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "financial-reports", "export"],
+              "query": [
+                {
+                  "key": "report_type",
+                  "value": "monthly_summary"
+                },
+                {
+                  "key": "year",
+                  "value": "2024"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test Data Creation",
+      "item": [
+        {
+          "name": "Create Test Income - Package 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1500,\n  \"income_type\": \"package\",\n  \"description\": \"แพ็คเกจโยคะ 5 ครั้ง\",\n  \"income_date\": \"2024-12-01\",\n  \"payment_method\": \"cash\",\n  \"reference_id\": \"PKG-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/income/manual",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", "manual"]
+            }
+          }
+        },
+        {
+          "name": "Create Test Income - Product 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500,\n  \"income_type\": \"product\",\n  \"description\": \"ขายเสื่อโยคะ\",\n  \"income_date\": \"2024-12-05\",\n  \"payment_method\": \"transfer\",\n  \"reference_id\": \"PRD-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/income/manual",
+              "host": ["{{base_url}}"],
+              "path": ["api", "income", "manual"]
+            }
+          }
+        },
+        {
+          "name": "Create Test Expense - Rent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 8000,\n  \"category\": \"rent\",\n  \"description\": \"ค่าเช่าสตูดิโอ\",\n  \"expense_date\": \"2024-12-01\",\n  \"payment_method\": \"transfer\",\n  \"vendor\": \"บริษัท อสังหาริมทรัพย์ ABC\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses"]
+            }
+          }
+        },
+        {
+          "name": "Create Test Expense - Utilities",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 2500,\n  \"category\": \"utilities\",\n  \"description\": \"ค่าไฟฟ้า-น้ำประปา\",\n  \"expense_date\": \"2024-12-05\",\n  \"payment_method\": \"cash\",\n  \"vendor\": \"การไฟฟ้านครหลวง\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

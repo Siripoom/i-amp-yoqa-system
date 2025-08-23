@@ -32,6 +32,8 @@ import AutoLogoutProvider from "./components/AutoLogoutProvider";
 import Term from "./pages/Term";
 import UserTerms from "./pages/admin/Terms"
 import GoodsPages from "./pages/admin/Goods";
+import Finance from "./pages/admin/Finance";
+import TestFinancePage from "./pages/TestFinancePage";
 
 const AppRouter = () => (
   <Router>
@@ -131,6 +133,22 @@ const AppRouter = () => (
           element={
             <AdminRoute>
               <UserTerms />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/finance"
+          element={
+            <AdminRoute>
+              <Finance />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/test-finance"
+          element={
+            <AdminRoute>
+              <TestFinancePage />
             </AdminRoute>
           }
         />

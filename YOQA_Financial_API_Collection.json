@@ -1,0 +1,585 @@
+{
+  "info": {
+    "name": "YOQA Financial System API",
+    "description": "API Collection สำหรับทดสอบระบบบัญชีการเงิน YOQA",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Income Management",
+      "item": [
+        {
+          "name": "F003 - Get Total Income by Period",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/income/total?start_date=2024-01-01&end_date=2024-12-31&income_type=package",
+              "host": ["{{base_url}}"],
+              "path": ["income", "total"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01",
+                  "description": "วันที่เริ่มต้น (YYYY-MM-DD)"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31",
+                  "description": "วันที่สิ้นสุด (YYYY-MM-DD)"
+                },
+                {
+                  "key": "income_type",
+                  "value": "package",
+                  "description": "ประเภทรายรับ: package, goods, manual (optional)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F004 - Get Income by Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/income/by-type?start_date=2024-01-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["income", "by-type"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F005 - Get Income by Period (Daily)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/income/by-period?period_type=daily&year=2024&month=8",
+              "host": ["{{base_url}}"],
+              "path": ["income", "by-period"],
+              "query": [
+                {
+                  "key": "period_type",
+                  "value": "daily",
+                  "description": "daily, monthly, yearly"
+                },
+                {
+                  "key": "year",
+                  "value": "2024"
+                },
+                {
+                  "key": "month",
+                  "value": "8"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F005 - Get Income by Period (Monthly)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/income/by-period?period_type=monthly&year=2024",
+              "host": ["{{base_url}}"],
+              "path": ["income", "by-period"],
+              "query": [
+                {
+                  "key": "period_type",
+                  "value": "monthly"
+                },
+                {
+                  "key": "year",
+                  "value": "2024"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Manual Income",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"description\": \"รายรับจากการสอนพิเศษ\",\n  \"income_type\": \"manual\",\n  \"income_date\": \"2024-08-08\",\n  \"payment_method\": \"cash\",\n  \"reference_number\": \"MANUAL001\",\n  \"notes\": \"รายรับเพิ่มเติมจากการสอนพิเศษ\",\n  \"category\": \"teaching\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/income/manual",
+              "host": ["{{base_url}}"],
+              "path": ["income", "manual"]
+            }
+          }
+        },
+        {
+          "name": "Get All Income (No Date Filter)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/income?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["income"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "หน้าที่ต้องการ"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "จำนวนรายการต่อหน้า"
+                }
+              ]
+            },
+            "description": "ดูรายการรายรับทั้งหมด (ไม่กรองวันที่) - เรียงจากล่าสุดไปเก่าสุด"
+          }
+        },
+        {
+          "name": "Get All Income (With Filters)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/income?page=1&limit=10&start_date=2024-08-01&income_type=manual&search=สอน",
+              "host": ["{{base_url}}"],
+              "path": ["income"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-08-01",
+                  "description": "Optional - วันที่เริ่มต้น"
+                },
+                {
+                  "key": "end_date",
+                  "value": "",
+                  "description": "Optional - วันที่สิ้นสุด",
+                  "disabled": true
+                },
+                {
+                  "key": "income_type",
+                  "value": "manual",
+                  "description": "Optional - ประเภทรายรับ"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Optional - สถานะ",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "สอน",
+                  "description": "Optional - ค้นหา"
+                }
+              ]
+            },
+            "description": "ดูรายการรายรับพร้อมการกรอง"
+          }
+        },
+        {
+          "name": "Update Income",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 6000,\n  \"description\": \"รายรับจากการสอนพิเศษ (แก้ไข)\",\n  \"notes\": \"อัพเดทจำนวนเงิน\",\n  \"payment_method\": \"transfer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/income/{{income_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["income", "{{income_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expense Management",
+      "item": [
+        {
+          "name": "Create Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "amount",
+                  "value": "2500",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "ค่าไฟฟ้าประจำเดือน",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "utilities",
+                  "type": "text"
+                },
+                {
+                  "key": "expense_date",
+                  "value": "2024-08-08",
+                  "type": "text"
+                },
+                {
+                  "key": "payment_method",
+                  "value": "transfer",
+                  "type": "text"
+                },
+                {
+                  "key": "reference_number",
+                  "value": "ELEC001",
+                  "type": "text"
+                },
+                {
+                  "key": "vendor_name",
+                  "value": "การไฟฟ้านครหลวง",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "ค่าไฟฟ้าเดือนสิงหาคม 2024",
+                  "type": "text"
+                },
+                {
+                  "key": "receipt",
+                  "type": "file",
+                  "description": "ไฟล์ใบเสร็จ (jpg, png, pdf)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/expenses",
+              "host": ["{{base_url}}"],
+              "path": ["expenses"]
+            }
+          }
+        },
+        {
+          "name": "Get All Expenses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/expenses?page=1&limit=10&category=utilities&status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["expenses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "category",
+                  "value": "utilities"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approval_notes\": \"อนุมัติการจ่ายค่าไฟฟ้า\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/expenses/{{expense_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["expenses", "{{expense_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approval_notes\": \"ไม่อนุมัติ - ใบเสร็จไม่ชัดเจน\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/expenses/{{expense_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["expenses", "{{expense_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "F006 - Get Expenses by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/expenses/by-category?start_date=2024-01-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["expenses", "by-category"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F007 - Get Total Expenses by Period",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/expenses/total?start_date=2024-01-01&end_date=2024-12-31&category=utilities",
+              "host": ["{{base_url}}"],
+              "path": ["expenses", "total"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "category",
+                  "value": "utilities"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financial Reports",
+      "item": [
+        {
+          "name": "F011 - Profit & Loss Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/financial-reports/profit-loss?start_date=2024-01-01&end_date=2024-12-31&period_type=monthly",
+              "host": ["{{base_url}}"],
+              "path": ["financial-reports", "profit-loss"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "period_type",
+                  "value": "monthly"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F012 - Cash Flow Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/financial-reports/cash-flow?start_date=2024-01-01&end_date=2024-12-31&period_type=monthly",
+              "host": ["{{base_url}}"],
+              "path": ["financial-reports", "cash-flow"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "period_type",
+                  "value": "monthly"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F013 - Monthly Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/financial-reports/monthly-summary?year=2024&month=8",
+              "host": ["{{base_url}}"],
+              "path": ["financial-reports", "monthly-summary"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2024"
+                },
+                {
+                  "key": "month",
+                  "value": "8"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F014 - Compare Periods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/financial-reports/compare-periods?period1_start=2024-01-01&period1_end=2024-06-30&period2_start=2024-07-01&period2_end=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["financial-reports", "compare-periods"],
+              "query": [
+                {
+                  "key": "period1_start",
+                  "value": "2024-01-01",
+                  "description": "ช่วงเวลาที่ 1 - เริ่มต้น"
+                },
+                {
+                  "key": "period1_end",
+                  "value": "2024-06-30",
+                  "description": "ช่วงเวลาที่ 1 - สิ้นสุด"
+                },
+                {
+                  "key": "period2_start",
+                  "value": "2024-07-01",
+                  "description": "ช่วงเวลาที่ 2 - เริ่มต้น"
+                },
+                {
+                  "key": "period2_end",
+                  "value": "2024-12-31",
+                  "description": "ช่วงเวลาที่ 2 - สิ้นสุด"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "F015 - Export Excel Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/financial-reports/export-excel?report_type=profit_loss&start_date=2024-01-01&end_date=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["financial-reports", "export-excel"],
+              "query": [
+                {
+                  "key": "report_type",
+                  "value": "profit_loss",
+                  "description": "profit_loss, cash_flow, monthly_summary"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -7,13 +7,20 @@ import {
   FileTextOutlined,
   UserOutlined,
   CalendarOutlined,
-  LogoutOutlined,
   FileImageOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import "./Sidebar.css";
 import logo from "../assets/images/logo.png";
 
 const Sidebar = () => {
+  // Get user role from localStorage
+  const userRole = localStorage.getItem("role");
+  
+  // Define which roles can see restricted menus
+  const canSeeImageSetup = userRole === "SuperAdmin" || userRole === "Admin";
+  const canSeeMasterReport = userRole === "SuperAdmin" || userRole === "Admin";
+
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
@@ -85,19 +92,30 @@ const Sidebar = () => {
           <CalendarOutlined /> <span>Schedule</span>
         </NavLink>
         <NavLink
-          to="/admin/imageSetup"
+          to="/admin/finance"
           activeClassName="active"
           className="nav-item"
         >
-          <FileImageOutlined /> <span>Image Setup</span>
+          <DollarOutlined /> <span>Finance</span>
         </NavLink>
-        <NavLink
-          to="/admin/master-report"
-          activeClassName="active"
-          className="nav-item"
-        >
-          <FileTextOutlined /> <span>Master Report</span>
-        </NavLink>
+        {canSeeImageSetup && (
+          <NavLink
+            to="/admin/imageSetup"
+            activeClassName="active"
+            className="nav-item"
+          >
+            <FileImageOutlined /> <span>Image Setup</span>
+          </NavLink>
+        )}
+        {canSeeMasterReport && (
+          <NavLink
+            to="/admin/master-report"
+            activeClassName="active"
+            className="nav-item"
+          >
+            <FileTextOutlined /> <span>Master Report</span>
+          </NavLink>
+        )}
         {/* <NavLink to="/" activeClassName="active" className="nav-item">
           <LogoutOutlined /> <span>Sign Out</span>
         </NavLink> */}

@@ -18,10 +18,10 @@ import {
   List,
   Alert,
   Empty,
-  DatePicker,
   Select,
   message,
   Popconfirm,
+  Tooltip,
 } from "antd";
 import {
   SearchOutlined,
@@ -31,7 +31,6 @@ import {
   BookOutlined,
   ClockCircleOutlined,
   EnvironmentOutlined,
-  FilterOutlined,
   DownloadOutlined,
   FileExcelOutlined,
   DeleteOutlined,
@@ -58,6 +57,12 @@ const InstructorReport = () => {
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [allClassesOfInstructor, setAllClassesOfInstructor] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Get user role from localStorage for permission control
+  const userRole = localStorage.getItem("role");
+  
+  // Define permissions based on role
+  const canDelete = userRole === "SuperAdmin";
 
   useEffect(() => {
     fetchInstructorReport();
@@ -115,6 +120,11 @@ const InstructorReport = () => {
 
   // Function to delete instructor report
   const handleDeleteInstructor = async (instructorName) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete instructor reports.");
+      return;
+    }
+
     setDeleteLoading(true);
     try {
       const response = await MasterReport.deleteMasterReport(instructorName);
@@ -345,18 +355,26 @@ const InstructorReport = () => {
           <Button type="primary" onClick={() => handleViewDetail(record)}>
             ดูรายละเอียด
           </Button>
-          <Popconfirm
-            title="ลบข้อมูลผู้สอน"
-            description={`คุณต้องการลบข้อมูลของ "${record.name}" ใช่หรือไม่? การดำเนินการนี้จะลบข้อมูลผู้สอนออกจากคลาสทั้งหมด`}
-            onConfirm={() => handleDeleteInstructor(record.name)}
-            okText="ใช่"
-            cancelText="ไม่"
-            okButtonProps={{ loading: deleteLoading }}
-          >
-            <Button type="primary" danger icon={<DeleteOutlined />}>
-              ลบข้อมูล
-            </Button>
-          </Popconfirm>
+          {canDelete ? (
+            <Popconfirm
+              title="ลบข้อมูลผู้สอน"
+              description={`คุณต้องการลบข้อมูลของ "${record.name}" ใช่หรือไม่? การดำเนินการนี้จะลบข้อมูลผู้สอนออกจากคลาสทั้งหมด`}
+              onConfirm={() => handleDeleteInstructor(record.name)}
+              okText="ใช่"
+              cancelText="ไม่"
+              okButtonProps={{ loading: deleteLoading }}
+            >
+              <Button type="primary" danger icon={<DeleteOutlined />}>
+                ลบข้อมูล
+              </Button>
+            </Popconfirm>
+          ) : (
+            <Tooltip title="คุณไม่มีสิทธิ์ในการลบข้อมูลผู้สอน">
+              <Button type="primary" danger icon={<DeleteOutlined />} disabled>
+                ลบข้อมูล
+              </Button>
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -390,6 +408,17 @@ const InstructorReport = () => {
         <Header title="รายงานผู้สอน" />
 
         <Content className="user-container">
+          {/* Role-based warning for non-SuperAdmin users */}
+          {userRole !== "SuperAdmin" && (
+            <Alert
+              message={`สิทธิ์การใช้งาน: ${userRole}`}
+              description="คุณสามารถดูข้อมูลได้เท่านั้น ไม่สามารถลบข้อมูลผู้สอนได้"
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+          )}
+          
           <Card
             title={
               <Space direction="vertical" style={{ width: "100%" }}>
@@ -456,7 +485,7 @@ const InstructorReport = () => {
               <Space>
                 <UserOutlined />
                 <span>{selectedInstructor?.name}</span>
-                {selectedInstructor && (
+                {selectedInstructor && canDelete && (
                   <Popconfirm
                     title="ลบข้อมูลผู้สอน"
                     description={`คุณต้องการลบข้อมูลของ "${selectedInstructor.name}" ใช่หรือไม่? การดำเนินการนี้จะลบข้อมูลผู้สอนออกจากคลาสทั้งหมด`}
@@ -469,6 +498,13 @@ const InstructorReport = () => {
                       ลบข้อมูล
                     </Button>
                   </Popconfirm>
+                )}
+                {selectedInstructor && !canDelete && (
+                  <Tooltip title="คุณไม่มีสิทธิ์ในการลบข้อมูลผู้สอน">
+                    <Button type="primary" danger icon={<DeleteOutlined />} disabled>
+                      ลบข้อมูล
+                    </Button>
+                  </Tooltip>
                 )}
               </Space>
             }

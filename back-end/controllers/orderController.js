@@ -2,11 +2,69 @@ const Order = require("../models/order");
 const User = require("../models/user");
 const Product = require("../models/product");
 const Goods = require("../models/goods"); // เพิ่ม import Goods model
+const Receipt = require("../models/receipt"); // เพิ่ม import Receipt model
+const Income = require("../models/income"); // เพิ่ม import Income model
+const QRCode = require("qrcode"); // เพิ่มสำหรับ QR Code
+const { createIncomeFromOrder } = require("./incomeController");
 const multer = require("multer");
 const path = require("path");
 const supabase = require("../config/supabaseConfig");
 const dotenv = require("dotenv");
 dotenv.config();
+
+// สร้างเลขรันนิ่งใบเสร็จ (ตัวอย่าง: R20250821-0001)
+async function generateReceiptNumber() {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+  const count = await Receipt.countDocuments({
+    createdAt: {
+      $gte: new Date(today.setHours(0, 0, 0, 0)),
+      $lte: new Date(today.setHours(23, 59, 59, 999)),
+    },
+  });
+  return `R${dateStr}-${String(count + 1).padStart(4, "0")}`;
+}
+
+// สร้างใบเสร็จอัตโนมัติจากการสั่งซื้อ
+async function createReceiptFromOrder(order, user, item) {
+  try {
+    const receiptNumber = await generateReceiptNumber();
+
+    // สร้าง QR Code สำหรับตรวจสอบใบเสร็จ
+    const qrCodeData = `Receipt:${receiptNumber}`;
+    const qrCode = await QRCode.toDataURL(qrCodeData);
+
+    const receiptData = {
+      receiptNumber,
+      orderId: order._id,
+      customerName: `${user.first_name} ${user.last_name}`,
+      customerPhone: user.phone || order.phone_number,
+      customerAddress: user.address || order.address,
+      companyInfo: {
+        name: "YOQA Studio",
+        address: "123 ถนนสุขุมวิท กรุงเทพฯ 10110",
+        phone: "02-xxx-xxxx",
+      },
+      items: [
+        {
+          name: item.name || item.goods || "สินค้า",
+          quantity: order.quantity || 1,
+          price: order.unit_price || order.total_price || 0,
+        },
+      ],
+      totalAmount: order.total_price || 0,
+      template: "default",
+      qrCode: qrCode,
+    };
+
+    const receipt = new Receipt(receiptData);
+    await receipt.save();
+
+    return receipt;
+  } catch (error) {
+    throw new Error(`Failed to create receipt: ${error.message}`);
+  }
+}
 
 // Use Multer for file uploads (memory storage)
 const storage = multer.memoryStorage();
@@ -175,6 +233,33 @@ exports.createOrder = async (req, res) => {
 
     const order = new Order(orderData);
     await order.save();
+
+    // F001 & F002: สร้างรายรับอัตโนมัติจากการสั่งซื้อ
+    try {
+      await createIncomeFromOrder({
+        _id: order._id,
+        total_amount: order.total_price,
+        order_type: order.order_type,
+        user_id: order.user_id,
+        createdAt: order.createdAt,
+        payment_method: "transfer", // ค่าเริ่มต้น
+        payment_reference: null,
+        status: "pending", // เริ่มต้นเป็น pending จะเปลี่ยนเป็น confirmed เมื่อได้รับการอนุมัติ
+      });
+      console.log("Income record created automatically for order:", order._id);
+    } catch (incomeError) {
+      console.error("Failed to create income record:", incomeError.message);
+      // ไม่ให้ error นี้หยุดการทำงานของการสั่งซื้อ
+    }
+
+    // สร้างใบเสร็จอัตโนมัติ
+    try {
+      await createReceiptFromOrder(order, user, item);
+      console.log("Receipt created automatically for order:", order._id);
+    } catch (receiptError) {
+      console.error("Failed to create receipt:", receiptError.message);
+      // ไม่ให้ error นี้หยุดการทำงานของการสั่งซื้อ
+    }
 
     res.status(201).json({
       status: "success",
@@ -433,6 +518,21 @@ exports.updateOrderStatus = async (req, res) => {
     if (previousStatus === "รออนุมัติ" && status === "อนุมัติ") {
       const user = order.user_id;
 
+      // อัพเดทสถานะรายรับเป็น confirmed เมื่อ order ได้รับการอนุมัติ
+      try {
+        await Income.findOneAndUpdate(
+          { order_id: order._id },
+          {
+            status: "confirmed",
+            income_date: new Date(), // อัพเดทวันที่รายรับ
+            payment_method: "approved", // อัพเดท payment method
+          }
+        );
+        console.log("Income status updated to confirmed for order:", order._id);
+      } catch (incomeError) {
+        console.error("Failed to update income status:", incomeError.message);
+      }
+
       if (order.order_type === "product" && order.product_id) {
         // สำหรับ product orders - เพิ่ม sessions ให้ user
         const product = order.product_id;
@@ -470,6 +570,25 @@ exports.updateOrderStatus = async (req, res) => {
       await Goods.findByIdAndUpdate(order.goods_id._id, {
         $inc: { stock: order.quantity },
       });
+    }
+
+    // หากยกเลิก order ให้อัพเดทสถานะรายรับ
+    if (status === "ยกเลิก") {
+      try {
+        await Income.findOneAndUpdate(
+          { order_id: order._id },
+          {
+            status: "cancelled",
+            notes: "Order cancelled by admin",
+          }
+        );
+        console.log("Income status updated to cancelled for order:", order._id);
+      } catch (incomeError) {
+        console.error(
+          "Failed to update income status to cancelled:",
+          incomeError.message
+        );
+      }
     }
 
     res.status(200).json({

@@ -37,10 +37,17 @@ const SignIn = () => {
       );
       localStorage.setItem("role", response.data.role_id); // Store user role
 
+      // Debug: Log the role received from backend
+      console.log("User role from backend:", response.data.role_id);
+
       // Redirect based on role
-      if (response.data.role_id === "Admin") {
+      if (response.data.role_id === "Admin" || 
+          response.data.role_id === "SuperAdmin" || 
+          response.data.role_id === "Accounting") {
+        console.log("Redirecting to admin dashboard...");
         navigate("/admin/dashboard");
       } else {
+        console.log("Redirecting to home...");
         navigate("/");
       }
     } catch (error) {

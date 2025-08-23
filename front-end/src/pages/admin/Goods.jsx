@@ -78,6 +78,15 @@ const GoodsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
+  // Get user role from localStorage for permission control
+  const userRole = localStorage.getItem("role");
+  
+  // Define permissions based on role
+  const canCreate = userRole === "SuperAdmin" || userRole === "Admin";
+  const canEdit = userRole === "SuperAdmin" || userRole === "Admin";
+  const canDelete = userRole === "SuperAdmin";
+  const canUpdateStock = userRole === "SuperAdmin" || userRole === "Admin";
+
   // Fetch goods data
   const fetchGoods = async (page = 1, limit = 10, filters = {}) => {
     setLoading(true);
@@ -174,6 +183,10 @@ const GoodsPage = () => {
 
   // Modal handlers
   const showCreateModal = () => {
+    if (!canCreate) {
+      message.warning("You don't have permission to create goods.");
+      return;
+    }
     setEditingGoods(null);
     form.resetFields();
     form.setFieldsValue({
@@ -185,6 +198,10 @@ const GoodsPage = () => {
   };
 
   const showEditModal = (record) => {
+    if (!canEdit && userRole !== "Accounting") {
+      message.warning("You don't have permission to edit goods.");
+      return;
+    }
     setEditingGoods(record);
 
     // Handle multiple images for editing
@@ -237,6 +254,22 @@ const GoodsPage = () => {
 
   // CRUD operations
   const handleSave = async () => {
+    // Check permissions
+    if (userRole === "Accounting") {
+      message.warning("You don't have permission to modify goods data.");
+      return;
+    }
+    
+    if (editingGoods && !canEdit) {
+      message.warning("You don't have permission to edit goods.");
+      return;
+    }
+    
+    if (!editingGoods && !canCreate) {
+      message.warning("You don't have permission to create goods.");
+      return;
+    }
+
     try {
       const values = await form.validateFields();
       setLoading(true);
@@ -309,6 +342,11 @@ const GoodsPage = () => {
   };
 
   const handleDelete = async (id) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to delete goods.");
+      return;
+    }
+    
     try {
       setLoading(true);
       await goodsService.deleteGoods(id);
@@ -323,6 +361,11 @@ const GoodsPage = () => {
   };
 
   const handleStockUpdate = async () => {
+    if (!canUpdateStock) {
+      message.warning("You don't have permission to update stock.");
+      return;
+    }
+    
     try {
       const values = await stockForm.validateFields();
       setLoading(true);
@@ -544,24 +587,28 @@ const GoodsPage = () => {
               size="small"
             />
           </Tooltip>
-          <Tooltip title="Edit">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => showEditModal(record)}
-              size="small"
-            />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Popconfirm
-              title="Are you sure you want to delete this item?"
-              onConfirm={() => handleDelete(record._id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} size="small" />
-            </Popconfirm>
-          </Tooltip>
+          {canEdit && (
+            <Tooltip title="Edit">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => showEditModal(record)}
+                size="small"
+              />
+            </Tooltip>
+          )}
+          {canDelete && (
+            <Tooltip title="Delete">
+              <Popconfirm
+                title="Are you sure you want to delete this item?"
+                onConfirm={() => handleDelete(record._id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+              </Popconfirm>
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -615,6 +662,18 @@ const GoodsPage = () => {
         <Header title="Goods Management" />
 
         <Content className="goods-container p-2 sm:p-4 lg:p-6">
+          {userRole === "Accounting" && (
+            <div style={{ 
+              background: "#fff3cd", 
+              border: "1px solid #ffeaa7", 
+              borderRadius: "4px", 
+              padding: "8px 12px", 
+              marginBottom: "16px",
+              color: "#856404"
+            }}>
+              📖 You are in view-only mode. You can view goods information but cannot make changes.
+            </div>
+          )}
           {/* Header Section */}
           <div className="goods-header mb-4 sm:mb-6">
             <Row justify="space-between" align="middle">
@@ -646,16 +705,18 @@ const GoodsPage = () => {
                 />
               </Col>
               <Col xs={24} sm={12} lg={8}>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={showCreateModal}
-                  className="create-goods-button w-full sm:w-auto"
-                  size="large"
-                >
-                  <span className="hidden sm:inline">Add New Goods</span>
-                  <span className="sm:hidden">Add Goods</span>
-                </Button>
+                {canCreate && (
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={showCreateModal}
+                    className="create-goods-button w-full sm:w-auto"
+                    size="large"
+                  >
+                    <span className="hidden sm:inline">Add New Goods</span>
+                    <span className="sm:hidden">Add Goods</span>
+                  </Button>
+                )}
               </Col>
             </Row>
           </Card>
@@ -783,15 +844,18 @@ const GoodsPage = () => {
               <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
                 Cancel
               </Button>,
-              <Button
-                key="submit"
-                type="primary"
-                onClick={handleSave}
-                loading={loading}
-              >
-                {editingGoods ? "Update" : "Create"}
-              </Button>,
-            ]}
+              // Only show Save button if user has permission to create/edit
+              (canCreate || canEdit) && (
+                <Button
+                  key="submit"
+                  type="primary"
+                  onClick={handleSave}
+                  loading={loading}
+                >
+                  {editingGoods ? "Update" : "Create"}
+                </Button>
+              ),
+            ].filter(Boolean)} // Remove null/undefined elements
             width="95%"
             style={{ maxWidth: 800, top: 20 }}
           >
@@ -805,7 +869,7 @@ const GoodsPage = () => {
                       { required: true, message: "Please enter goods name" },
                     ]}
                   >
-                    <Input placeholder="Enter goods name" />
+                    <Input placeholder="Enter goods name" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -819,13 +883,14 @@ const GoodsPage = () => {
                     <Input
                       placeholder="Enter goods code"
                       prefix={<BarcodeOutlined />}
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Form.Item name="detail" label="Details">
-                <TextArea placeholder="Enter goods details" rows={3} />
+                <TextArea placeholder="Enter goods details" rows={3} disabled={userRole === "Accounting"} />
               </Form.Item>
 
               <Row gutter={16}>
@@ -843,6 +908,7 @@ const GoodsPage = () => {
                         `฿ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                       }
                       parser={(value) => value.replace(/฿\s?|(,*)/g, "")}
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -861,6 +927,7 @@ const GoodsPage = () => {
                       placeholder="0"
                       style={{ width: "100%" }}
                       min={0}
+                      disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
                 </Col>
@@ -870,7 +937,7 @@ const GoodsPage = () => {
                     label="Unit"
                     rules={[{ required: true, message: "Please select unit" }]}
                   >
-                    <Input placeholder="Enter unit (e.g., ชิ้น)" />
+                    <Input placeholder="Enter unit (e.g., ชิ้น)" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -878,12 +945,12 @@ const GoodsPage = () => {
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item name="size" label="Size">
-                    <Input placeholder="Enter size (optional)" />
+                    <Input placeholder="Enter size (optional)" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item name="color" label="Color">
-                    <Input placeholder="Enter color (optional)" />
+                    <Input placeholder="Enter color (optional)" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -894,11 +961,14 @@ const GoodsPage = () => {
                   listType="picture-card"
                   maxCount={3}
                   multiple
+                  disabled={userRole === "Accounting"}
                 >
-                  <div>
-                    <UploadOutlined />
-                    <div style={{ marginTop: 8 }}>Upload</div>
-                  </div>
+                  {userRole !== "Accounting" && (
+                    <div>
+                      <UploadOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </div>
+                  )}
                 </Upload>
                 <Text type="secondary" style={{ fontSize: "12px" }}>
                   You can upload maximum 3 images. Each image must be less than
@@ -915,7 +985,7 @@ const GoodsPage = () => {
                     label="Hot Sale"
                     valuePropName="checked"
                   >
-                    <Switch />
+                    <Switch disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -924,7 +994,7 @@ const GoodsPage = () => {
                     label="Has Promotion"
                     valuePropName="checked"
                   >
-                    <Switch />
+                    <Switch disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -963,6 +1033,7 @@ const GoodsPage = () => {
                               parser={(value) =>
                                 value.replace(/฿\s?|(,*)/g, "")
                               }
+                              disabled={userRole === "Accounting"}
                             />
                           </Form.Item>
                         </Col>
@@ -977,7 +1048,7 @@ const GoodsPage = () => {
                               },
                             ]}
                           >
-                            <DatePicker style={{ width: "100%" }} showTime />
+                            <DatePicker style={{ width: "100%" }} showTime disabled={userRole === "Accounting"} />
                           </Form.Item>
                         </Col>
                         <Col xs={24} sm={8}>
@@ -991,7 +1062,7 @@ const GoodsPage = () => {
                               },
                             ]}
                           >
-                            <DatePicker style={{ width: "100%" }} showTime />
+                            <DatePicker style={{ width: "100%" }} showTime disabled={userRole === "Accounting"} />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -1233,15 +1304,17 @@ const GoodsPage = () => {
               <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
                 Cancel
               </Button>,
-              <Button
-                key="update"
-                type="primary"
-                onClick={handleStockUpdate}
-                loading={loading}
-              >
-                Update Stock
-              </Button>,
-            ]}
+              canUpdateStock && (
+                <Button
+                  key="update"
+                  type="primary"
+                  onClick={handleStockUpdate}
+                  loading={loading}
+                >
+                  Update Stock
+                </Button>
+              ),
+            ].filter(Boolean)} // Remove null/undefined elements
             width="90%"
             style={{ maxWidth: 500, top: 20 }}
           >
@@ -1277,6 +1350,7 @@ const GoodsPage = () => {
                     style={{ width: "100%" }}
                     min={0}
                     addonAfter={stockGoods.unit}
+                    disabled={userRole === "Accounting"}
                   />
                 </Form.Item>
               </Form>
