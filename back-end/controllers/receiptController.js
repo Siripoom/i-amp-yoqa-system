@@ -2,6 +2,8 @@ const Receipt = require("../models/receipt");
 const Order = require("../models/order");
 const QRCode = require("qrcode");
 const PDFDocument = require("pdfkit");
+const path = require("path");
+const fs = require("fs");
 
 // สร้างเลขรันนิ่งใบเสร็จ (ตัวอย่าง: R20250821-0001)
 async function generateReceiptNumber() {
@@ -147,7 +149,15 @@ exports.downloadReceiptPDF = async (req, res) => {
     if (!receipt) return res.status(404).json({ message: "Receipt not found" });
 
     // สร้าง PDF document
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50
+      }
+    });
 
     // Set response headers for PDF download
     res.setHeader("Content-Type", "application/pdf");
@@ -159,26 +169,36 @@ exports.downloadReceiptPDF = async (req, res) => {
     // Pipe PDF to response
     doc.pipe(res);
 
-    // เพิ่มเนื้อหาใบเสร็จใน PDF
-    doc.fontSize(20).text("ใบเสร็จรับเงิน", { align: "center" });
-    doc.moveDown();
+    // ใช้ font THSarabun สำหรับภาษาไทย
+    doc.registerFont('THSarabun', path.join(__dirname, '../fonts/THSarabunNew.ttf'));
+    doc.registerFont('THSarabunBold', path.join(__dirname, '../fonts/THSarabunNew Bold.ttf'));
+    doc.font('THSarabun');
 
+    // หัวเอกสาร
+    doc.font('THSarabunBold').fontSize(24).text("ใบเสร็จรับเงิน", { align: "center" });
+    doc.font('THSarabun');
+    doc.moveDown(0.5);
+
+    // ข้อมูลใบเสร็จ
     doc.fontSize(12);
     doc.text(`เลขที่ใบเสร็จ: ${receipt.receiptNumber}`);
     doc.text(`วันที่: ${receipt.createdAt.toLocaleDateString("th-TH")}`);
     doc.moveDown();
 
     // ข้อมูลลูกค้า
-    doc.text("ข้อมูลลูกค้า:");
+    doc.font('THSarabunBold').fontSize(14).text("ข้อมูลลูกค้า:", { continued: false });
+    doc.font('THSarabun').fontSize(12);
     doc.text(`ชื่อ: ${receipt.customerName}`);
     if (receipt.customerPhone) doc.text(`เบอร์โทร: ${receipt.customerPhone}`);
-    if (receipt.customerAddress)
+    if (receipt.customerAddress) {
       doc.text(`ที่อยู่: ${receipt.customerAddress}`);
+    }
     doc.moveDown();
 
     // ข้อมูลบริษัท (ถ้ามี)
     if (receipt.companyInfo) {
-      doc.text("ข้อมูลบริษัท:");
+      doc.font('THSarabunBold').fontSize(14).text("ข้อมูลบริษัท:", { continued: false });
+      doc.font('THSarabun').fontSize(12);
       doc.text(`ชื่อบริษัท: ${receipt.companyInfo.name}`);
       doc.text(`ที่อยู่: ${receipt.companyInfo.address}`);
       doc.text(`เบอร์โทร: ${receipt.companyInfo.phone}`);
@@ -186,30 +206,101 @@ exports.downloadReceiptPDF = async (req, res) => {
     }
 
     // รายการสินค้า
-    doc.text("รายการสินค้า:");
-    doc.text("─".repeat(50));
+    doc.font('THSarabunBold').fontSize(14).text("รายการสินค้า:", { continued: false });
+    doc.font('THSarabun').fontSize(12);
+
+    // สร้างตารางรายการสินค้าแบบง่าย
+    let currentY = doc.y;
+    const startX = 50;
+    const nameX = 150;
+    const qtyX = 350;
+    const priceX = 420;
+    const totalX = 500;
+
+    // หัวตาราง
+    doc.font('THSarabunBold').fontSize(12);
+    doc.text("ลำดับ", startX, currentY);
+    doc.text("ชื่อสินค้า", nameX, currentY);
+    doc.text("จำนวน", qtyX, currentY);
+    doc.text("ราคา", priceX, currentY);
+    doc.text("รวม", totalX, currentY);
+    doc.font('THSarabun');
+
+    currentY += 20;
+
+    // เส้นใต้หัวตาราง
+    doc.moveTo(startX, currentY).lineTo(totalX + 50, currentY).stroke();
+    currentY += 10;
 
     let totalAmount = 0;
+
     receipt.items.forEach((item, index) => {
       const lineTotal = item.quantity * item.price;
       totalAmount += lineTotal;
-      doc.text(`${index + 1}. ${item.name}`);
-      doc.text(
-        `   จำนวน: ${item.quantity
-        } ราคา: ${item.price.toLocaleString()} รวม: ${lineTotal.toLocaleString()}`
-      );
+
+      doc.text(`${index + 1}`, startX, currentY);
+      doc.text(item.name, nameX, currentY);
+      doc.text(item.quantity.toString(), qtyX, currentY);
+      doc.text(item.price.toLocaleString(), priceX, currentY);
+      doc.text(lineTotal.toLocaleString(), totalX, currentY);
+
+      currentY += 20;
     });
 
-    doc.text("─".repeat(50));
-    doc
-      .fontSize(14)
-      .text(`ยอดรวมทั้งสิ้น: ${receipt.totalAmount.toLocaleString()} บาท`, {
-        align: "right",
-      });
+    // เส้นใต้ตาราง
+    doc.moveTo(startX, currentY).lineTo(totalX + 50, currentY).stroke();
+    doc.moveDown();
+
+    // ยอดรวมและ QR Code - วางชิดขวาในหน้าเดียวกัน
+    const margin = 50;
+    const qrSize = 80;
+
+    // คำนวณตำแหน่งที่ชิดขวา
+    const rightX = doc.page.width - margin;
+    let sumY = doc.y + 20; // ระยะห่างจากเนื้อหาด้านบน
+
+    // ยอดรวม - วางชิดขวา
+    doc.font('THSarabunBold').fontSize(18);
+    const totalText = `ยอดรวมทั้งสิ้น: ${receipt.totalAmount.toLocaleString()} บาท`;
+    const textWidth = 250; // กำหนดความกว้างของข้อความ
+
+    doc.text(totalText, rightX - textWidth, sumY, {
+      width: textWidth,
+      align: "right"
+    });
+    doc.font('THSarabun');
+
+    // QR Code - วางชิดขวาใต้ยอดรวม
+    if (receipt.qrCode) {
+      doc.moveDown(1);
+      try {
+        // แปลง QR Code จาก base64 เป็น buffer
+        const qrBuffer = Buffer.from(receipt.qrCode.split(',')[1], 'base64');
+        doc.image(qrBuffer, rightX - qrSize, doc.y, {
+          width: qrSize,
+          height: qrSize
+        });
+
+        // ข้อความใต้ QR Code
+        doc.fontSize(10);
+        doc.text("QR Code สำหรับตรวจสอบ", rightX - qrSize, doc.y + qrSize + 5, {
+          width: qrSize,
+          align: 'center'
+        });
+      } catch (qrError) {
+        console.error('Error adding QR code:', qrError);
+        doc.fontSize(10);
+        doc.text("QR Code ไม่สามารถแสดงได้", rightX - qrSize, doc.y + qrSize + 5, {
+          width: qrSize,
+          align: 'center'
+        });
+      }
+    }
 
     // จบการสร้าง PDF
     doc.end();
   } catch (err) {
+    console.error('Error generating PDF:', err);
     res.status(500).json({ message: err.message });
   }
 };
