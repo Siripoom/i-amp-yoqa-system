@@ -9,17 +9,56 @@ const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const { formatNumber } = require('../utils/formatters');
 
-// สร้างเลขรันนิ่งใบเสร็จ (ตัวอย่าง: R20250821-0001)
+// สร้างเลขรันนิ่งใบเสร็จ (ตัวอย่าง: R20250826-0001)
 async function generateReceiptNumber() {
+  // สร้าง Date object ใหม่ทุกครั้งที่ใช้
   const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
-  const count = await Receipt.countDocuments({
+
+  // สร้าง Date object ใหม่สำหรับ start และ end
+  const startOfDay = new Date(today);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(today);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // สร้างรูปแบบวันที่ YYYYMMDD จาก today โดยตรง
+  const dateStr = today.getFullYear() +
+    String(today.getMonth() + 1).padStart(2, '0') +
+    String(today.getDate()).padStart(2, '0');
+
+  // หาเลขล่าสุดของวันนี้
+  const latestReceipt = await Receipt.findOne({
     createdAt: {
-      $gte: new Date(today.setHours(0, 0, 0, 0)),
-      $lte: new Date(today.setHours(23, 59, 59, 999)),
-    },
+      $gte: startOfDay,
+      $lte: endOfDay
+    }
+  }).sort({ receiptNumber: -1 });
+
+  // เริ่มที่ 0001 ทุกวัน
+  let nextNumber = 1;
+  if (latestReceipt) {
+    const currentNumber = parseInt(latestReceipt.receiptNumber.split('-')[1]);
+    nextNumber = currentNumber + 1;
+  }
+
+  // สร้างเลขใบเสร็จใหม่
+  const receiptNumber = `R${dateStr}-${String(nextNumber).padStart(4, '0')}`;
+
+  // ตรวจสอบซ้ำอีกครั้ง
+  const existingReceipt = await Receipt.findOne({
+    receiptNumber,
+    createdAt: {
+      $gte: startOfDay,
+      $lte: endOfDay
+    }
   });
-  return `R${dateStr}-${String(count + 1).padStart(4, "0")}`;
+
+  if (existingReceipt) {
+    // ถ้าซ้ำ ให้เรียกฟังก์ชันนี้ใหม่
+    return generateReceiptNumber();
+  }
+
+  return receiptNumber;
 }
 
 // สร้างใบเสร็จอัตโนมัติเมื่อมีการสั่งซื้อ
@@ -214,9 +253,17 @@ exports.getReceiptsByDateRange = async (req, res) => {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
+
+    // เพิ่ม sort ที่ database query โดยตรง
     const receipts = await Receipt.find({
-      createdAt: { $gte: startDate, $lte: endDate },
-    });
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    })
+      .sort({ createdAt: -1 }) // เรียงจากวันที่ล่าสุด
+      .exec();
+
     res.json(receipts);
   } catch (err) {
     res.status(500).json({ message: err.message });

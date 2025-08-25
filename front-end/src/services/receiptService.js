@@ -81,22 +81,6 @@ export const receiptService = {
     }
   },
 
-  // ดาวน์โหลดใบเสร็จเป็น PDF
-  downloadReceiptPDF: async (receiptId) => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/api/receipts/${receiptId}/pdf`,
-        {
-          headers: getAuthHeaders(),
-          responseType: "blob",
-        }
-      );
-      return response.data;
-    } catch (error) {
-      throw error.response ? error.response.data : error;
-    }
-  },
-
   // front-end/src/services/receiptService.js
   downloadReceiptDOCX: async (receiptId) => {
     try {

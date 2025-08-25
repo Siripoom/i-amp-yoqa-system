@@ -19,7 +19,6 @@ import {
 import {
   SearchOutlined,
   EyeOutlined,
-  DownloadOutlined,
   FileWordOutlined,
   PrinterOutlined,
   FileTextOutlined,
@@ -131,25 +130,6 @@ const ReceiptManagement = () => {
     setIsDetailModalVisible(true);
   };
 
-  // ดาวน์โหลดใบเสร็จ PDF
-  const downloadReceiptPDF = async (receiptId, receiptNumber) => {
-    try {
-      const blob = await receiptService.downloadReceiptPDF(receiptId);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `receipt-${receiptNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      message.success('ดาวน์โหลดใบเสร็จสำเร็จ');
-    } catch (error) {
-      message.error('ไม่สามารถดาวน์โหลดใบเสร็จได้');
-      console.error('Error downloading receipt:', error);
-    }
-  };
-
   // ดาวน์โหลดใบเสร็จ DOCX จาก template
   const downloadReceiptDOCX = async (receiptId, receiptNumber) => {
     try {
@@ -258,13 +238,6 @@ const ReceiptManagement = () => {
               onClick={() => downloadReceiptDOCX(record._id, record.receiptNumber)}
             />
           </Tooltip>
-          <Tooltip title="ดาวน์โหลด PDF">
-            <Button
-              type="link"
-              icon={<DownloadOutlined />}
-              onClick={() => downloadReceiptPDF(record._id, record.receiptNumber)}
-            />
-          </Tooltip>
           <Tooltip title="พิมพ์ใบเสร็จ">
             <Button
               type="link"
@@ -361,14 +334,6 @@ const ReceiptManagement = () => {
             onClick={() => downloadReceiptDOCX(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
           >
             ดาวน์โหลด DOCX
-          </Button>,
-          <Button
-            key="download"
-            type="primary"
-            icon={<DownloadOutlined />}
-            onClick={() => downloadReceiptPDF(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
-          >
-            ดาวน์โหลด PDF
           </Button>,
           <Button
             key="print"
