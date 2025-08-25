@@ -97,6 +97,48 @@ export const receiptService = {
     }
   },
 
+  // front-end/src/services/receiptService.js
+  downloadReceiptDOCX: async (receiptId) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/receipts/${receiptId}/docx`,
+        {
+          headers: {
+            ...getAuthHeaders(),
+            "Accept":
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          },
+          responseType: "blob",
+        }
+      );
+
+      // Check if response is JSON (error)
+      const contentType = response.headers["content-type"];
+      if (contentType && contentType.includes("application/json")) {
+        const text = await new Response(response.data).text();
+        const error = JSON.parse(text);
+        throw new Error(error.message || "Failed to download DOCX");
+      }
+
+      // Validate DOCX content type
+      if (
+        !contentType.includes(
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+      ) {
+        throw new Error("Invalid file type received");
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("DOCX Download Error:", error);
+      if (error.response?.status === 500) {
+        throw new Error("Template file missing or server configuration error");
+      }
+      throw error;
+    }
+  },
+
   // พิมพ์ใบเสร็จ
   printReceipt: async (receiptId) => {
     try {

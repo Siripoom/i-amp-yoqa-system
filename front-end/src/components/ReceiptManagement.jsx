@@ -20,6 +20,7 @@ import {
   SearchOutlined,
   EyeOutlined,
   DownloadOutlined,
+  FileWordOutlined,
   PrinterOutlined,
   FileTextOutlined,
   CalendarOutlined,
@@ -149,6 +150,36 @@ const ReceiptManagement = () => {
     }
   };
 
+  // ดาวน์โหลดใบเสร็จ DOCX จาก template
+  const downloadReceiptDOCX = async (receiptId, receiptNumber) => {
+    try {
+      setLoading(true);
+      const blob = await receiptService.downloadReceiptDOCX(receiptId);
+
+      // ตรวจสอบ blob
+      if (!(blob instanceof Blob)) {
+        throw new Error('Invalid response format');
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt-${receiptNumber}.docx`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success('ดาวน์โหลด DOCX สำเร็จ');
+    } catch (error) {
+      console.error('Error downloading receipt DOCX:', error);
+      message.error(error.message || 'ไม่สามารถดาวน์โหลด DOCX ได้');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // พิมพ์ใบเสร็จ
   const printReceipt = async (receiptId) => {
     try {
@@ -218,6 +249,13 @@ const ReceiptManagement = () => {
               type="link"
               icon={<EyeOutlined />}
               onClick={() => showReceiptDetail(record)}
+            />
+          </Tooltip>
+          <Tooltip title="ดาวน์โหลด DOCX">
+            <Button
+              type="link"
+              icon={<FileWordOutlined />}
+              onClick={() => downloadReceiptDOCX(record._id, record.receiptNumber)}
             />
           </Tooltip>
           <Tooltip title="ดาวน์โหลด PDF">
@@ -316,6 +354,13 @@ const ReceiptManagement = () => {
         footer={[
           <Button key="close" onClick={() => setIsDetailModalVisible(false)}>
             ปิด
+          </Button>,
+          <Button
+            key="download-docx"
+            icon={<FileWordOutlined />}
+            onClick={() => downloadReceiptDOCX(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
+          >
+            ดาวน์โหลด DOCX
           </Button>,
           <Button
             key="download"

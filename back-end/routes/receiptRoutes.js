@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const receiptController = require("../controllers/receiptController");
+const fs = require('fs');
+const path = require('path');
+const PizZip = require('pizzip');
+const Docxtemplater = require('docxtemplater');
+
 
 // สร้างใบเสร็จ
 router.post("/", receiptController.createReceipt);
@@ -14,6 +19,8 @@ router.get("/customer", receiptController.getReceiptsByCustomer);
 router.get("/date", receiptController.getReceiptsByDateRange);
 // ดาวน์โหลดใบเสร็จเป็น PDF
 router.get("/:id/pdf", receiptController.downloadReceiptPDF);
+// ดาวน์โหลดใบเสร็จเป็น DOCX จาก template
+router.get("/:id/docx", receiptController.downloadReceiptDOCX);
 // พิมพ์ใบเสร็จ
 router.get("/:id/print", receiptController.printReceipt);
 

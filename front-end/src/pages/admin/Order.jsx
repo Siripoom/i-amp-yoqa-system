@@ -56,7 +56,7 @@ const OrderPage = () => {
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
-  
+
   // Define permissions based on role
   const canCreate = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
   const canEdit = userRole === "SuperAdmin";
@@ -243,7 +243,7 @@ const OrderPage = () => {
       // Extract product/item name and total amount
       let itemName = "สินค้า";
       let totalAmount = 0;
-      
+
       if (order.product_name) {
         itemName = order.product_name;
       } else if (order.goods_name) {
@@ -280,7 +280,7 @@ const OrderPage = () => {
 
       const receipt = await receiptService.createReceipt(receiptData);
       message.success(`สร้างใบเสร็จสำเร็จ: ${receipt.receiptNumber}`);
-      
+
     } catch (error) {
       console.error('Error creating receipt:', error);
       const errorMessage = error?.message || "ไม่สามารถสร้างใบเสร็จได้";
@@ -844,8 +844,8 @@ const OrderPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
-      <Sider 
-        width={220} 
+      <Sider
+        width={220}
         className="lg:block hidden"
         breakpoint="lg"
         collapsedWidth="0"
@@ -859,9 +859,9 @@ const OrderPage = () => {
         <Content className="order-container p-2 sm:p-4 lg:p-6">
           {/* แสดงข้อความแจ้งเตือนสำหรับ role ที่มีข้อจำกัด */}
           {userRole === "Admin" && (
-            <div style={{ 
-              background: "#fff3cd", 
-              border: "1px solid #ffeaa7", 
+            <div style={{
+              background: "#fff3cd",
+              border: "1px solid #ffeaa7",
               borderRadius: "4px",
               padding: "12px 16px",
               marginBottom: "16px",
@@ -871,11 +871,11 @@ const OrderPage = () => {
               <strong>⚠️ Admin Role:</strong> You can view and create orders but cannot edit or delete existing orders.
             </div>
           )}
-          
+
           {userRole === "Accounting" && (
-            <div style={{ 
-              background: "#d1ecf1", 
-              border: "1px solid #bee5eb", 
+            <div style={{
+              background: "#d1ecf1",
+              border: "1px solid #bee5eb",
               borderRadius: "4px",
               padding: "12px 16px",
               marginBottom: "16px",
@@ -909,7 +909,7 @@ const OrderPage = () => {
             style={{ marginBottom: 16 }}
             size="large"
             className="order-tabs"
-            tabBarStyle={{ 
+            tabBarStyle={{
               overflow: "auto",
               whiteSpace: "nowrap"
             }}
@@ -957,8 +957,8 @@ const OrderPage = () => {
             <Table
               columns={currentColumns}
               dataSource={currentData}
-              pagination={{ 
-                position: ["bottomCenter"], 
+              pagination={{
+                position: ["bottomCenter"],
                 pageSize: 10,
                 showSizeChanger: true,
                 showQuickJumper: true,
@@ -1033,7 +1033,7 @@ const OrderPage = () => {
                           {selectedOrder.order_type === "product" &&
                             selectedOrder.product_id &&
                             selectedOrder.unit_price <
-                              selectedOrder.product_id.price && (
+                            selectedOrder.product_id.price && (
                               <div>
                                 <span className="text-gray-500 line-through">
                                   Original: ฿
@@ -1047,7 +1047,7 @@ const OrderPage = () => {
                           {selectedOrder.order_type === "goods" &&
                             selectedOrder.goods_id &&
                             selectedOrder.unit_price <
-                              selectedOrder.goods_id.price && (
+                            selectedOrder.goods_id.price && (
                               <div>
                                 <span className="text-gray-500 line-through">
                                   Original: ฿
@@ -1219,16 +1219,16 @@ const OrderPage = () => {
                 <Select placeholder={`Select a ${selectedOrderType}`}>
                   {selectedOrderType === "product"
                     ? products.map((product) => (
-                        <Option key={product._id} value={product._id}>
-                          {product.sessions} Sessions - ฿{product.price}
-                        </Option>
-                      ))
+                      <Option key={product._id} value={product._id}>
+                        {product.sessions} Sessions - ฿{product.price}
+                      </Option>
+                    ))
                     : goods.map((goodsItem) => (
-                        <Option key={goodsItem._id} value={goodsItem._id}>
-                          {goodsItem.goods} - ฿{goodsItem.price}
-                          {goodsItem.code && ` (${goodsItem.code})`}
-                        </Option>
-                      ))}
+                      <Option key={goodsItem._id} value={goodsItem._id}>
+                        {goodsItem.goods} - ฿{goodsItem.price}
+                        {goodsItem.code && ` (${goodsItem.code})`}
+                      </Option>
+                    ))}
                 </Select>
               </Form.Item>
 

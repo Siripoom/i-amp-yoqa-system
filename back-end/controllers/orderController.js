@@ -545,7 +545,7 @@ exports.updateOrderStatus = async (req, res) => {
             $set: {
               sessions_expiry_date:
                 user.sessions_expiry_date &&
-                user.sessions_expiry_date > new Date()
+                  user.sessions_expiry_date > new Date()
                   ? user.sessions_expiry_date
                   : initialExpiryDate,
             },
