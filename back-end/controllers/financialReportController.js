@@ -717,30 +717,30 @@ const getFinancialComparison = async (req, res) => {
       income_change_percent:
         compareData.total_income > 0
           ? (
-              ((currentData.total_income - compareData.total_income) /
-                compareData.total_income) *
-              100
-            ).toFixed(2)
+            ((currentData.total_income - compareData.total_income) /
+              compareData.total_income) *
+            100
+          ).toFixed(2)
           : 0,
 
       expense_change: currentData.total_expense - compareData.total_expense,
       expense_change_percent:
         compareData.total_expense > 0
           ? (
-              ((currentData.total_expense - compareData.total_expense) /
-                compareData.total_expense) *
-              100
-            ).toFixed(2)
+            ((currentData.total_expense - compareData.total_expense) /
+              compareData.total_expense) *
+            100
+          ).toFixed(2)
           : 0,
 
       profit_change: currentData.net_profit - compareData.net_profit,
       profit_change_percent:
         compareData.net_profit !== 0
           ? (
-              ((currentData.net_profit - compareData.net_profit) /
-                Math.abs(compareData.net_profit)) *
-              100
-            ).toFixed(2)
+            ((currentData.net_profit - compareData.net_profit) /
+              Math.abs(compareData.net_profit)) *
+            100
+          ).toFixed(2)
           : 0,
 
       margin_change: currentData.profit_margin - compareData.profit_margin,
