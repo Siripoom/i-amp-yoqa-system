@@ -81,7 +81,7 @@ export const receiptService = {
     }
   },
 
-  // front-end/src/services/receiptService.js
+  // ดาวน์โหลดใบเสร็จเป็น DOCX
   downloadReceiptDOCX: async (receiptId) => {
     try {
       const response = await axios.get(
@@ -116,6 +116,43 @@ export const receiptService = {
       return response.data;
     } catch (error) {
       console.error("DOCX Download Error:", error);
+      if (error.response?.status === 500) {
+        throw new Error("Template file missing or server configuration error");
+      }
+      throw error;
+    }
+  },
+
+  // ดาวน์โหลดใบเสร็จเป็น PDF (จาก DOCX template)
+  downloadReceiptPDF: async (receiptId) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/receipts/${receiptId}/pdf`,
+        {
+          headers: {
+            ...getAuthHeaders(),
+            "Accept": "application/pdf",
+          },
+          responseType: "blob",
+        }
+      );
+
+      // Check if response is JSON (error)
+      const contentType = response.headers["content-type"];
+      if (contentType && contentType.includes("application/json")) {
+        const text = await new Response(response.data).text();
+        const error = JSON.parse(text);
+        throw new Error(error.message || "Failed to download PDF");
+      }
+
+      // Validate PDF content type
+      if (!contentType.includes("application/pdf")) {
+        throw new Error("Invalid file type received");
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("PDF Download Error:", error);
       if (error.response?.status === 500) {
         throw new Error("Template file missing or server configuration error");
       }

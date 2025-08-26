@@ -13,6 +13,8 @@ router.get("/number/:number", receiptController.getReceiptByNumber);
 router.get("/customer", receiptController.getReceiptsByCustomer);
 // ค้นหาใบเสร็จด้วยช่วงวันที่
 router.get("/date", receiptController.getReceiptsByDateRange);
+// ดาวน์โหลดใบเสร็จเป็น PDF จาก DOCX template
+router.get("/:id/pdf", receiptController.downloadReceiptPDF);
 // ดาวน์โหลดใบเสร็จเป็น DOCX จาก template
 router.get("/:id/docx", receiptController.downloadReceiptDOCX);
 // พิมพ์ใบเสร็จ

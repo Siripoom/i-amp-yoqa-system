@@ -20,6 +20,7 @@ import {
   SearchOutlined,
   EyeOutlined,
   FileWordOutlined,
+  FilePdfOutlined,
   PrinterOutlined,
   FileTextOutlined,
   CalendarOutlined,
@@ -130,7 +131,9 @@ const ReceiptManagement = () => {
     setIsDetailModalVisible(true);
   };
 
-  // ดาวน์โหลดใบเสร็จ DOCX จาก template
+
+
+  // ดาวน์โหลดใบเสร็จ DOCX
   const downloadReceiptDOCX = async (receiptId, receiptNumber) => {
     try {
       setLoading(true);
@@ -155,6 +158,36 @@ const ReceiptManagement = () => {
     } catch (error) {
       console.error('Error downloading receipt DOCX:', error);
       message.error(error.message || 'ไม่สามารถดาวน์โหลด DOCX ได้');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ดาวน์โหลดใบเสร็จ PDF (จาก DOCX template)
+  const downloadReceiptPDF = async (receiptId, receiptNumber) => {
+    try {
+      setLoading(true);
+      const blob = await receiptService.downloadReceiptPDF(receiptId);
+
+      // ตรวจสอบ blob
+      if (!(blob instanceof Blob)) {
+        throw new Error('Invalid response format');
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt-${receiptNumber}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success('ดาวน์โหลด PDF สำเร็จ');
+    } catch (error) {
+      console.error('Error downloading receipt PDF:', error);
+      message.error(error.message || 'ไม่สามารถดาวน์โหลด PDF ได้');
     } finally {
       setLoading(false);
     }
@@ -229,6 +262,13 @@ const ReceiptManagement = () => {
               type="link"
               icon={<EyeOutlined />}
               onClick={() => showReceiptDetail(record)}
+            />
+          </Tooltip>
+          <Tooltip title="ดาวน์โหลด PDF">
+            <Button
+              type="link"
+              icon={<FilePdfOutlined />}
+              onClick={() => downloadReceiptPDF(record._id, record.receiptNumber)}
             />
           </Tooltip>
           <Tooltip title="ดาวน์โหลด DOCX">
@@ -327,6 +367,13 @@ const ReceiptManagement = () => {
         footer={[
           <Button key="close" onClick={() => setIsDetailModalVisible(false)}>
             ปิด
+          </Button>,
+          <Button
+            key="download-pdf"
+            icon={<FilePdfOutlined />}
+            onClick={() => downloadReceiptPDF(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
+          >
+            ดาวน์โหลด PDF
           </Button>,
           <Button
             key="download-docx"
