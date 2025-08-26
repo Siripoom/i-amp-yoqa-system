@@ -11,6 +11,64 @@ const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
 
+// ฟังก์ชันสำหรับแทนที่ฟอนต์ใน DOCX
+function replaceFontsInDocx(docxBuffer) {
+  try {
+    const zip = new PizZip(docxBuffer);
+
+    // อ่านและแก้ไขไฟล์ styles.xml
+    const stylesXml = zip.file('word/styles.xml');
+    if (stylesXml) {
+      let stylesContent = stylesXml.asText();
+      console.log('Original styles.xml found');
+
+      // แทนที่ฟอนต์ทุกแบบเป็น TH Sarabun New
+      stylesContent = stylesContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="TH Sarabun New"');
+      stylesContent = stylesContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="TH Sarabun New"');
+      stylesContent = stylesContent.replace(/w:cs="[^"]*"/g, 'w:cs="TH Sarabun New"');
+      stylesContent = stylesContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="TH Sarabun New"');
+
+      zip.file('word/styles.xml', stylesContent);
+    }
+
+    // อ่านและแก้ไขไฟล์ document.xml
+    const docXml = zip.file('word/document.xml');
+    if (docXml) {
+      let docContent = docXml.asText();
+      console.log('Original document.xml found');
+
+      // แทนที่ฟอนต์ทุกแบบเป็น TH Sarabun New
+      docContent = docContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="TH Sarabun New"');
+      docContent = docContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="TH Sarabun New"');
+      docContent = docContent.replace(/w:cs="[^"]*"/g, 'w:cs="TH Sarabun New"');
+      docContent = docContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="TH Sarabun New"');
+
+      zip.file('word/document.xml', docContent);
+    }
+
+    // อ่านและแก้ไขไฟล์ fontTable.xml (ถ้ามี)
+    const fontTableXml = zip.file('word/fontTable.xml');
+    if (fontTableXml) {
+      let fontTableContent = fontTableXml.asText();
+      console.log('Original fontTable.xml found');
+
+      // แทนที่ชื่อฟอนต์ทั้งหมดเป็น TH Sarabun New
+      fontTableContent = fontTableContent.replace(/w:name="[^"]*"/g, 'w:name="TH Sarabun New"');
+
+      zip.file('word/fontTable.xml', fontTableContent);
+    }
+
+    console.log('Font replacement completed');
+    return zip.generate({
+      type: 'nodebuffer',
+      compression: 'DEFLATE'
+    });
+  } catch (error) {
+    console.error('Error replacing fonts:', error);
+    return docxBuffer; // ถ้าเกิดข้อผิดพลาด ให้ส่งไฟล์เดิมกลับไป
+  }
+}
+
 // สร้างเลขรันนิ่งใบเสร็จ (ตัวอย่าง: R20250826-0001)
 async function generateReceiptNumber() {
   // สร้าง Date object ใหม่ทุกครั้งที่ใช้
@@ -230,10 +288,13 @@ exports.downloadReceiptPDF = async (req, res) => {
     doc.render(data);
 
     // สร้างไฟล์ DOCX ใน memory
-    const docxBuffer = doc.getZip().generate({
+    let docxBuffer = doc.getZip().generate({
       type: 'nodebuffer',
       compression: 'DEFLATE'
     });
+
+    // แทนที่ฟอนต์เป็น THSarabunNew
+    docxBuffer = replaceFontsInDocx(docxBuffer);
 
     // สร้างไฟล์ชั่วคราว
     const tempDir = path.join(__dirname, '../tmp');
