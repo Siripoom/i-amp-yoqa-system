@@ -655,6 +655,56 @@ const downloadReceipt = async (req, res) => {
   }
 };
 
+// ส่งออกข้อมูลรายจ่ายเป็น CSV
+const exportExpenseToCSV = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด",
+      });
+    }
+
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+
+    const expenses = await Expense.find({
+      expense_date: { $gte: startDate, $lte: endDate }
+    }).sort({ expense_date: -1 });
+
+    // สร้าง CSV content
+    let csvContent = `รายงานรายจ่าย,${start_date} ถึง ${end_date}\n\n`;
+    csvContent += `วันที่,รายละเอียด,หมวดหมู่,จำนวนเงิน,ผู้จำหน่าย,วิธีชำระ,เลขที่ใบเสร็จ,สถานะ,หมายเหตุ\n`;
+
+    expenses.forEach(expense => {
+      const date = expense.expense_date.toISOString().split('T')[0];
+      csvContent += `${date},"${expense.description}","${expense.category}",${expense.amount},"${expense.vendor || ''}","${expense.payment_method}","${expense.receipt_number || ''}","${expense.status}","${expense.notes || ''}"\n`;
+    });
+
+    const timestamp = new Date().toISOString().slice(0, -5);
+    const filename = `expense-report-${timestamp}.csv`;
+
+    // Set response headers for CSV
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Add BOM for UTF-8 to ensure proper encoding in Excel
+    res.write('\uFEFF');
+    res.write(csvContent);
+    res.end();
+
+  } catch (error) {
+    console.error('Expense CSV export error:', error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการส่งออกรายงานรายจ่าย CSV",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   upload,
   createExpense,
@@ -667,4 +717,5 @@ module.exports = {
   rejectExpense,
   getExpenseById,
   downloadReceipt,
+  exportExpenseToCSV,
 };

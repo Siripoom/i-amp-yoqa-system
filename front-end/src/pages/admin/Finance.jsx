@@ -32,7 +32,7 @@ import {
   UploadOutlined,
   CheckOutlined,
   CloseOutlined,
-  FileExcelOutlined
+  FileTextOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import Sidebar from '../../components/Sidebar';
@@ -432,26 +432,74 @@ const Finance = () => {
     }
   };
 
-  const exportToExcel = async (reportType) => {
+
+
+  const exportToCSV = async (reportType) => {
     try {
       const startDate = dateRange[0].format('YYYY-MM-DD');
       const endDate = dateRange[1].format('YYYY-MM-DD');
 
-      const blob = await financeService.exportFinancialReportToExcel(reportType, startDate, endDate);
+      const blob = await financeService.exportFinancialReportToCSV(reportType, startDate, endDate);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${reportType}_report_${startDate}_${endDate}.xlsx`;
+      a.download = `${reportType}_report_${startDate}_${endDate}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      message.success('ส่งออกรายงานเรียบร้อยแล้ว');
+      message.success('ส่งออกรายงาน CSV เรียบร้อยแล้ว');
     } catch (error) {
-      console.error('Error exporting report:', error);
-      message.error('เกิดข้อผิดพลาดในการส่งออกรายงาน');
+      console.error('Error exporting CSV report:', error);
+      message.error('เกิดข้อผิดพลาดในการส่งออกรายงาน CSV');
+    }
+  };
+
+  const exportIncomeToCSV = async () => {
+    try {
+      const startDate = dateRange[0].format('YYYY-MM-DD');
+      const endDate = dateRange[1].format('YYYY-MM-DD');
+
+      const blob = await financeService.exportIncomeToCSV(startDate, endDate);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `income_report_${startDate}_${endDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      message.success('ส่งออกรายงานรายรับ CSV เรียบร้อยแล้ว');
+    } catch (error) {
+      console.error('Error exporting income CSV:', error);
+      message.error('เกิดข้อผิดพลาดในการส่งออกรายงานรายรับ CSV');
+    }
+  };
+
+  const exportExpenseToCSV = async () => {
+    try {
+      const startDate = dateRange[0].format('YYYY-MM-DD');
+      const endDate = dateRange[1].format('YYYY-MM-DD');
+
+      const blob = await financeService.exportExpenseToCSV(startDate, endDate);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `expense_report_${startDate}_${endDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      message.success('ส่งออกรายงานรายจ่าย CSV เรียบร้อยแล้ว');
+    } catch (error) {
+      console.error('Error exporting expense CSV:', error);
+      message.error('เกิดข้อผิดพลาดในการส่งออกรายงานรายจ่าย CSV');
     }
   };
 
@@ -798,26 +846,47 @@ const Finance = () => {
   const renderReportsTab = () => (
     <div className="space-y-6">
       <Card title="รายงานการเงิน">
-        <Space wrap className="mb-4">
-          <Button
-            icon={<FileExcelOutlined />}
-            onClick={() => exportToExcel('profit-loss')}
-          >
-            ส่งออกรายงานกำไร-ขาดทุน
-          </Button>
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={() => exportToExcel('cash-flow')}
-          >
-            ส่งออกรายงานกระแสเงินสด
-          </Button>
-          <Button
-            icon={<FileExcelOutlined />}
-            onClick={() => exportToExcel('monthly-summary')}
-          >
-            ส่งออกสรุปรายเดือน
-          </Button>
-        </Space>
+        {/* รายงานหลัก */}
+        <div className="mb-6">
+          <h4 className="text-md font-semibold mb-3">รายงานสรุป</h4>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={8}>
+              <Card size="small" title="กำไร-ขาดทุน">
+                <Button
+                  block
+                  icon={<FileTextOutlined />}
+                  onClick={() => exportToCSV('profit-loss')}
+                >
+                  ส่งออก CSV
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Card size="small" title="กระแสเงินสด">
+                <Button
+                  block
+                  icon={<FileTextOutlined />}
+                  onClick={() => exportToCSV('cash-flow')}
+                >
+                  ส่งออก CSV
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Card size="small" title="สรุปรายเดือน">
+                <Button
+                  block
+                  icon={<FileTextOutlined />}
+                  onClick={() => exportToCSV('monthly-summary')}
+                >
+                  ส่งออก CSV
+                </Button>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+
+
 
         {profitLossData && (
           <div className="mt-6">

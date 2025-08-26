@@ -219,6 +219,54 @@ export const financeService = {
     );
     return response.data;
   },
+
+  exportFinancialReportToCSV: async (reportType, startDate, endDate) => {
+    const response = await axios.get(
+      `${API_URL}/api/financial-reports/export/csv`,
+      {
+        params: {
+          report_type: reportType,
+          start_date: startDate,
+          end_date: endDate,
+        },
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
+
+  // ส่งออกรายรับเป็น CSV
+  exportIncomeToCSV: async (startDate, endDate) => {
+    const response = await axios.get(
+      `${API_URL}/api/income/export/csv`,
+      {
+        params: {
+          start_date: startDate,
+          end_date: endDate,
+        },
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
+
+  // ส่งออกรายจ่ายเป็น CSV
+  exportExpenseToCSV: async (startDate, endDate) => {
+    const response = await axios.get(
+      `${API_URL}/api/expenses/export/csv`,
+      {
+        params: {
+          start_date: startDate,
+          end_date: endDate,
+        },
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
 };
 
 export default financeService;

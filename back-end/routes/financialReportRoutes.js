@@ -6,6 +6,7 @@ const {
   getMonthlySummary,
   getFinancialComparison,
   exportFinancialReportToExcel,
+  exportFinancialReportToCSV,
 } = require("../controllers/financialReportController");
 
 const { authenticate } = require("../middlewares/auth");
@@ -24,5 +25,8 @@ router.get("/comparison", getFinancialComparison);
 
 // F015: ส่งออกรายงานเป็นไฟล์ Excel
 router.get("/export/excel", exportFinancialReportToExcel);
+
+// F016: ส่งออกรายงานเป็นไฟล์ CSV
+router.get("/export/csv", exportFinancialReportToCSV);
 
 module.exports = router;

@@ -617,6 +617,56 @@ const getIncomeById = async (req, res) => {
   }
 };
 
+// ส่งออกข้อมูลรายรับเป็น CSV
+const exportIncomeToCSV = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด",
+      });
+    }
+
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+
+    const incomes = await Income.find({
+      income_date: { $gte: startDate, $lte: endDate }
+    }).sort({ income_date: -1 });
+
+    // สร้าง CSV content
+    let csvContent = `รายงานรายรับ,${start_date} ถึง ${end_date}\n\n`;
+    csvContent += `วันที่,รายละเอียด,ประเภท,จำนวนเงิน,วิธีชำระ,สถานะ,หมายเหตุ\n`;
+
+    incomes.forEach(income => {
+      const date = income.income_date.toISOString().split('T')[0];
+      csvContent += `${date},"${income.description}","${income.income_type}",${income.amount},"${income.payment_method}","${income.status}","${income.notes || ''}"\n`;
+    });
+
+    const timestamp = new Date().toISOString().slice(0, -5);
+    const filename = `income-report-${timestamp}.csv`;
+
+    // Set response headers for CSV
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Add BOM for UTF-8 to ensure proper encoding in Excel
+    res.write('\uFEFF');
+    res.write(csvContent);
+    res.end();
+
+  } catch (error) {
+    console.error('Income CSV export error:', error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการส่งออกรายงานรายรับ CSV",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createIncomeFromOrder,
   getTotalIncomeByPeriod,
@@ -627,4 +677,5 @@ module.exports = {
   updateIncome,
   deleteIncome,
   getIncomeById,
+  exportIncomeToCSV,
 };

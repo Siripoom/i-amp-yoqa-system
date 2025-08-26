@@ -9,6 +9,7 @@ const {
   updateIncome,
   deleteIncome,
   getIncomeById,
+  exportIncomeToCSV,
 } = require("../controllers/incomeController");
 
 const { authenticate } = require("../middlewares/auth");
@@ -21,6 +22,9 @@ router.get("/by-type", getIncomeByType);
 
 // F005: แสดงรายรับรายวัน รายเดือน และรายปี
 router.get("/by-period", getIncomeByPeriod);
+
+// Export to CSV (put this before /:id to avoid conflicts)
+router.get("/export/csv", exportIncomeToCSV);
 
 // CRUD operations
 router.post("/manual", authenticate, createManualIncome);

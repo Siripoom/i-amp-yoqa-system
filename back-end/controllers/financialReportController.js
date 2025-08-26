@@ -941,6 +941,7 @@ const exportFinancialReportToExcel = async (req, res) => {
 
       // ดึงข้อมูลรายงาน (ใช้ฟังก์ชันเดียวกับ API)
       const reportData = await generateProfitLossData(start_date, end_date);
+      console.log('Excel report data:', JSON.stringify(reportData, null, 2));
 
       const worksheet = workbook.addWorksheet("รายงานกำไร-ขาดทุน");
 
@@ -1168,10 +1169,16 @@ const exportFinancialReportToExcel = async (req, res) => {
     );
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
-    // Write to response
-    await workbook.xlsx.write(res);
-    res.end();
+    // Write to buffer first to ensure file integrity
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Set content length header
+    res.setHeader('Content-Length', buffer.length);
+
+    // Send the buffer
+    res.send(buffer);
   } catch (error) {
+    console.error('Excel export error:', error);
     res.status(500).json({
       success: false,
       message: "เกิดข้อผิดพลาดในการส่งออกรายงาน Excel",
@@ -1180,10 +1187,198 @@ const exportFinancialReportToExcel = async (req, res) => {
   }
 };
 
+// F016: ส่งออกรายงานเป็นไฟล์ CSV
+const exportFinancialReportToCSV = async (req, res) => {
+  try {
+    const { report_type, start_date, end_date } = req.query;
+
+    if (!report_type) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุประเภทรายงาน (profit-loss, cash-flow, monthly-summary)",
+      });
+    }
+
+    let csvContent = '';
+    const timestamp = new Date().toISOString().slice(0, -5);
+    let filename = `financial-report-${report_type}-${timestamp}.csv`;
+
+    if (report_type === 'profit-loss') {
+      if (!start_date || !end_date) {
+        return res.status(400).json({
+          success: false,
+          message: "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด",
+        });
+      }
+
+      try {
+        const reportData = await generateProfitLossData(start_date, end_date);
+        console.log('CSV report data:', JSON.stringify(reportData, null, 2));
+
+        if (!reportData || !reportData.revenue || !reportData.expenses || !reportData.profit_loss) {
+          console.error('Invalid report data structure:', reportData);
+          return res.status(500).json({
+            success: false,
+            message: "ข้อมูลรายงานไม่ถูกต้อง",
+          });
+        }
+
+        csvContent = `รายงานกำไร-ขาดทุน,${start_date} ถึง ${end_date}\n\n`;
+        csvContent += `ประเภท,รายการ,จำนวนเงิน\n`;
+        csvContent += `รายรับ,,${reportData.revenue.total_income || 0}\n`;
+
+        const incomeTypes = reportData.revenue.income_by_type || {};
+        Object.keys(incomeTypes).forEach(type => {
+          const amount = incomeTypes[type]?.amount || 0;
+          csvContent += `,${type},${amount}\n`;
+        });
+
+        csvContent += `รายจ่าย,,${reportData.expenses.total_expense || 0}\n`;
+
+        const expenseCategories = reportData.expenses.expense_by_category || {};
+        Object.keys(expenseCategories).forEach(category => {
+          const amount = expenseCategories[category]?.amount || 0;
+          csvContent += `,${category},${amount}\n`;
+        });
+
+        csvContent += `กำไรสุทธิ,,${reportData.profit_loss.net_profit || 0}\n`;
+      } catch (dataError) {
+        console.error('Error generating profit-loss data:', dataError);
+        return res.status(500).json({
+          success: false,
+          message: "เกิดข้อผิดพลาดในการสร้างข้อมูลรายงาน",
+          error: dataError.message,
+        });
+      }
+
+    } else if (report_type === 'cash-flow') {
+      if (!start_date || !end_date) {
+        return res.status(400).json({
+          success: false,
+          message: "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด",
+        });
+      }
+
+      const reportData = await generateCashFlowData(start_date, end_date);
+
+      csvContent = `รายงานกระแสเงินสด,${start_date} ถึง ${end_date}\n\n`;
+      csvContent += `รายการ,จำนวนเงิน\n`;
+      csvContent += `เงินเข้า,${reportData.total_inflow}\n`;
+      csvContent += `เงินออก,${reportData.total_outflow}\n`;
+      csvContent += `กระแสเงินสุทธิ,${reportData.net_cash_flow}\n`;
+
+    } else if (report_type === 'monthly-summary') {
+      const currentDate = new Date();
+      const year = req.query.year || currentDate.getFullYear();
+      const month = req.query.month || currentDate.getMonth() + 1;
+
+      const reportData = await getMonthlySummaryData(year, month);
+
+      csvContent = `สรุปรายเดือน,${month}/${year}\n\n`;
+      csvContent += `รายการ,จำนวนเงิน\n`;
+      csvContent += `รายรับรวม,${reportData.total_income}\n`;
+      csvContent += `รายจ่ายรวม,${reportData.total_expense}\n`;
+      csvContent += `กำไรสุทธิ,${reportData.net_profit}\n`;
+    }
+
+    // Set response headers for CSV
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Add BOM for UTF-8 to ensure proper encoding in Excel
+    res.write('\uFEFF');
+    res.write(csvContent);
+    res.end();
+
+  } catch (error) {
+    console.error('CSV export error:', error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการส่งออกรายงาน CSV",
+      error: error.message,
+    });
+  }
+};
+
+// Helper function สำหรับ Cash Flow Data
+const generateCashFlowData = async (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const totalInflow = await Income.aggregate([
+    {
+      $match: {
+        income_date: { $gte: start, $lte: end },
+        status: "confirmed",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  const totalOutflow = await Expense.aggregate([
+    {
+      $match: {
+        expense_date: { $gte: start, $lte: end },
+        status: "approved",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  const inflowAmount = totalInflow[0]?.total || 0;
+  const outflowAmount = totalOutflow[0]?.total || 0;
+
+  return {
+    total_inflow: inflowAmount,
+    total_outflow: outflowAmount,
+    net_cash_flow: inflowAmount - outflowAmount,
+  };
+};
+
 // Helper functions สำหรับ Excel export
 const generateProfitLossData = async (startDate, endDate) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
+
+  console.log(`🔍 Generating Profit-Loss Data for: ${start.toISOString()} to ${end.toISOString()}`);
+
+  // ตรวจสอบข้อมูลทั้งหมดก่อน
+  const totalIncomeCount = await Income.countDocuments();
+  const totalExpenseCount = await Expense.countDocuments();
+  console.log(`📊 Total Income Records: ${totalIncomeCount}`);
+  console.log(`📊 Total Expense Records: ${totalExpenseCount}`);
+
+  // ตรวจสอบข้อมูลในช่วงวันที่
+  const dateRangeIncomeCount = await Income.countDocuments({
+    income_date: { $gte: start, $lte: end }
+  });
+  const dateRangeExpenseCount = await Expense.countDocuments({
+    expense_date: { $gte: start, $lte: end }
+  });
+  console.log(`📅 Income in date range: ${dateRangeIncomeCount}`);
+  console.log(`📅 Expense in date range: ${dateRangeExpenseCount}`);
+
+  // ตรวจสอบ status
+  const confirmedIncomeCount = await Income.countDocuments({
+    income_date: { $gte: start, $lte: end },
+    status: "confirmed"
+  });
+  const approvedExpenseCount = await Expense.countDocuments({
+    expense_date: { $gte: start, $lte: end },
+    status: "approved"
+  });
+  console.log(`✅ Confirmed Income in range: ${confirmedIncomeCount}`);
+  console.log(`✅ Approved Expense in range: ${approvedExpenseCount}`);
 
   const incomeData = await Income.aggregate([
     {
@@ -1216,6 +1411,9 @@ const generateProfitLossData = async (startDate, endDate) => {
       },
     },
   ]);
+
+  console.log(`💰 Income aggregation result:`, incomeData);
+  console.log(`💸 Expense aggregation result:`, expenseData);
 
   const totalIncome = incomeData.reduce(
     (sum, item) => sum + item.total_amount,
@@ -1359,4 +1557,5 @@ module.exports = {
   getMonthlySummary,
   getFinancialComparison,
   exportFinancialReportToExcel,
+  exportFinancialReportToCSV,
 };
