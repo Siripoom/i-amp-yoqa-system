@@ -1,11 +1,13 @@
-import { Button, Card, Typography, message, Modal, Badge, Tag } from "antd";
+import { Button, Card, Typography, message, Modal, Badge, Tag, Tooltip, Divider } from "antd";
 import { useState, useEffect } from "react";
 import moment from "moment";
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import orderService from "../services/orderService";
+import receiptService from "../services/receiptService";
 import { Link } from "react-router-dom";
+import { FilePdfOutlined, EyeOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 import dayjs from "dayjs";
 const MyOrders = () => {
@@ -13,30 +15,75 @@ const MyOrders = () => {
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [receipts, setReceipts] = useState({}); // เก็บใบเสร็จตาม order ID
+  const [receiptLoading, setReceiptLoading] = useState({}); // loading state สำหรับแต่ละใบเสร็จ
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    // ตรวจสอบ token ก่อนเรียก API
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("user_id");
+
+    if (!token || !userId) {
+      message.error("กรุณาเข้าสู่ระบบ");
+      return;
+    }
+
     fetchOrders();
   }, []);
 
   const fetchOrders = async () => {
     try {
       const userId = localStorage.getItem("user_id");
+      const token = localStorage.getItem("token");
+
+      console.log('📱 Debug fetchOrders in MyOder.jsx:');
+      console.log('  - User ID from localStorage:', userId);
+      console.log('  - Token exists:', !!token);
+
       if (!userId) {
+        console.log('❌ No user ID found');
         message.error("Please log in to view your orders.");
         return;
       }
 
+      if (!token) {
+        console.log('❌ No token found');
+        message.error("Authentication token not found. Please log in again.");
+        return;
+      }
+
+      console.log('🚀 Calling orderService.getOrdersByUserId...');
       const response = await orderService.getOrdersByUserId(userId);
 
-      if (response.data && Array.isArray(response.data)) {
+      console.log('📦 Response received:', response);
+
+      if (response.status === "success" && response.data && Array.isArray(response.data)) {
+        console.log('✅ Setting orders from response.data:', response.data.length, 'orders');
+        setOrders(response.data);
+      } else if (response.data && Array.isArray(response.data)) {
+        console.log('✅ Setting orders from response.data (fallback):', response.data.length, 'orders');
         setOrders(response.data);
       } else {
+        console.log('⚠️ No orders found, setting empty array');
         setOrders([]);
       }
     } catch (error) {
-      console.error("Fetch orders error:", error);
-      message.error("Failed to load orders.");
+      console.error("❌ Fetch orders error:", error);
+
+      if (error.message && error.message.includes("No orders found")) {
+        setOrders([]);
+        message.info("คุณยังไม่มีประวัติการสั่งซื้อ");
+      } else if (error.message && error.message.includes("401")) {
+        message.error("กรุณาเข้าสู่ระบบใหม่");
+      } else if (error.message && error.message.includes("403")) {
+        message.error("ไม่มีสิทธิ์เข้าถึงข้อมูล");
+      } else if (error.message && error.message.includes("Access denied")) {
+        message.error("ไม่มีสิทธิ์เข้าถึงข้อมูล");
+      } else {
+        message.error("Failed to load orders. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -52,6 +99,48 @@ const MyOrders = () => {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+
+  // ดึงใบเสร็จตาม order ID
+  const fetchReceiptForOrder = async (orderId) => {
+    if (receipts[orderId]) return; // ถ้ามีแล้วไม่ต้องดึงซ้ำ
+
+    setReceiptLoading(prev => ({ ...prev, [orderId]: true }));
+    try {
+      const response = await receiptService.getReceiptByOrderId(orderId);
+      if (response.success && response.data) {
+        setReceipts(prev => ({ ...prev, [orderId]: response.data }));
+      }
+    } catch (error) {
+      console.error('Error fetching receipt for order:', error);
+      // ไม่แสดง error message เพราะอาจไม่มีใบเสร็จสำหรับ order นี้
+    } finally {
+      setReceiptLoading(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
+
+  // ดาวน์โหลดใบเสร็จ PDF
+  const downloadReceiptPDF = async (receiptId, receiptNumber) => {
+    try {
+      const blob = await receiptService.downloadReceiptPDF(receiptId);
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt-${receiptNumber}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success('ดาวน์โหลดใบเสร็จ PDF สำเร็จ');
+    } catch (error) {
+      console.error('Error downloading receipt PDF:', error);
+      message.error('ไม่สามารถดาวน์โหลดใบเสร็จได้');
+    }
+  };
+
+
 
   // ฟังก์ชันสำหรับแสดงสถานะด้วยสีที่แตกต่างกัน
   const getStatusTag = (status) => {
@@ -209,13 +298,38 @@ const MyOrders = () => {
                         </p>
                       </div>
 
-                      {/* ปุ่มดูรายละเอียด */}
-                      <Button
-                        className="mt-3 bg-pink-100 text-pink-600 hover:bg-pink-200 border-pink-300"
-                        onClick={() => showModal(order)}
-                      >
-                        ดูรายละเอียด
-                      </Button>
+                      {/* ปุ่มดูรายละเอียดและใบเสร็จ */}
+                      <div className="mt-3 space-y-2">
+                        <Button
+                          className="w-full bg-pink-100 text-pink-600 hover:bg-pink-200 border-pink-300"
+                          onClick={() => showModal(order)}
+                        >
+                          ดูรายละเอียด
+                        </Button>
+
+                        {/* ปุ่มดึงใบเสร็จ */}
+                        <Button
+                          className="w-full bg-blue-100 text-blue-600 hover:bg-blue-200 border-blue-300"
+                          loading={receiptLoading[order._id]}
+                          onClick={() => fetchReceiptForOrder(order._id)}
+                        >
+                          <EyeOutlined /> ดูใบเสร็จ
+                        </Button>
+
+                        {/* แสดงปุ่มดาวน์โหลดใบเสร็จถ้ามี */}
+                        {receipts[order._id] && (
+                          <Tooltip title="ดาวน์โหลด PDF">
+                            <Button
+                              size="small"
+                              icon={<FilePdfOutlined />}
+                              onClick={() => downloadReceiptPDF(receipts[order._id]._id, receipts[order._id].receiptNumber)}
+                              className="w-full bg-green-100 text-green-600 hover:bg-green-200 border-green-300"
+                            >
+                              ดาวน์โหลด PDF
+                            </Button>
+                          </Tooltip>
+                        )}
+                      </div>
                     </Card>
                   );
                 })}
@@ -344,6 +458,46 @@ const MyOrders = () => {
                 <strong>เลขที่ใบเสร็จ:</strong> {selectedOrder.invoice_number}
               </p>
             )}
+
+            {/* ส่วนแสดงข้อมูลใบเสร็จ */}
+            <Divider />
+            <div className="bg-blue-50 p-4 rounded-md">
+              <Title level={5} className="text-blue-700 mb-3">
+                ข้อมูลใบเสร็จ
+              </Title>
+
+              {receipts[selectedOrder._id] ? (
+                <div className="space-y-2">
+                  <p><strong>เลขที่ใบเสร็จ:</strong> {receipts[selectedOrder._id].receiptNumber}</p>
+                  <p><strong>วันที่สร้าง:</strong> {moment(receipts[selectedOrder._id].createdAt).format('DD/MM/YYYY HH:mm')}</p>
+                  <p><strong>ยอดรวม:</strong> ฿{receipts[selectedOrder._id].totalAmount?.toLocaleString()}</p>
+
+                  <div className="mt-3">
+                    <Tooltip title="ดาวน์โหลด PDF">
+                      <Button
+                        icon={<FilePdfOutlined />}
+                        onClick={() => downloadReceiptPDF(receipts[selectedOrder._id]._id, receipts[selectedOrder._id].receiptNumber)}
+                        className="bg-green-100 text-green-600 hover:bg-green-200 border-green-300"
+                      >
+                        ดาวน์โหลด PDF
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-gray-500 mb-2">ยังไม่มีใบเสร็จสำหรับคำสั่งซื้อนี้</p>
+                  <Button
+                    type="primary"
+                    loading={receiptLoading[selectedOrder._id]}
+                    onClick={() => fetchReceiptForOrder(selectedOrder._id)}
+                    className="bg-blue-600"
+                  >
+                    <EyeOutlined /> ดูใบเสร็จ
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* แสดงภาพใบเสร็จถ้ามี */}
             {selectedOrder?.image ? (

@@ -530,3 +530,70 @@ exports.printReceipt = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// ดึงใบเสร็จตาม user ID (สำหรับ user ดูใบเสร็จของตัวเอง)
+exports.getReceiptsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // ดึงใบเสร็จที่เกี่ยวข้องกับ user นี้
+    const receipts = await Receipt.find({
+      $or: [
+        { 'customerName': { $regex: userId, $options: 'i' } }, // ค้นหาจากชื่อลูกค้า
+        { 'orderId': { $exists: true } } // หรือมี orderId (จะต้องเชื่อมโยงกับ order ที่มี user_id)
+      ]
+    })
+      .populate({
+        path: 'orderId',
+        match: { user_id: userId },
+        select: 'user_id order_date status'
+      })
+      .sort({ createdAt: -1 });
+
+    // กรองเฉพาะใบเสร็จที่เกี่ยวข้องกับ user นี้จริงๆ
+    const userReceipts = receipts.filter(receipt =>
+      receipt.orderId && receipt.orderId.user_id === userId
+    );
+
+    res.json({
+      success: true,
+      data: userReceipts
+    });
+  } catch (err) {
+    console.error('Error getting receipts by user ID:', err);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการดึงข้อมูลใบเสร็จ",
+      error: err.message
+    });
+  }
+};
+
+// ดึงใบเสร็จตาม order ID
+exports.getReceiptByOrderId = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const receipt = await Receipt.findOne({ orderId })
+      .populate('orderId', 'user_id order_date status product_id quantity');
+
+    if (!receipt) {
+      return res.status(404).json({
+        success: false,
+        message: "ไม่พบใบเสร็จสำหรับคำสั่งซื้อนี้"
+      });
+    }
+
+    res.json({
+      success: true,
+      data: receipt
+    });
+  } catch (err) {
+    console.error('Error getting receipt by order ID:', err);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการดึงข้อมูลใบเสร็จ",
+      error: err.message
+    });
+  }
+};

@@ -174,6 +174,36 @@ export const receiptService = {
       throw error.response ? error.response.data : error;
     }
   },
+
+  // ดึงใบเสร็จตาม user ID (สำหรับ user ดูใบเสร็จของตัวเอง)
+  getReceiptsByUserId: async (userId) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/receipts/user/${userId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
+
+  // ดึงใบเสร็จตาม order ID
+  getReceiptByOrderId: async (orderId) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/receipts/order/${orderId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
 };
 
 export default receiptService;

@@ -19,5 +19,9 @@ router.get("/:id/pdf", receiptController.downloadReceiptPDF);
 router.get("/:id/docx", receiptController.downloadReceiptDOCX);
 // พิมพ์ใบเสร็จ
 router.get("/:id/print", receiptController.printReceipt);
+// ดึงใบเสร็จตาม user ID
+router.get("/user/:userId", receiptController.getReceiptsByUserId);
+// ดึงใบเสร็จตาม order ID
+router.get("/order/:orderId", receiptController.getReceiptByOrderId);
 
 module.exports = router;
