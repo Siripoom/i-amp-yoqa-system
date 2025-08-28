@@ -1,8 +1,6 @@
 const Income = require("../models/income");
 const Order = require("../models/order");
 const Reservation = require("../models/reservation");
-const User = require("../models/user");
-const Goods = require("../models/goods");
 const mongoose = require("mongoose");
 
 // F001: บันทึกรายรับจากการขายแพ็คเกจ/sessions อัตโนมัติ
@@ -547,12 +545,10 @@ const deleteIncome = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่ามี Order ที่เกี่ยวข้องหรือไม่
     if (income.order_id) {
       console.log(`Income is linked to Order ID: ${income.order_id._id}. Reverting actions...`);
       const associatedOrder = income.order_id;
 
-      // ตรวจสอบสถานะของ Order และทำการ revert การกระทำที่เกี่ยวข้อง
       if (associatedOrder.status === 'อนุมัติ') {
         if (associatedOrder.order_type === 'product' && associatedOrder.product_id) {
           // คืน Session ให้ User
@@ -569,7 +565,6 @@ const deleteIncome = async (req, res) => {
         }
       }
 
-      // อัพเดทสถานะ Order เป็นยกเลิก
       await Order.findByIdAndUpdate(associatedOrder._id, {
         status: 'ยกเลิก',
         notes: `ถูกยกเลิกอัตโนมัติเนื่องจากรายรับ ID: ${income._id} ถูกลบโดยตรงจากระบบ Finance`
@@ -577,7 +572,6 @@ const deleteIncome = async (req, res) => {
       console.log(`Order status updated to 'ยกเลิก' for Order ID: ${associatedOrder._id}`);
     }
 
-    // ลบรายรับ (ไม่ว่าจะเป็นสถานะใดก็ตาม)
     await Income.findByIdAndDelete(id);
 
     res.json({

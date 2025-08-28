@@ -7,9 +7,10 @@ import Navbar from "../components/Navbar";
 import orderService from "../services/orderService";
 import receiptService from "../services/receiptService";
 import { Link } from "react-router-dom";
-import { FilePdfOutlined, EyeOutlined } from "@ant-design/icons";
+import { FilePdfOutlined, EyeOutlined, ShoppingOutlined, BookOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 import dayjs from "dayjs";
+
 const MyOrders = () => {
   const [orders, setOrders] = useState([]); // เก็บรายการ Order จริง
   const [loading, setLoading] = useState(true);
@@ -140,8 +141,6 @@ const MyOrders = () => {
     }
   };
 
-
-
   // ฟังก์ชันสำหรับแสดงสถานะด้วยสีที่แตกต่างกัน
   const getStatusTag = (status) => {
     let color = "";
@@ -161,7 +160,54 @@ const MyOrders = () => {
     return <Tag color={color}>{status}</Tag>;
   };
 
-  // คำนวณจำนวนครั้งและระยะเวลาทั้งหมด
+  // ฟังก์ชันสำหรับแสดงข้อมูลสินค้าตามประเภท
+  const getOrderDisplayInfo = (order) => {
+    const isProduct = order.order_type === "product";
+    const isGoods = order.order_type === "goods";
+
+    if (isProduct) {
+      // สำหรับสินค้าประเภท product (คอร์สออนไลน์)
+      const { totalSessions, totalDuration, totalPrice, quantity } = calculateTotals(order);
+      return {
+        title: `${order.product_id?.sessions || "N/A"} Sessions`,
+        icon: <BookOutlined className="text-blue-500" />,
+        type: "คอร์สออนไลน์",
+        details: [
+          { label: "จำนวนครั้ง", value: `${totalSessions} ครั้ง` },
+          { label: "ระยะเวลา", value: `${totalDuration} วัน` },
+          { label: "ราคา", value: `${totalPrice} THB` }
+        ],
+        quantity: quantity
+      };
+    } else if (isGoods) {
+      // สำหรับสินค้าประเภท goods (สินค้าที่จับต้องได้)
+      const item = order.goods_id;
+      const totalPrice = (item?.price || 0) * (order.quantity || 1);
+      return {
+        title: item?.goods || "สินค้า",
+        icon: <ShoppingOutlined className="text-green-500" />,
+        type: "สินค้าที่จับต้องได้",
+        details: [
+          { label: "รหัสสินค้า", value: item?.code || "N/A" },
+          { label: "รายละเอียด", value: item?.detail || "N/A" },
+          { label: "ขนาด", value: order.size || "N/A" },
+          { label: "สี", value: order.color || "N/A" },
+          { label: "ราคา", value: `${totalPrice} THB` }
+        ],
+        quantity: order.quantity || 1
+      };
+    }
+
+    return {
+      title: "สินค้าไม่ระบุประเภท",
+      icon: <ShoppingOutlined />,
+      type: "ไม่ระบุ",
+      details: [],
+      quantity: 1
+    };
+  };
+
+  // คำนวณจำนวนครั้งและระยะเวลาทั้งหมด (สำหรับ product เท่านั้น)
   const calculateTotals = (order) => {
     // ใช้ค่าจาก API โดยตรงถ้ามี
     if (order.total_sessions && order.total_duration && order.total_price) {
@@ -245,10 +291,10 @@ const MyOrders = () => {
             </div>
           </Card>
 
-          {/* ประวัติการซื้อ Session */}
+          {/* ประวัติการสั่งซื้อ */}
           <div className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md bg-white">
             <Title level={3} className="text-purple-700">
-              My Purchased Sessions
+              ประวัติการสั่งซื้อของฉัน
             </Title>
 
             {/* แสดง Loading */}
@@ -259,43 +305,42 @@ const MyOrders = () => {
             ) : orders.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 {orders.map((order) => {
-                  const { totalSessions, totalDuration, totalPrice, quantity } =
-                    calculateTotals(order);
+                  const orderInfo = getOrderDisplayInfo(order);
 
                   return (
                     <Card key={order._id} className="p-4 rounded-lg shadow-md">
-                      <div className="flex justify-between items-start">
-                        <p className="font-bold text-gray-700">
-                          {order.product_id?.sessions || "N/A"} Sessions
-                        </p>
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          {orderInfo.icon}
+                          <div>
+                            <p className="font-bold text-gray-700">
+                              {orderInfo.title}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {orderInfo.type}
+                            </p>
+                          </div>
+                        </div>
                         {getStatusTag(order.status)}
                       </div>
 
-                      <div className="mt-2">
+                      <div className="mt-2 space-y-1">
                         <p>
-                          <strong>Order Date:</strong>{" "}
+                          <strong>วันที่สั่งซื้อ:</strong>{" "}
                           {moment(order.order_date).format("DD MMM YYYY")}
                         </p>
 
-                        {quantity > 1 && (
+                        {orderInfo.quantity > 1 && (
                           <p>
-                            <strong>Quantity:</strong> {quantity} รายการ
+                            <strong>จำนวน:</strong> {orderInfo.quantity} รายการ
                           </p>
                         )}
 
-                        <p>
-                          <strong>Total Sessions:</strong> {totalSessions} ครั้ง
-                        </p>
-
-                        {totalDuration > 0 && (
-                          <p>
-                            <strong>Duration:</strong> {totalDuration} วัน
+                        {orderInfo.details.map((detail, index) => (
+                          <p key={index}>
+                            <strong>{detail.label}:</strong> {detail.value}
                           </p>
-                        )}
-
-                        <p>
-                          <strong>Price:</strong> {totalPrice} THB
-                        </p>
+                        ))}
                       </div>
 
                       {/* ปุ่มดูรายละเอียดและใบเสร็จ */}
@@ -337,11 +382,18 @@ const MyOrders = () => {
             ) : (
               <div className="text-center text-gray-500 py-8">
                 <p className="mb-4">คุณยังไม่มีประวัติการสั่งซื้อ</p>
-                <Link to="/product">
-                  <Button type="primary" className="bg-pink-500">
-                    ซื้อ Session
-                  </Button>
-                </Link>
+                <div className="space-x-4">
+                  <Link to="/product">
+                    <Button type="primary" className="bg-pink-500">
+                      ซื้อคอร์สออนไลน์
+                    </Button>
+                  </Link>
+                  <Link to="/goods">
+                    <Button type="primary" className="bg-green-500">
+                      ซื้อสินค้า
+                    </Button>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
@@ -358,6 +410,7 @@ const MyOrders = () => {
             ปิด
           </Button>,
         ]}
+        width={600}
       >
         {selectedOrder && (
           <div className="space-y-3">
@@ -369,50 +422,114 @@ const MyOrders = () => {
             </div>
 
             <div className="bg-gray-50 p-4 rounded-md">
-              <div className="grid grid-cols-2 gap-2">
-                <p>
-                  <strong>จำนวนต่อชิ้น:</strong>{" "}
-                  {selectedOrder?.product_id?.sessions || "N/A"} ครั้ง
-                </p>
-                <p>
-                  <strong>ราคาต่อชิ้น:</strong>{" "}
-                  {selectedOrder?.product_id?.price || "N/A"} THB
-                </p>
-                <p>
-                  <strong>ระยะเวลาต่อชิ้น:</strong>{" "}
-                  {selectedOrder?.product_id?.duration || "N/A"} วัน
-                </p>
-                <p>
-                  <strong>จำนวนที่ซื้อ:</strong> {selectedOrder.quantity || 1}{" "}
-                  ชิ้น
-                </p>
-              </div>
+              {selectedOrder.order_type === "product" ? (
+                // แสดงข้อมูลสำหรับ product (คอร์สออนไลน์)
+                <div>
+                  <h4 className="font-semibold text-blue-600 mb-3">
+                    <BookOutlined /> ข้อมูลคอร์สออนไลน์
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <p>
+                      <strong>จำนวนต่อชิ้น:</strong>{" "}
+                      {selectedOrder?.product_id?.sessions || "N/A"} ครั้ง
+                    </p>
+                    <p>
+                      <strong>ราคาต่อชิ้น:</strong>{" "}
+                      {selectedOrder?.product_id?.price || "N/A"} THB
+                    </p>
+                    <p>
+                      <strong>ระยะเวลาต่อชิ้น:</strong>{" "}
+                      {selectedOrder?.product_id?.duration || "N/A"} วัน
+                    </p>
+                    <p>
+                      <strong>จำนวนที่ซื้อ:</strong> {selectedOrder.quantity || 1}{" "}
+                      ชิ้น
+                    </p>
+                  </div>
 
-              <div className="border-t border-gray-200 my-3"></div>
+                  <div className="border-t border-gray-200 my-3"></div>
 
-              <div className="grid grid-cols-2 gap-2">
-                {(() => {
-                  const { totalSessions, totalDuration, totalPrice } =
-                    calculateTotals(selectedOrder);
+                  <div className="grid grid-cols-2 gap-2">
+                    {(() => {
+                      const { totalSessions, totalDuration, totalPrice } =
+                        calculateTotals(selectedOrder);
 
-                  return (
-                    <>
-                      <p>
-                        <strong>รวมจำนวนครั้ง:</strong> {totalSessions} ครั้ง
-                      </p>
-                      <p>
-                        <strong>รวมระยะเวลา:</strong> {totalDuration} วัน
-                      </p>
-                      <p>
-                        <strong>ราคาสุทธิ:</strong>{" "}
-                        <span className="text-red-600 font-bold">
-                          {totalPrice} THB
-                        </span>
-                      </p>
-                    </>
-                  );
-                })()}
-              </div>
+                      return (
+                        <>
+                          <p>
+                            <strong>รวมจำนวนครั้ง:</strong> {totalSessions} ครั้ง
+                          </p>
+                          <p>
+                            <strong>รวมระยะเวลา:</strong> {totalDuration} วัน
+                          </p>
+                          <p>
+                            <strong>ราคาสุทธิ:</strong>{" "}
+                            <span className="text-red-600 font-bold">
+                              {totalPrice} THB
+                            </span>
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              ) : selectedOrder.order_type === "goods" ? (
+                // แสดงข้อมูลสำหรับ goods (สินค้าที่จับต้องได้)
+                <div>
+                  <h4 className="font-semibold text-green-600 mb-3">
+                    <ShoppingOutlined /> ข้อมูลสินค้า
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <p>
+                      <strong>ชื่อสินค้า:</strong>{" "}
+                      {selectedOrder?.goods_id?.goods || "N/A"}
+                    </p>
+                    <p>
+                      <strong>รหัสสินค้า:</strong>{" "}
+                      {selectedOrder?.goods_id?.code || "N/A"}
+                    </p>
+                    <p>
+                      <strong>รายละเอียด:</strong>{" "}
+                      {selectedOrder?.goods_id?.detail || "N/A"}
+                    </p>
+                    <p>
+                      <strong>ราคาต่อชิ้น:</strong>{" "}
+                      {selectedOrder?.goods_id?.price || "N/A"} THB
+                    </p>
+                    <p>
+                      <strong>ขนาด:</strong>{" "}
+                      {selectedOrder.size || "N/A"}
+                    </p>
+                    <p>
+                      <strong>สี:</strong>{" "}
+                      {selectedOrder.color || "N/A"}
+                    </p>
+                    <p>
+                      <strong>จำนวนที่ซื้อ:</strong> {selectedOrder.quantity || 1}{" "}
+                      ชิ้น
+                    </p>
+                    <p>
+                      <strong>ราคาสุทธิ:</strong>{" "}
+                      <span className="text-red-600 font-bold">
+                        {(selectedOrder?.goods_id?.price || 0) * (selectedOrder.quantity || 1)} THB
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* ข้อมูลการจัดส่งสำหรับ goods */}
+                  {selectedOrder.address && (
+                    <div className="border-t border-gray-200 my-3 pt-3">
+                      <h5 className="font-semibold mb-2">ข้อมูลการจัดส่ง</h5>
+                      <p><strong>ที่อยู่:</strong> {selectedOrder.address}</p>
+                      {selectedOrder.phone_number && (
+                        <p><strong>เบอร์โทร:</strong> {selectedOrder.phone_number}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p>ไม่สามารถแสดงข้อมูลสินค้าได้</p>
+              )}
             </div>
 
             <p>
@@ -526,7 +643,7 @@ const MyOrders = () => {
             {selectedOrder.status === "อนุมัติ" && (
               <div className="bg-green-50 p-3 rounded-md border border-green-200 mt-4">
                 <Text className="text-green-700">
-                  การสั่งซื้อนี้ได้รับการอนุมัติแล้ว คุณสามารถใช้บริการได้ทันที
+                  การสั่งซื้อนี้ได้รับการอนุมัติแล้ว {selectedOrder.order_type === "product" ? "คุณสามารถใช้บริการได้ทันที" : "สินค้าจะถูกจัดส่งให้คุณ"}
                 </Text>
               </div>
             )}
