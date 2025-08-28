@@ -383,14 +383,9 @@ const MyOrders = () => {
               <div className="text-center text-gray-500 py-8">
                 <p className="mb-4">คุณยังไม่มีประวัติการสั่งซื้อ</p>
                 <div className="space-x-4">
-                  <Link to="/product">
+                  <Link to="/course">
                     <Button type="primary" className="bg-pink-500">
                       ซื้อคอร์สออนไลน์
-                    </Button>
-                  </Link>
-                  <Link to="/goods">
-                    <Button type="primary" className="bg-green-500">
-                      ซื้อสินค้า
                     </Button>
                   </Link>
                 </div>

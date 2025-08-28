@@ -1,6 +1,8 @@
 const Income = require("../models/income");
 const Order = require("../models/order");
 const Reservation = require("../models/reservation");
+const User = require("../models/user");
+const Goods = require("../models/goods");
 const mongoose = require("mongoose");
 
 // F001: บันทึกรายรับจากการขายแพ็คเกจ/sessions อัตโนมัติ
