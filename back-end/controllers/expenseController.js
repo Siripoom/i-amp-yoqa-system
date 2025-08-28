@@ -231,7 +231,7 @@ const getAllExpenses = async (req, res) => {
       start_date,
       end_date,
       category,
-      status,
+      status, // รับ status จาก query
       search,
       vendor,
       sort_by = "expense_date",
@@ -240,19 +240,20 @@ const getAllExpenses = async (req, res) => {
 
     const matchConditions = {};
 
+    // Logic การกรองวันที่ (ปรับปรุงให้แม่นยำ)
     if (start_date && end_date) {
+      const startDateObj = new Date(start_date);
+      startDateObj.setHours(0, 0, 0, 0);
+      const endDateObj = new Date(end_date);
+      endDateObj.setHours(23, 59, 59, 999);
       matchConditions.expense_date = {
-        $gte: new Date(start_date),
-        $lte: new Date(end_date),
+        $gte: startDateObj,
+        $lte: endDateObj,
       };
     }
 
     if (category) {
       matchConditions.category = category;
-    }
-
-    if (status) {
-      matchConditions.status = status;
     }
 
     if (vendor) {
@@ -267,6 +268,21 @@ const getAllExpenses = async (req, res) => {
         { vendor: { $regex: search, $options: "i" } },
       ];
     }
+
+    // ===================================================================
+    // =======================   จุดที่เป็นปัญหา   =========================
+    // ===================================================================
+    // Logic การกรองสถานะ (เพิ่ม Default case)
+    if (status) {
+      // ถ้า Frontend ส่งค่า status มา, ให้ใช้ค่านั้นในการกรอง
+      matchConditions.status = status;
+    } else {
+      // ถ้าไม่ได้ส่ง status มา (Default)
+      // ให้ดึงข้อมูลทั้ง 'approved' (อนุมัติแล้ว) และ 'pending' (รออนุมัติ)
+      matchConditions.status = { $in: ["approved", "pending"] };
+    }
+    // ===================================================================
+    // ===================================================================
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sortOrder = sort_order === "desc" ? -1 : 1;
@@ -283,6 +299,12 @@ const getAllExpenses = async (req, res) => {
 
     const total = await Expense.countDocuments(matchConditions);
 
+    // คำนวณยอดรวมของข้อมูลที่ดึงมา
+    const summary = await Expense.aggregate([
+      { $match: matchConditions },
+      { $group: { _id: null, total_amount: { $sum: "$amount" } } }
+    ]);
+
     res.json({
       success: true,
       data: {
@@ -293,6 +315,7 @@ const getAllExpenses = async (req, res) => {
           total_records: total,
           per_page: parseInt(limit),
         },
+        summary: summary[0] || { total_amount: 0 } // ส่งยอดรวมไปด้วย
       },
     });
   } catch (error) {
@@ -632,6 +655,56 @@ const downloadReceipt = async (req, res) => {
   }
 };
 
+// ส่งออกข้อมูลรายจ่ายเป็น CSV
+const exportExpenseToCSV = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุวันที่เริ่มต้นและสิ้นสุด",
+      });
+    }
+
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+
+    const expenses = await Expense.find({
+      expense_date: { $gte: startDate, $lte: endDate }
+    }).sort({ expense_date: -1 });
+
+    // สร้าง CSV content
+    let csvContent = `รายงานรายจ่าย,${start_date} ถึง ${end_date}\n\n`;
+    csvContent += `วันที่,รายละเอียด,หมวดหมู่,จำนวนเงิน,ผู้จำหน่าย,วิธีชำระ,เลขที่ใบเสร็จ,สถานะ,หมายเหตุ\n`;
+
+    expenses.forEach(expense => {
+      const date = expense.expense_date.toISOString().split('T')[0];
+      csvContent += `${date},"${expense.description}","${expense.category}",${expense.amount},"${expense.vendor || ''}","${expense.payment_method}","${expense.receipt_number || ''}","${expense.status}","${expense.notes || ''}"\n`;
+    });
+
+    const timestamp = new Date().toISOString().slice(0, -5);
+    const filename = `expense-report-${timestamp}.csv`;
+
+    // Set response headers for CSV
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Add BOM for UTF-8 to ensure proper encoding in Excel
+    res.write('\uFEFF');
+    res.write(csvContent);
+    res.end();
+
+  } catch (error) {
+    console.error('Expense CSV export error:', error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการส่งออกรายงานรายจ่าย CSV",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   upload,
   createExpense,
@@ -644,4 +717,5 @@ module.exports = {
   rejectExpense,
   getExpenseById,
   downloadReceipt,
+  exportExpenseToCSV,
 };

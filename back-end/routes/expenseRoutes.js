@@ -12,10 +12,11 @@ const {
   rejectExpense,
   getExpenseById,
   downloadReceipt,
+  exportExpenseToCSV,
 } = require("../controllers/expenseController");
 
 const { authenticate } = require("../middlewares/auth");
-
+router.use(authenticate);
 // F006: เพิ่ม แก้ไข และลบข้อมูลรายจ่าย
 // F008: อัปโหลดใบเสร็จรายจ่าย
 router.post("/", upload.single("receipt"), createExpense);
@@ -28,6 +29,9 @@ router.get("/", getAllExpenses);
 
 // F010: แสดงยอดรายจ่ายรวมตามช่วงเวลา
 router.get("/total", getTotalExpenseByPeriod);
+
+// Export to CSV (put this before /:id to avoid conflicts)
+router.get("/export/csv", exportExpenseToCSV);
 
 // CRUD operations
 router.get("/:id", getExpenseById);

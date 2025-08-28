@@ -433,16 +433,32 @@ exports.deleteOrder = async (req, res) => {
 exports.getOrdersByUserId = async (req, res) => {
   try {
     const { user_id } = req.params;
+    const requestingUserId = req.user.userId; // จาก JWT token
+    const requestingUserRole = req.user.role; // จาก JWT token
+
+    console.log('🔍 Debug getOrdersByUserId:');
+    console.log('  - Requested user_id:', user_id);
+    console.log('  - Requesting user ID:', requestingUserId);
+    console.log('  - Requesting user role:', requestingUserRole);
+
+    // ตรวจสอบสิทธิ์: user สามารถดู orders ของตัวเอง หรือ admin สามารถดู orders ของทุกคน
+    if (requestingUserId !== user_id && requestingUserRole !== "admin" && requestingUserRole !== "SuperAdmin" && requestingUserRole !== "Accounting") {
+      console.log('❌ Access denied - user cannot view orders');
+      return res.status(403).json({
+        message: "Access denied. You can only view your own orders."
+      });
+    }
+
+    console.log('✅ Access granted - searching for orders...');
     const orders = await Order.find({ user_id })
       .populate("user_id")
       .populate("product_id")
       .populate("goods_id")
       .sort({ createdAt: -1 });
 
-    if (orders.length === 0) {
-      return res.status(404).json({ message: "No orders found for this user" });
-    }
+    console.log('📊 Found orders:', orders.length);
 
+    // ส่งข้อมูลกลับแม้ว่าจะไม่มี orders ก็ตาม
     res.status(200).json({
       status: "success",
       count: orders.length,
@@ -545,7 +561,7 @@ exports.updateOrderStatus = async (req, res) => {
             $set: {
               sessions_expiry_date:
                 user.sessions_expiry_date &&
-                user.sessions_expiry_date > new Date()
+                  user.sessions_expiry_date > new Date()
                   ? user.sessions_expiry_date
                   : initialExpiryDate,
             },

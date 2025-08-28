@@ -124,9 +124,25 @@ const orderService = {
   // ✅ ดึงรายการคำสั่งซื้อทั้งหมดของ User ตาม ID
   getOrdersByUserId: async (userId) => {
     try {
-      const response = await axios.get(`${API_URL}/api/orders/user/${userId}`);
+      const token = localStorage.getItem("token");
+      console.log('🌐 Debug getOrdersByUserId:');
+      console.log('  - User ID:', userId);
+      console.log('  - Token exists:', !!token);
+      console.log('  - Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
+
+      const response = await axios.get(`${API_URL}/api/orders/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('✅ API call successful:', response.status);
       return response.data;
     } catch (error) {
+      console.log('❌ API call failed:');
+      console.log('  - Error status:', error.response?.status);
+      console.log('  - Error data:', error.response?.data);
+      console.log('  - Error message:', error.message);
       throw error.response ? error.response.data : error.message;
     }
   },

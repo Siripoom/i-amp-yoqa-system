@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/orderController");
+const { authenticate, authorizeUserOrAdmin } = require("../middlewares/auth");
 
 // สร้างคำสั่งซื้อใหม่ พร้อมอัปโหลดรูปภาพ (รองรับทั้ง product และ goods)
 router.post(
@@ -32,7 +33,7 @@ router.put(
 router.put("/:id/status", orderController.updateOrderStatus);
 
 // ดึงรายการ Order ทั้งหมดของ User ID ที่กำหนด
-router.get("/user/:user_id", orderController.getOrdersByUserId);
+router.get("/user/:user_id", authenticate, authorizeUserOrAdmin, orderController.getOrdersByUserId);
 
 // ลบคำสั่งซื้อ
 router.delete("/:id", orderController.deleteOrder);

@@ -95,14 +95,8 @@ export const financeService = {
     return response.data;
   },
 
-  createExpense: async (expenseData) => {
-    const formData = new FormData();
-    Object.keys(expenseData).forEach((key) => {
-      if (expenseData[key] !== null && expenseData[key] !== undefined) {
-        formData.append(key, expenseData[key]);
-      }
-    });
-
+  // ใน services/financeService.js
+  createExpense: async (formData) => { // รับ formData ที่สร้างเสร็จแล้วมาเลย
     const response = await axios.post(`${API_URL}/api/expenses`, formData, {
       headers: {
         ...getAuthHeaders(),
@@ -112,14 +106,7 @@ export const financeService = {
     return response.data;
   },
 
-  updateExpense: async (id, expenseData) => {
-    const formData = new FormData();
-    Object.keys(expenseData).forEach((key) => {
-      if (expenseData[key] !== null && expenseData[key] !== undefined) {
-        formData.append(key, expenseData[key]);
-      }
-    });
-
+  updateExpense: async (id, formData) => { // รับ formData ที่สร้างเสร็จแล้วมาเลย
     const response = await axios.put(
       `${API_URL}/api/expenses/${id}`,
       formData,
@@ -223,6 +210,57 @@ export const financeService = {
       {
         params: {
           report_type: reportType,
+          start_date: startDate,
+          end_date: endDate,
+        },
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
+
+  exportFinancialReportToCSV: async (reportType, startDate, endDate, year, month) => {
+    const params = { report_type: reportType };
+
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    if (year) params.year = year;
+    if (month) params.month = month;
+
+    const response = await axios.get(
+      `${API_URL}/api/financial-reports/export/csv`,
+      {
+        params,
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
+
+  // ส่งออกรายรับเป็น CSV
+  exportIncomeToCSV: async (startDate, endDate) => {
+    const response = await axios.get(
+      `${API_URL}/api/income/export/csv`,
+      {
+        params: {
+          start_date: startDate,
+          end_date: endDate,
+        },
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
+
+  // ส่งออกรายจ่ายเป็น CSV
+  exportExpenseToCSV: async (startDate, endDate) => {
+    const response = await axios.get(
+      `${API_URL}/api/expenses/export/csv`,
+      {
+        params: {
           start_date: startDate,
           end_date: endDate,
         },

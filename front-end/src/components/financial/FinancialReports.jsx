@@ -170,7 +170,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">รายจ่ายรวม</CardTitle>
@@ -181,7 +181,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">กำไร/ขาดทุนสุทธิ</CardTitle>
@@ -280,7 +280,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">เงินออกรวม</CardTitle>
@@ -291,7 +291,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">กระแสเงินสดสุทธิ</CardTitle>
@@ -302,7 +302,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">ยอดคงเหลือสุดท้าย</CardTitle>
@@ -361,7 +361,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">รายจ่ายรวมทั้งปี</CardTitle>
@@ -372,7 +372,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">กำไร/ขาดทุนทั้งปี</CardTitle>
@@ -386,7 +386,7 @@ const FinancialReports = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">ธุรกรรมทั้งหมด</CardTitle>
@@ -588,11 +588,10 @@ const FinancialReports = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'bg-white text-blue-600 shadow'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
+              ? 'bg-white text-blue-600 shadow'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <tab.icon className="h-4 w-4" />
             <span>{tab.label}</span>

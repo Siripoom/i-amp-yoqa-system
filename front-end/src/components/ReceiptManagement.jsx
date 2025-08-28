@@ -19,7 +19,8 @@ import {
 import {
   SearchOutlined,
   EyeOutlined,
-  DownloadOutlined,
+  FileWordOutlined,
+  FilePdfOutlined,
   PrinterOutlined,
   FileTextOutlined,
   CalendarOutlined,
@@ -46,14 +47,16 @@ const ReceiptManagement = () => {
     loadAllReceipts();
   }, []);
 
-  // โหลดใบเสร็จทั้งหมดตามช่วงวันที่เริ่มต้น (30 วันที่ผ่านมา)
+  // โหลดใบเสร็จทั้งหมด
   const loadAllReceipts = async () => {
     setLoading(true);
     try {
-      const endDate = dayjs().format('YYYY-MM-DD');
-      const startDate = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
-      
-      const data = await receiptService.getReceiptsByDateRange(startDate, endDate);
+      console.log('📋 Loading all receipts...');
+
+      const data = await receiptService.getAllReceipts();
+
+      console.log('📊 Received receipts:', data.length);
+
       setReceipts(data);
       setFilteredReceipts(data);
     } catch (error) {
@@ -113,7 +116,7 @@ const ReceiptManagement = () => {
     try {
       const startDate = dates[0].format('YYYY-MM-DD');
       const endDate = dates[1].format('YYYY-MM-DD');
-      
+
       const data = await receiptService.getReceiptsByDateRange(startDate, endDate);
       setFilteredReceipts(data);
     } catch (error) {
@@ -130,22 +133,65 @@ const ReceiptManagement = () => {
     setIsDetailModalVisible(true);
   };
 
-  // ดาวน์โหลดใบเสร็จ PDF
-  const downloadReceiptPDF = async (receiptId, receiptNumber) => {
+
+
+  // ดาวน์โหลดใบเสร็จ DOCX
+  const downloadReceiptDOCX = async (receiptId, receiptNumber) => {
     try {
-      const blob = await receiptService.downloadReceiptPDF(receiptId);
+      setLoading(true);
+      const blob = await receiptService.downloadReceiptDOCX(receiptId);
+
+      // ตรวจสอบ blob
+      if (!(blob instanceof Blob)) {
+        throw new Error('Invalid response format');
+      }
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `receipt-${receiptNumber}.pdf`;
+      link.download = `receipt-${receiptNumber}.docx`;
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      message.success('ดาวน์โหลดใบเสร็จสำเร็จ');
+
+      message.success('ดาวน์โหลด DOCX สำเร็จ');
     } catch (error) {
-      message.error('ไม่สามารถดาวน์โหลดใบเสร็จได้');
-      console.error('Error downloading receipt:', error);
+      console.error('Error downloading receipt DOCX:', error);
+      message.error(error.message || 'ไม่สามารถดาวน์โหลด DOCX ได้');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ดาวน์โหลดใบเสร็จ PDF (จาก DOCX template)
+  const downloadReceiptPDF = async (receiptId, receiptNumber) => {
+    try {
+      setLoading(true);
+      const blob = await receiptService.downloadReceiptPDF(receiptId);
+
+      // ตรวจสอบ blob
+      if (!(blob instanceof Blob)) {
+        throw new Error('Invalid response format');
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt-${receiptNumber}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success('ดาวน์โหลด PDF สำเร็จ');
+    } catch (error) {
+      console.error('Error downloading receipt PDF:', error);
+      message.error(error.message || 'ไม่สามารถดาวน์โหลด PDF ได้');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -223,10 +269,17 @@ const ReceiptManagement = () => {
           <Tooltip title="ดาวน์โหลด PDF">
             <Button
               type="link"
-              icon={<DownloadOutlined />}
+              icon={<FilePdfOutlined />}
               onClick={() => downloadReceiptPDF(record._id, record.receiptNumber)}
             />
           </Tooltip>
+          {/* <Tooltip title="ดาวน์โหลด DOCX">
+            <Button
+              type="link"
+              icon={<FileWordOutlined />}
+              onClick={() => downloadReceiptDOCX(record._id, record.receiptNumber)}
+            />
+          </Tooltip> */}
           <Tooltip title="พิมพ์ใบเสร็จ">
             <Button
               type="link"
@@ -246,6 +299,14 @@ const ReceiptManagement = () => {
           <FileTextOutlined />
           <span>จัดการใบเสร็จ</span>
         </Space>
+      } extra={
+        <Button
+          type="primary"
+          onClick={loadAllReceipts}
+          loading={loading}
+        >
+          รีเฟรชข้อมูล
+        </Button>
       }>
         {/* ส่วนการค้นหา */}
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
@@ -279,6 +340,27 @@ const ReceiptManagement = () => {
               }}
               style={{ width: '100%' }}
             />
+          </Col>
+        </Row>
+
+        {/* ปุ่มล้างการค้นหา */}
+        <Row style={{ marginBottom: 16 }}>
+          <Col>
+            <Space>
+              <Button
+                onClick={() => {
+                  setReceiptNumberSearch('');
+                  setCustomerSearch('');
+                  setDateRange([]);
+                  setFilteredReceipts(receipts);
+                }}
+              >
+                ล้างการค้นหา
+              </Button>
+              <Text type="secondary">
+                แสดง {filteredReceipts.length} จาก {receipts.length} รายการ
+              </Text>
+            </Space>
           </Col>
         </Row>
 
@@ -318,13 +400,19 @@ const ReceiptManagement = () => {
             ปิด
           </Button>,
           <Button
-            key="download"
-            type="primary"
-            icon={<DownloadOutlined />}
+            key="download-pdf"
+            icon={<FilePdfOutlined />}
             onClick={() => downloadReceiptPDF(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
           >
             ดาวน์โหลด PDF
           </Button>,
+          // <Button
+          //   key="download-docx"
+          //   icon={<FileWordOutlined />}
+          //   onClick={() => downloadReceiptDOCX(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
+          // >
+          //   ดาวน์โหลด DOCX
+          // </Button>,
           <Button
             key="print"
             icon={<PrinterOutlined />}
@@ -368,9 +456,9 @@ const ReceiptManagement = () => {
                 columns={[
                   { title: 'ชื่อสินค้า', dataIndex: 'name', key: 'name' },
                   { title: 'จำนวน', dataIndex: 'quantity', key: 'quantity' },
-                  { 
-                    title: 'ราคา', 
-                    dataIndex: 'price', 
+                  {
+                    title: 'ราคา',
+                    dataIndex: 'price',
                     key: 'price',
                     render: (price) => `฿${price?.toLocaleString()}`
                   },
