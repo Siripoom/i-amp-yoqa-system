@@ -3,6 +3,8 @@ const router = express.Router();
 const receiptController = require("../controllers/receiptController");
 
 
+// ดึงใบเสร็จทั้งหมด
+router.get("/", receiptController.getAllReceipts);
 // สร้างใบเสร็จ
 router.post("/", receiptController.createReceipt);
 // สร้างใบเสร็จแบบ manual

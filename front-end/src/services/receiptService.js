@@ -81,6 +81,18 @@ export const receiptService = {
     }
   },
 
+  // ดึงใบเสร็จทั้งหมด
+  getAllReceipts: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/receipts`, {
+        headers: getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
+
   // ดาวน์โหลดใบเสร็จเป็น DOCX
   downloadReceiptDOCX: async (receiptId) => {
     try {

@@ -425,12 +425,32 @@ exports.getReceiptsByCustomer = async (req, res) => {
   }
 };
 
+// ดึงใบเสร็จทั้งหมด
+exports.getAllReceipts = async (req, res) => {
+  try {
+    console.log('📋 Getting all receipts...');
+
+    const receipts = await Receipt.find({})
+      .sort({ createdAt: -1 }) // เรียงจากวันที่ล่าสุด
+      .exec();
+
+    console.log(`📊 Found ${receipts.length} receipts`);
+
+    res.json(receipts);
+  } catch (err) {
+    console.error('Error getting all receipts:', err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // ค้นหาใบเสร็จด้วยช่วงวันที่
 exports.getReceiptsByDateRange = async (req, res) => {
   try {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
+
+    console.log('📅 Searching receipts from:', startDate, 'to:', endDate);
 
     // เพิ่ม sort ที่ database query โดยตรง
     const receipts = await Receipt.find({
@@ -442,8 +462,11 @@ exports.getReceiptsByDateRange = async (req, res) => {
       .sort({ createdAt: -1 }) // เรียงจากวันที่ล่าสุด
       .exec();
 
+    console.log(`📊 Found ${receipts.length} receipts in date range`);
+
     res.json(receipts);
   } catch (err) {
+    console.error('Error getting receipts by date range:', err);
     res.status(500).json({ message: err.message });
   }
 };

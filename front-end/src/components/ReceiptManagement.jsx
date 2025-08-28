@@ -47,14 +47,16 @@ const ReceiptManagement = () => {
     loadAllReceipts();
   }, []);
 
-  // โหลดใบเสร็จทั้งหมดตามช่วงวันที่เริ่มต้น (30 วันที่ผ่านมา)
+  // โหลดใบเสร็จทั้งหมด
   const loadAllReceipts = async () => {
     setLoading(true);
     try {
-      const endDate = dayjs().format('YYYY-MM-DD');
-      const startDate = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
+      console.log('📋 Loading all receipts...');
 
-      const data = await receiptService.getReceiptsByDateRange(startDate, endDate);
+      const data = await receiptService.getAllReceipts();
+
+      console.log('📊 Received receipts:', data.length);
+
       setReceipts(data);
       setFilteredReceipts(data);
     } catch (error) {
@@ -271,13 +273,13 @@ const ReceiptManagement = () => {
               onClick={() => downloadReceiptPDF(record._id, record.receiptNumber)}
             />
           </Tooltip>
-          <Tooltip title="ดาวน์โหลด DOCX">
+          {/* <Tooltip title="ดาวน์โหลด DOCX">
             <Button
               type="link"
               icon={<FileWordOutlined />}
               onClick={() => downloadReceiptDOCX(record._id, record.receiptNumber)}
             />
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip title="พิมพ์ใบเสร็จ">
             <Button
               type="link"
@@ -297,6 +299,14 @@ const ReceiptManagement = () => {
           <FileTextOutlined />
           <span>จัดการใบเสร็จ</span>
         </Space>
+      } extra={
+        <Button
+          type="primary"
+          onClick={loadAllReceipts}
+          loading={loading}
+        >
+          รีเฟรชข้อมูล
+        </Button>
       }>
         {/* ส่วนการค้นหา */}
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
@@ -330,6 +340,27 @@ const ReceiptManagement = () => {
               }}
               style={{ width: '100%' }}
             />
+          </Col>
+        </Row>
+
+        {/* ปุ่มล้างการค้นหา */}
+        <Row style={{ marginBottom: 16 }}>
+          <Col>
+            <Space>
+              <Button
+                onClick={() => {
+                  setReceiptNumberSearch('');
+                  setCustomerSearch('');
+                  setDateRange([]);
+                  setFilteredReceipts(receipts);
+                }}
+              >
+                ล้างการค้นหา
+              </Button>
+              <Text type="secondary">
+                แสดง {filteredReceipts.length} จาก {receipts.length} รายการ
+              </Text>
+            </Space>
           </Col>
         </Row>
 
@@ -375,13 +406,13 @@ const ReceiptManagement = () => {
           >
             ดาวน์โหลด PDF
           </Button>,
-          <Button
-            key="download-docx"
-            icon={<FileWordOutlined />}
-            onClick={() => downloadReceiptDOCX(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
-          >
-            ดาวน์โหลด DOCX
-          </Button>,
+          // <Button
+          //   key="download-docx"
+          //   icon={<FileWordOutlined />}
+          //   onClick={() => downloadReceiptDOCX(selectedReceipt?._id, selectedReceipt?.receiptNumber)}
+          // >
+          //   ดาวน์โหลด DOCX
+          // </Button>,
           <Button
             key="print"
             icon={<PrinterOutlined />}
