@@ -1211,6 +1211,11 @@ const exportFinancialReportToCSV = async (req, res) => {
         });
       }
 
+      console.log(`🔍 CSV Export - Profit Loss Report:`);
+      console.log(`  - Start Date: ${start_date}`);
+      console.log(`  - End Date: ${end_date}`);
+      console.log(`  - Report Type: ${report_type}`);
+
       try {
         const reportData = await generateProfitLossData(start_date, end_date);
         console.log('CSV report data:', JSON.stringify(reportData, null, 2));
@@ -1259,20 +1264,32 @@ const exportFinancialReportToCSV = async (req, res) => {
         });
       }
 
+      console.log(`🔍 CSV Export - Cash Flow Report:`);
+      console.log(`  - Start Date: ${start_date}`);
+      console.log(`  - End Date: ${end_date}`);
+      console.log(`  - Report Type: ${report_type}`);
+
       const reportData = await generateCashFlowData(start_date, end_date);
+      console.log('Cash Flow report data:', JSON.stringify(reportData, null, 2));
 
       csvContent = `รายงานกระแสเงินสด,${start_date} ถึง ${end_date}\n\n`;
       csvContent += `รายการ,จำนวนเงิน\n`;
-      csvContent += `เงินเข้า,${reportData.total_inflow}\n`;
-      csvContent += `เงินออก,${reportData.total_outflow}\n`;
-      csvContent += `กระแสเงินสุทธิ,${reportData.net_cash_flow}\n`;
+      csvContent += `เงินเข้า,${reportData.total_inflow || 0}\n`;
+      csvContent += `เงินออก,${reportData.total_outflow || 0}\n`;
+      csvContent += `กระแสเงินสุทธิ,${reportData.net_cash_flow || 0}\n`;
 
     } else if (report_type === 'monthly-summary') {
       const currentDate = new Date();
       const year = req.query.year || currentDate.getFullYear();
       const month = req.query.month || currentDate.getMonth() + 1;
 
+      console.log(`🔍 CSV Export - Monthly Summary Report:`);
+      console.log(`  - Year: ${year}`);
+      console.log(`  - Month: ${month}`);
+      console.log(`  - Report Type: ${report_type}`);
+
       const reportData = await getSingleMonthSummaryData(year, month);
+      console.log('Monthly Summary report data:', JSON.stringify(reportData, null, 2));
 
       const monthNames = [
         "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -1281,11 +1298,11 @@ const exportFinancialReportToCSV = async (req, res) => {
 
       csvContent = `สรุปรายเดือน,${monthNames[month - 1]} ${year}\n\n`;
       csvContent += `รายการ,จำนวนเงิน\n`;
-      csvContent += `รายรับรวม,${reportData.total_income}\n`;
-      csvContent += `รายจ่ายรวม,${reportData.total_expense}\n`;
-      csvContent += `กำไรสุทธิ,${reportData.net_profit}\n`;
-      csvContent += `จำนวนธุรกรรมรายรับ,${reportData.income_count}\n`;
-      csvContent += `จำนวนธุรกรรมรายจ่าย,${reportData.expense_count}\n`;
+      csvContent += `รายรับรวม,${reportData.total_income || 0}\n`;
+      csvContent += `รายจ่ายรวม,${reportData.total_expense || 0}\n`;
+      csvContent += `กำไรสุทธิ,${reportData.net_profit || 0}\n`;
+      csvContent += `จำนวนธุรกรรมรายรับ,${reportData.income_count || 0}\n`;
+      csvContent += `จำนวนธุรกรรมรายจ่าย,${reportData.expense_count || 0}\n`;
     }
 
     // Set response headers for CSV
@@ -1309,8 +1326,16 @@ const exportFinancialReportToCSV = async (req, res) => {
 
 // Helper function สำหรับ Cash Flow Data
 const generateCashFlowData = async (startDate, endDate) => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  console.log(`🔍 generateCashFlowData called with:`);
+  console.log(`  - startDate: ${startDate}`);
+  console.log(`  - endDate: ${endDate}`);
+
+  // แปลงวันที่ให้ถูกต้อง - เริ่มต้นวันแรกเวลา 00:00:00 และสิ้นสุดวันสุดท้ายเวลา 23:59:59
+  const start = new Date(startDate + 'T00:00:00.000Z');
+  const end = new Date(endDate + 'T23:59:59.999Z');
+
+  console.log(`  - start (Date object): ${start.toISOString()}`);
+  console.log(`  - end (Date object): ${end.toISOString()}`);
 
   const totalInflow = await Income.aggregate([
     {
@@ -1345,6 +1370,12 @@ const generateCashFlowData = async (startDate, endDate) => {
   const inflowAmount = totalInflow[0]?.total || 0;
   const outflowAmount = totalOutflow[0]?.total || 0;
 
+  console.log(`💰 Cash Flow Results:`);
+  console.log(`  - totalInflow aggregation:`, totalInflow);
+  console.log(`  - totalOutflow aggregation:`, totalOutflow);
+  console.log(`  - inflowAmount: ${inflowAmount}`);
+  console.log(`  - outflowAmount: ${outflowAmount}`);
+
   return {
     total_inflow: inflowAmount,
     total_outflow: outflowAmount,
@@ -1354,8 +1385,13 @@ const generateCashFlowData = async (startDate, endDate) => {
 
 // Helper functions สำหรับ Excel export
 const generateProfitLossData = async (startDate, endDate) => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  console.log(`🔍 generateProfitLossData called with:`);
+  console.log(`  - startDate: ${startDate}`);
+  console.log(`  - endDate: ${endDate}`);
+
+  // แปลงวันที่ให้ถูกต้อง - เริ่มต้นวันแรกเวลา 00:00:00 และสิ้นสุดวันสุดท้ายเวลา 23:59:59
+  const start = new Date(startDate + 'T00:00:00.000Z');
+  const end = new Date(endDate + 'T23:59:59.999Z');
 
   console.log(`🔍 Generating Profit-Loss Data for: ${start.toISOString()} to ${end.toISOString()}`);
 
@@ -1560,6 +1596,10 @@ const getMonthlySummaryData = async (year) => {
 
 // Helper function สำหรับสรุปรายเดือนเดียว
 const getSingleMonthSummaryData = async (year, month) => {
+  console.log(`🔍 getSingleMonthSummaryData called with:`);
+  console.log(`  - year: ${year}`);
+  console.log(`  - month: ${month}`);
+
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
 
@@ -1607,6 +1647,8 @@ const getSingleMonthSummaryData = async (year, month) => {
   console.log(`💰 Total Income: ${totalIncome}`);
   console.log(`💸 Total Expense: ${totalExpense}`);
   console.log(`📊 Net Profit: ${netProfit}`);
+  console.log(`📊 Income aggregation result:`, incomeResult);
+  console.log(`📊 Expense aggregation result:`, expenseResult);
 
   return {
     year: parseInt(year),

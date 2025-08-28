@@ -446,7 +446,8 @@ const Finance = () => {
         const month = dateRange[0].format('MM');
         blob = await financeService.exportFinancialReportToCSV(reportType, null, null, year, month);
       } else {
-        blob = await financeService.exportFinancialReportToCSV(reportType, startDate, endDate);
+        // สำหรับ profit-loss และ cash-flow ส่ง startDate และ endDate
+        blob = await financeService.exportFinancialReportToCSV(reportType, startDate, endDate, null, null);
       }
 
       const url = window.URL.createObjectURL(blob);
