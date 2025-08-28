@@ -220,15 +220,18 @@ export const financeService = {
     return response.data;
   },
 
-  exportFinancialReportToCSV: async (reportType, startDate, endDate) => {
+  exportFinancialReportToCSV: async (reportType, startDate, endDate, year, month) => {
+    const params = { report_type: reportType };
+
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    if (year) params.year = year;
+    if (month) params.month = month;
+
     const response = await axios.get(
       `${API_URL}/api/financial-reports/export/csv`,
       {
-        params: {
-          report_type: reportType,
-          start_date: startDate,
-          end_date: endDate,
-        },
+        params,
         headers: getAuthHeaders(),
         responseType: "blob",
       }

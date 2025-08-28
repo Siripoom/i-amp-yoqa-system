@@ -1272,13 +1272,20 @@ const exportFinancialReportToCSV = async (req, res) => {
       const year = req.query.year || currentDate.getFullYear();
       const month = req.query.month || currentDate.getMonth() + 1;
 
-      const reportData = await getMonthlySummaryData(year, month);
+      const reportData = await getSingleMonthSummaryData(year, month);
 
-      csvContent = `สรุปรายเดือน,${month}/${year}\n\n`;
+      const monthNames = [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      ];
+
+      csvContent = `สรุปรายเดือน,${monthNames[month - 1]} ${year}\n\n`;
       csvContent += `รายการ,จำนวนเงิน\n`;
       csvContent += `รายรับรวม,${reportData.total_income}\n`;
       csvContent += `รายจ่ายรวม,${reportData.total_expense}\n`;
       csvContent += `กำไรสุทธิ,${reportData.net_profit}\n`;
+      csvContent += `จำนวนธุรกรรมรายรับ,${reportData.income_count}\n`;
+      csvContent += `จำนวนธุรกรรมรายจ่าย,${reportData.expense_count}\n`;
     }
 
     // Set response headers for CSV
@@ -1548,6 +1555,68 @@ const getMonthlySummaryData = async (year) => {
   return {
     monthly_data: monthlyData,
     year_summary: yearSummary,
+  };
+};
+
+// Helper function สำหรับสรุปรายเดือนเดียว
+const getSingleMonthSummaryData = async (year, month) => {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  console.log(`🔍 Getting Single Month Summary for: ${year}-${month.toString().padStart(2, '0')}`);
+  console.log(`📅 Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+  // ดึงข้อมูลรายรับ
+  const incomeResult = await Income.aggregate([
+    {
+      $match: {
+        income_date: { $gte: startDate, $lte: endDate },
+        status: "confirmed",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total_income: { $sum: "$amount" },
+        income_count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // ดึงข้อมูลรายจ่าย
+  const expenseResult = await Expense.aggregate([
+    {
+      $match: {
+        expense_date: { $gte: startDate, $lte: endDate },
+        status: "approved",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total_expense: { $sum: "$amount" },
+        expense_count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const totalIncome = incomeResult[0]?.total_income || 0;
+  const totalExpense = expenseResult[0]?.total_expense || 0;
+  const netProfit = totalIncome - totalExpense;
+
+  console.log(`💰 Total Income: ${totalIncome}`);
+  console.log(`💸 Total Expense: ${totalExpense}`);
+  console.log(`📊 Net Profit: ${netProfit}`);
+
+  return {
+    year: parseInt(year),
+    month: parseInt(month),
+    total_income: totalIncome,
+    total_expense: totalExpense,
+    net_profit: netProfit,
+    profit_margin: totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(2) : "0.00",
+    income_count: incomeResult[0]?.income_count || 0,
+    expense_count: expenseResult[0]?.expense_count || 0,
   };
 };
 

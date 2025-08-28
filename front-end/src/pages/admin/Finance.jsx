@@ -439,12 +439,29 @@ const Finance = () => {
       const startDate = dateRange[0].format('YYYY-MM-DD');
       const endDate = dateRange[1].format('YYYY-MM-DD');
 
-      const blob = await financeService.exportFinancialReportToCSV(reportType, startDate, endDate);
+      let blob;
+      if (reportType === 'monthly-summary') {
+        // สำหรับ monthly-summary ส่ง year และ month จาก dateRange
+        const year = dateRange[0].format('YYYY');
+        const month = dateRange[0].format('MM');
+        blob = await financeService.exportFinancialReportToCSV(reportType, null, null, year, month);
+      } else {
+        blob = await financeService.exportFinancialReportToCSV(reportType, startDate, endDate);
+      }
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${reportType}_report_${startDate}_${endDate}.csv`;
+
+      let filename;
+      if (reportType === 'monthly-summary') {
+        const year = dateRange[0].format('YYYY');
+        const month = dateRange[0].format('MM');
+        filename = `${reportType}_report_${year}-${month}.csv`;
+      } else {
+        filename = `${reportType}_report_${startDate}_${endDate}.csv`;
+      }
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

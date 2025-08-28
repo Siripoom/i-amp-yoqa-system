@@ -70,3 +70,4 @@ function fixTemplateFonts() {
 
 // รันสคริปต์
 fixTemplateFonts();
+
