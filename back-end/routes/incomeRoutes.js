@@ -30,7 +30,7 @@ router.get("/export/csv", exportIncomeToCSV);
 router.post("/manual", authenticate, createManualIncome);
 router.get("/", getAllIncome);
 router.get("/:id", getIncomeById);
-router.put("/:id", updateIncome);
-router.delete("/:id", deleteIncome);
+router.put("/:id", authenticate, updateIncome);
+router.delete("/:id", authenticate, deleteIncome);
 
 module.exports = router;
