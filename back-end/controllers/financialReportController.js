@@ -1230,7 +1230,9 @@ const exportFinancialReportToCSV = async (req, res) => {
 
         csvContent = `รายงานกำไร-ขาดทุน,${start_date} ถึง ${end_date}\n\n`;
         csvContent += `ประเภท,รายการ,จำนวนเงิน\n`;
-        csvContent += `รายรับ,,${reportData.revenue.total_income || 0}\n`;
+
+        // ส่วนรายรับ
+        csvContent += `รายรับ,,\n`;
 
         const incomeTypes = reportData.revenue.income_by_type || {};
         Object.keys(incomeTypes).forEach(type => {
@@ -1238,7 +1240,11 @@ const exportFinancialReportToCSV = async (req, res) => {
           csvContent += `,${type},${amount}\n`;
         });
 
-        csvContent += `รายจ่าย,,${reportData.expenses.total_expense || 0}\n`;
+        // รวมรายรับ
+        csvContent += `รวมรายรับ,,${reportData.revenue.total_income || 0}\n`;
+
+        // ส่วนรายจ่าย
+        csvContent += `รายจ่าย,,\n`;
 
         const expenseCategories = reportData.expenses.expense_by_category || {};
         Object.keys(expenseCategories).forEach(category => {
@@ -1246,6 +1252,10 @@ const exportFinancialReportToCSV = async (req, res) => {
           csvContent += `,${category},${amount}\n`;
         });
 
+        // รวมรายจ่าย
+        csvContent += `รวมรายจ่าย,,${reportData.expenses.total_expense || 0}\n`;
+
+        // กำไรสุทธิ
         csvContent += `กำไรสุทธิ,,${reportData.profit_loss.net_profit || 0}\n`;
       } catch (dataError) {
         console.error('Error generating profit-loss data:', dataError);
