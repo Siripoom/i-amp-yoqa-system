@@ -1,4 +1,21 @@
 node_modules
 npm-debug.log
-logs
+*.log
+.git
+.gitignore
+README.md
 .env
+.env.local
+.env.production
+.env.test
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# ไม่ ignore โฟลเดอร์ที่สำคัญ
+!templates/
+!fonts/
+!tmp/

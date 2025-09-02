@@ -9,6 +9,12 @@ services:
       - .env # ดึง environment variables จากไฟล์ .env
     depends_on:
       - mongo
+    volumes:
+      - ./tmp:/app/tmp # Map โฟลเดอร์ tmp เพื่อให้สามารถเขียนไฟล์ได้
+      - ./templates:/app/templates # Map โฟลเดอร์ templates
+      - ./fonts:/app/fonts # Map โฟลเดอร์ fonts
+    environment:
+      - NODE_ENV=production
 
   mongo:
     image: mongo:latest # ดึง MongoDB image จาก Docker Hub
