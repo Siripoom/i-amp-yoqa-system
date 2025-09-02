@@ -15,7 +15,8 @@ README.md
 *.swo
 *~
 
-# ไม่ ignore โฟลเดอร์ที่สำคัญ
+# ไม่ ignore โฟลเดอร์และไฟล์ที่สำคัญ
 !templates/
 !fonts/
 !tmp/
+!.nvmrc
