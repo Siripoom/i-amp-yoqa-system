@@ -22,11 +22,11 @@ function replaceFontsInDocx(docxBuffer) {
       let stylesContent = stylesXml.asText();
       console.log('Original styles.xml found');
 
-      // แทนที่ฟอนต์ทุกแบบเป็น Liberation Sans (ฟอนต์ที่ติดตั้งได้ใน Debian)
-      stylesContent = stylesContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="Liberation Sans"');
-      stylesContent = stylesContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="Liberation Sans"');
-      stylesContent = stylesContent.replace(/w:cs="[^"]*"/g, 'w:cs="Liberation Sans"');
-      stylesContent = stylesContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="Liberation Sans"');
+      // แทนที่ฟอนต์ทุกแบบเป็น TH Sarabun New
+      stylesContent = stylesContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="TH Sarabun New"');
+      stylesContent = stylesContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="TH Sarabun New"');
+      stylesContent = stylesContent.replace(/w:cs="[^"]*"/g, 'w:cs="TH Sarabun New"');
+      stylesContent = stylesContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="TH Sarabun New"');
 
       zip.file('word/styles.xml', stylesContent);
     }
@@ -37,11 +37,11 @@ function replaceFontsInDocx(docxBuffer) {
       let docContent = docXml.asText();
       console.log('Original document.xml found');
 
-      // แทนที่ฟอนต์ทุกแบบเป็น Liberation Sans
-      docContent = docContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="Liberation Sans"');
-      docContent = docContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="Liberation Sans"');
-      docContent = docContent.replace(/w:cs="[^"]*"/g, 'w:cs="Liberation Sans"');
-      docContent = docContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="Liberation Sans"');
+      // แทนที่ฟอนต์ทุกแบบเป็น TH Sarabun New
+      docContent = docContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="TH Sarabun New"');
+      docContent = docContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="TH Sarabun New"');
+      docContent = docContent.replace(/w:cs="[^"]*"/g, 'w:cs="TH Sarabun New"');
+      docContent = docContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="TH Sarabun New"');
 
       zip.file('word/document.xml', docContent);
     }
@@ -52,13 +52,13 @@ function replaceFontsInDocx(docxBuffer) {
       let fontTableContent = fontTableXml.asText();
       console.log('Original fontTable.xml found');
 
-      // แทนที่ชื่อฟอนต์ทั้งหมดเป็น Liberation Sans
-      fontTableContent = fontTableContent.replace(/w:name="[^"]*"/g, 'w:name="Liberation Sans"');
+      // แทนที่ชื่อฟอนต์ทั้งหมดเป็น TH Sarabun New
+      fontTableContent = fontTableContent.replace(/w:name="[^"]*"/g, 'w:name="TH Sarabun New"');
 
       zip.file('word/fontTable.xml', fontTableContent);
     }
 
-    console.log('Font replacement completed - using Liberation Sans');
+    console.log('Font replacement completed');
     return zip.generate({
       type: 'nodebuffer',
       compression: 'DEFLATE'
@@ -239,7 +239,38 @@ exports.downloadReceiptPDF = async (req, res) => {
       return res.status(404).json({ message: "Receipt not found" });
     }
 
+    // ตรวจสอบไฟล์ template
     const templatePath = path.resolve(__dirname, '../templates/receipt-template.docx');
+
+    if (!fs.existsSync(templatePath)) {
+      console.error('Template file not found at:', templatePath);
+      return res.status(500).json({
+        message: "Template file missing. Please check server configuration.",
+        error: "Template file not found"
+      });
+    }
+
+    // ตรวจสอบ LibreOffice ก่อนใช้งาน
+    try {
+      await execAsync('libreoffice --version');
+      console.log('LibreOffice is available');
+    } catch (libreOfficeError) {
+      console.error('LibreOffice not available:', libreOfficeError.message);
+      return res.status(500).json({
+        message: "PDF conversion not available. LibreOffice is not installed on the server.",
+        error: "LibreOffice not available",
+        details: "Please contact administrator to install LibreOffice"
+      });
+    }
+
+    // ตรวจสอบฟอนต์ THSarabunNew
+    try {
+      await execAsync('fc-list | grep -i thsarabun');
+      console.log('THSarabunNew fonts are available');
+    } catch (fontError) {
+      console.warn('THSarabunNew fonts not found, using system fonts:', fontError.message);
+    }
+
     const content = fs.readFileSync(templatePath);
 
     const zip = new PizZip(content);
