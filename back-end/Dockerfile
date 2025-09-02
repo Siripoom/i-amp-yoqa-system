@@ -11,7 +11,8 @@ RUN yarn install
 RUN apt-get update && apt-get install -y \
     libreoffice \
     libreoffice-writer \
-    fonts-thai \
+    fonts-liberation \
+    fonts-dejavu \
     && rm -rf /var/lib/apt/lists/*
 
 # สร้างโฟลเดอร์ tmp สำหรับไฟล์ชั่วคราว
