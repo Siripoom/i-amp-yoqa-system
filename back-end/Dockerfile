@@ -1,20 +1,34 @@
-# ใช้ Node.js version 18 เป็น base image
 FROM node:20
 
-# ตั้งค่า working directory ภายใน container
 WORKDIR /app
 
-# คัดลอก package.json และ package-lock.json เข้าไปใน container
-COPY package*.json ./
+# Install system dependencies first
+RUN apt-get update && apt-get install -y \
+    libreoffice \
+    libreoffice-writer \
+    fonts-liberation \
+    fonts-dejavu \
+    fontconfig \
+    && rm -rf /var/lib/apt/lists/*
 
-# ติดตั้ง dependencies
+# Copy package files
+COPY back-end/package*.json ./
+
+# Install Node.js dependencies
 RUN yarn install
 
-# คัดลอกโค้ดทั้งหมดเข้าไปใน container
-COPY . .
+# สร้างโฟลเดอร์ tmp สำหรับไฟล์ชั่วคราว
+RUN mkdir -p /app/tmp && chmod 777 /app/tmp
 
-# เปิด port 5000 (หรือ port ที่ backend ของคุณใช้)
+# Copy fonts folder and install fonts
+COPY back-end/fonts/ /app/fonts/
+RUN mkdir -p /usr/share/fonts/truetype/thsarabun && \
+    cp /app/fonts/*.ttf /usr/share/fonts/truetype/thsarabun/ && \
+    fc-cache -fv
+
+# Copy the rest of the application
+COPY back-end/ ./
+
 EXPOSE 5000
 
-# รัน server เมื่อ container เริ่มต้น
 CMD ["yarn", "start"]

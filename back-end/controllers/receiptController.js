@@ -239,7 +239,38 @@ exports.downloadReceiptPDF = async (req, res) => {
       return res.status(404).json({ message: "Receipt not found" });
     }
 
+    // ตรวจสอบไฟล์ template
     const templatePath = path.resolve(__dirname, '../templates/receipt-template.docx');
+
+    if (!fs.existsSync(templatePath)) {
+      console.error('Template file not found at:', templatePath);
+      return res.status(500).json({
+        message: "Template file missing. Please check server configuration.",
+        error: "Template file not found"
+      });
+    }
+
+    // ตรวจสอบ LibreOffice ก่อนใช้งาน
+    try {
+      await execAsync('libreoffice --version');
+      console.log('LibreOffice is available');
+    } catch (libreOfficeError) {
+      console.error('LibreOffice not available:', libreOfficeError.message);
+      return res.status(500).json({
+        message: "PDF conversion not available. LibreOffice is not installed on the server.",
+        error: "LibreOffice not available",
+        details: "Please contact administrator to install LibreOffice"
+      });
+    }
+
+    // ตรวจสอบฟอนต์ THSarabunNew
+    try {
+      await execAsync('fc-list | grep -i thsarabun');
+      console.log('THSarabunNew fonts are available');
+    } catch (fontError) {
+      console.warn('THSarabunNew fonts not found, using system fonts:', fontError.message);
+    }
+
     const content = fs.readFileSync(templatePath);
 
     const zip = new PizZip(content);
