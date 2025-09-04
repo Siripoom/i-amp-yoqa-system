@@ -59,7 +59,7 @@ const UserPage = () => {
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
-  
+
   // Define permissions based on role
   const canCreate = userRole === "SuperAdmin" || userRole === "Admin";
   const canEdit = userRole === "SuperAdmin" || userRole === "Admin";
@@ -93,7 +93,7 @@ const UserPage = () => {
       message.warning("You don't have permission to view user history.");
       return;
     }
-    
+
     setLoadingHistory(true);
     setHistoryDrawerVisible(true);
     setSelectedUserHistory(userName);
@@ -144,7 +144,7 @@ const UserPage = () => {
     setExpiryDays(daysLeft);
 
     // Format birth date for input field (YYYY-MM-DD format)
-    const formattedBirthDate = record.birth_date 
+    const formattedBirthDate = record.birth_date
       ? moment(record.birth_date).format("YYYY-MM-DD")
       : null;
 
@@ -168,12 +168,12 @@ const UserPage = () => {
       message.warning("You don't have permission to modify user data.");
       return;
     }
-    
+
     if (editingUser && !canEdit) {
       message.warning("You don't have permission to edit users.");
       return;
     }
-    
+
     if (!editingUser && !canCreate) {
       message.warning("You don't have permission to create users.");
       return;
@@ -197,6 +197,7 @@ const UserPage = () => {
         password: values.password,
         first_name: values.first_name,
         last_name: values.last_name,
+        nickname: values.nickname,
         code: values.code,
         phone: values.phone,
         birth_date: values.birth_date,
@@ -229,7 +230,7 @@ const UserPage = () => {
       message.warning("You don't have permission to delete users.");
       return;
     }
-    
+
     try {
       await deleteUser(editingUser._id);
       message.success("User deleted successfully");
@@ -263,6 +264,7 @@ const UserPage = () => {
     { title: "Code", dataIndex: "code", key: "code" },
     { title: "First Name", dataIndex: "first_name", key: "first_name" },
     { title: "Last Name", dataIndex: "last_name", key: "last_name" },
+    { title: "Nickname", dataIndex: "nickname", key: "nickname" },
     { title: "Email", dataIndex: "email", key: "email" },
     {
       title: "Birth Date",
@@ -370,8 +372,8 @@ const UserPage = () => {
           const classTime =
             classInfo.start_time && classInfo.end_time
               ? `${moment(classInfo.start_time).format("HH:mm")} - ${moment(
-                  classInfo.end_time
-                ).format("HH:mm")}`
+                classInfo.end_time
+              ).format("HH:mm")}`
               : "N/A";
 
           return (
@@ -443,11 +445,11 @@ const UserPage = () => {
 
         <Content className="user-container">
           {userRole === "Accounting" && (
-            <div style={{ 
-              background: "#fff3cd", 
-              border: "1px solid #ffeaa7", 
-              borderRadius: "4px", 
-              padding: "8px 12px", 
+            <div style={{
+              background: "#fff3cd",
+              border: "1px solid #ffeaa7",
+              borderRadius: "4px",
+              padding: "8px 12px",
               marginBottom: "16px",
               color: "#856404"
             }}>
@@ -544,6 +546,9 @@ const UserPage = () => {
               >
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
+              <Form.Item name="nickname" label="Nickname">
+                <Input disabled={userRole === "Accounting"} />
+              </Form.Item>
               <Form.Item name="code" label="code">
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
@@ -616,8 +621,8 @@ const UserPage = () => {
                 extra={
                   editingUser && editingUser.sessions_expiry_date
                     ? `Current expiry date: ${moment(
-                        editingUser.sessions_expiry_date
-                      ).format("YYYY-MM-DD")}`
+                      editingUser.sessions_expiry_date
+                    ).format("YYYY-MM-DD")}`
                     : "Enter number of days until sessions expire"
                 }
               >

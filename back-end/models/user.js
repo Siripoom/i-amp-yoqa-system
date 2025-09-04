@@ -22,6 +22,9 @@ const userSchema = new mongoose.Schema({
   last_name: {
     type: String,
   },
+  nickname: {
+    type: String,
+  },
   code: {
     type: String,
   },
