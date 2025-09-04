@@ -424,9 +424,17 @@ const OrderPage = () => {
     },
 
     {
-      title: "USER",
+      title: "CODE",
       dataIndex: "user_id",
-      key: "user_id",
+      key: "user_code",
+      render: (user) => (user?.code || "N/A"),
+      width: 120,
+      ellipsis: true,
+    },
+    {
+      title: "NAME",
+      dataIndex: "user_id",
+      key: "user_name",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
       width: 150,
       ellipsis: true,
@@ -523,10 +531,19 @@ const OrderPage = () => {
   // ✅ คอลัมน์ของตาราง - Product Orders
   const productOrdersColumns = [
     {
-      title: "USER",
+      title: "CODE",
       dataIndex: "user_id",
-      key: "user_id",
+      key: "user_code",
+      render: (user) => (user?.code || "N/A"),
+      width: 120,
+      ellipsis: true,
+    },
+    {
+      title: "NAME",
+      dataIndex: "user_id",
+      key: "user_name",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+      width: 150,
       ellipsis: true,
     },
     {
@@ -657,10 +674,20 @@ const OrderPage = () => {
       ellipsis: true,
     },
     {
-      title: "USER",
+      title: "CODE",
       dataIndex: "user_id",
-      key: "user_id",
+      key: "user_code",
+      render: (user) => (user?.code || "N/A"),
+      width: 120,
+      ellipsis: true,
+      responsive: ["md"],
+    },
+    {
+      title: "NAME",
+      dataIndex: "user_id",
+      key: "user_name",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+      width: 150,
       ellipsis: true,
       responsive: ["md"],
     },
@@ -1164,12 +1191,22 @@ const OrderPage = () => {
                       { required: true, message: "Please select a user" },
                     ]}
                   >
-                    <Select placeholder="Select a user" showSearch>
-                      {users.map((user) => (
-                        <Option key={user._id} value={user._id}>
-                          {user.first_name} {user.last_name}
-                        </Option>
-                      ))}
+                    <Select
+                      placeholder="Select a user"
+                      showSearch
+                      filterOption={(input, option) =>
+                        (option?.children?.toString().toLowerCase() ?? '').includes(input.toLowerCase())
+                      }
+                    >
+                      {users.map((user) => {
+                        const userName = `${user.first_name} ${user.last_name}`;
+                        const displayText = user.code ? `${user.code} (${userName})` : userName;
+                        return (
+                          <Option key={user._id} value={user._id}>
+                            {displayText}
+                          </Option>
+                        );
+                      })}
                     </Select>
                   </Form.Item>
                 </Col>
