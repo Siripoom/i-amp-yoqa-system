@@ -212,6 +212,18 @@ const OrderPage = () => {
   // ✅ สร้างใบเสร็จสำหรับ Order
   const handleCreateReceipt = async (order) => {
     try {
+      // ตรวจสอบว่าใบเสร็จถูกสร้างไปแล้วหรือไม่
+      try {
+        const existingReceipt = await receiptService.getReceiptByOrderId(order._id);
+        if (existingReceipt.success && existingReceipt.data) {
+          message.warning(`ใบเสร็จถูกสร้างไปแล้ว : ${existingReceipt.data.receiptNumber}`);
+          return;
+        }
+      } catch (checkError) {
+        // ถ้าไม่พบใบเสร็จ ให้ดำเนินการสร้างต่อไป
+        console.log('No existing receipt found, proceeding to create new one');
+      }
+
       // Extract customer name from different possible sources
       let customerName = "ลูกค้า";
       if (order.user_id && order.user_id.name) {
@@ -411,6 +423,7 @@ const OrderPage = () => {
       record.order_type === "product" ? record.product_id : record.goods_id;
     return item ? `฿${item.price.toLocaleString()}` : "N/A";
   };
+
 
   // ✅ คอลัมน์ของตาราง - All Orders
   const allOrdersColumns = [
