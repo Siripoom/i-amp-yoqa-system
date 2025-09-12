@@ -212,6 +212,18 @@ const OrderPage = () => {
   // ✅ สร้างใบเสร็จสำหรับ Order
   const handleCreateReceipt = async (order) => {
     try {
+      // ตรวจสอบว่าใบเสร็จถูกสร้างไปแล้วหรือไม่
+      try {
+        const existingReceipt = await receiptService.getReceiptByOrderId(order._id);
+        if (existingReceipt.success && existingReceipt.data) {
+          message.warning(`ใบเสร็จถูกสร้างไปแล้ว : ${existingReceipt.data.receiptNumber}`);
+          return;
+        }
+      } catch (checkError) {
+        // ถ้าไม่พบใบเสร็จ ให้ดำเนินการสร้างต่อไป
+        console.log('No existing receipt found, proceeding to create new one');
+      }
+
       // Extract customer name from different possible sources
       let customerName = "ลูกค้า";
       if (order.user_id && order.user_id.name) {
@@ -412,6 +424,7 @@ const OrderPage = () => {
     return item ? `฿${item.price.toLocaleString()}` : "N/A";
   };
 
+
   // ✅ คอลัมน์ของตาราง - All Orders
   const allOrdersColumns = [
     {
@@ -424,9 +437,17 @@ const OrderPage = () => {
     },
 
     {
-      title: "USER",
+      title: "CODE",
       dataIndex: "user_id",
-      key: "user_id",
+      key: "user_code",
+      render: (user) => (user?.code || "N/A"),
+      width: 120,
+      ellipsis: true,
+    },
+    {
+      title: "NAME",
+      dataIndex: "user_id",
+      key: "user_name",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
       width: 150,
       ellipsis: true,
@@ -523,10 +544,19 @@ const OrderPage = () => {
   // ✅ คอลัมน์ของตาราง - Product Orders
   const productOrdersColumns = [
     {
-      title: "USER",
+      title: "CODE",
       dataIndex: "user_id",
-      key: "user_id",
+      key: "user_code",
+      render: (user) => (user?.code || "N/A"),
+      width: 120,
+      ellipsis: true,
+    },
+    {
+      title: "NAME",
+      dataIndex: "user_id",
+      key: "user_name",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+      width: 150,
       ellipsis: true,
     },
     {
@@ -657,10 +687,20 @@ const OrderPage = () => {
       ellipsis: true,
     },
     {
-      title: "USER",
+      title: "CODE",
       dataIndex: "user_id",
-      key: "user_id",
+      key: "user_code",
+      render: (user) => (user?.code || "N/A"),
+      width: 120,
+      ellipsis: true,
+      responsive: ["md"],
+    },
+    {
+      title: "NAME",
+      dataIndex: "user_id",
+      key: "user_name",
       render: (user) => (user ? `${user.first_name} ${user.last_name}` : "N/A"),
+      width: 150,
       ellipsis: true,
       responsive: ["md"],
     },
@@ -1164,12 +1204,22 @@ const OrderPage = () => {
                       { required: true, message: "Please select a user" },
                     ]}
                   >
-                    <Select placeholder="Select a user" showSearch>
-                      {users.map((user) => (
-                        <Option key={user._id} value={user._id}>
-                          {user.first_name} {user.last_name}
-                        </Option>
-                      ))}
+                    <Select
+                      placeholder="Select a user"
+                      showSearch
+                      filterOption={(input, option) =>
+                        (option?.children?.toString().toLowerCase() ?? '').includes(input.toLowerCase())
+                      }
+                    >
+                      {users.map((user) => {
+                        const userName = `${user.first_name} ${user.last_name}`;
+                        const displayText = user.code ? `${user.code} (${userName})` : userName;
+                        return (
+                          <Option key={user._id} value={user._id}>
+                            {displayText}
+                          </Option>
+                        );
+                      })}
                     </Select>
                   </Form.Item>
                 </Col>
