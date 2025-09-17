@@ -70,7 +70,10 @@ exports.createReservation = async (req, res) => {
     await user.save();
 
     // Update class participants
-    yogaClass.participants.push(user.first_name);
+    const displayName = user.nickname
+      ? `${user.nickname} ${user.first_name}`
+      : user.first_name;
+    yogaClass.participants.push(displayName);
     yogaClass.amount += 1;
     await yogaClass.save();
 
@@ -125,10 +128,12 @@ exports.cancelReservation = async (req, res) => {
     yogaClass.amount = Math.max(0, (yogaClass.amount || 0) - 1);
 
     // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
-    const fullName = reservation.user_id.first_name;
+    const displayName = reservation.user_id.nickname
+      ? `${reservation.user_id.nickname} ${reservation.user_id.first_name}`
+      : reservation.user_id.first_name;
 
     yogaClass.participants = yogaClass.participants.filter(
-      (participant) => participant !== fullName
+      (participant) => participant !== displayName
     );
 
     await yogaClass.save();
@@ -155,7 +160,7 @@ exports.getAllReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find()
       .populate("class_id", "title start_time end_time instructor")
-      .populate("user_id", "first_name")
+      .populate("user_id", "first_name nickname")
       .sort({ createdAt: -1 }); // Sort by createdAt in descending order
     res.status(200).json({ reservations });
   } catch (error) {
@@ -191,14 +196,16 @@ exports.cancelReservationById = async (req, res) => {
     yogaClass.amount = Math.max(0, currentAmount - 1);
 
     // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
-    const userName = reservation.user_id.first_name;
+    const displayName = reservation.user_id.nickname
+      ? `${reservation.user_id.nickname} ${reservation.user_id.first_name}`
+      : reservation.user_id.first_name;
 
     // ป้องกันกรณี participants ไม่ใช่ array
     if (!Array.isArray(yogaClass.participants)) {
       yogaClass.participants = [];
     } else {
       yogaClass.participants = yogaClass.participants.filter(
-        (participant) => participant !== userName
+        (participant) => participant !== displayName
       );
     }
 

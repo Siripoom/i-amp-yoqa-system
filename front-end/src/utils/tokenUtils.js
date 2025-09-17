@@ -47,9 +47,11 @@ export const getUserFullName = () => {
   const decoded = validateAndGetUserFromToken();
   if (!decoded) return "";
 
-  // ลองดึงชื่อจาก token ก่อน
-  if (decoded.first_name && decoded.last_name) {
-    return `${decoded.first_name} ${decoded.last_name}`.trim();
+  // ลองดึงชื่อจาก token ก่อน - ใช้ nickname + first_name แทน
+  if (decoded.nickname && decoded.first_name) {
+    return `${decoded.nickname} ${decoded.first_name}`.trim();
+  } else if (decoded.first_name) {
+    return decoded.first_name.trim();
   }
 
   if (decoded.user && typeof decoded.user === "string") {

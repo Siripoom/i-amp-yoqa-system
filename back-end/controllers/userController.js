@@ -40,7 +40,12 @@ exports.createUser = async (req, res) => {
 
     // สร้าง JWT Token
     const token = jwt.sign(
-      { userId: user._id, role: req.body.role_name || "default_role" }, // ระบุค่า default role หากไม่มี role_name
+      {
+        userId: user._id,
+        role: req.body.role_name || "default_role",
+        first_name: user.first_name,
+        nickname: user.nickname,
+      }, // ระบุค่า default role หากไม่มี role_name
       process.env.JWT_SECRET,
       {
         expiresIn: "1h",
