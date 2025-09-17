@@ -523,7 +523,7 @@ const UserPage = () => {
           >
             <Form form={form} layout="vertical">
               <Form.Item name="email" label="Email">
-                <Input disabled={userRole === "Accounting"} />
+                <Input disabled={userRole === "Accounting" || editingUser} />
               </Form.Item>
               <Form.Item name="password" label="Password">
                 <Input.Password disabled={userRole === "Accounting"} />

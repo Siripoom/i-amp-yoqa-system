@@ -31,6 +31,8 @@ exports.login = async (req, res) => {
         userId: user._id,
         role: user.role_id,
         user: user.first_name + user.last_name,
+        first_name: user.first_name,
+        nickname: user.nickname,
       },
       process.env.JWT_SECRET,
       {
@@ -91,6 +93,8 @@ exports.loginLine = async (req, res) => {
         userId: user._id,
         role: user.role_id,
         user: user.first_name + user.last_name,
+        first_name: user.first_name,
+        nickname: user.nickname,
       },
       process.env.JWT_SECRET,
       {
