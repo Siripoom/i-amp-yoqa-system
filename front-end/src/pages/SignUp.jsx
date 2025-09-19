@@ -39,6 +39,18 @@ const SignUp = () => {
 
       const response = await register(formattedValues);
 
+      // เก็บ token ที่ได้จาก register response
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user_id", response.user.user_id || response.user._id);
+        localStorage.setItem("role", response.user.role_id || "Member");
+        
+        // เก็บข้อมูลผู้ใช้เพิ่มเติมสำหรับใช้ในหน้า Terms
+        localStorage.setItem("username", `${response.user.first_name} ${response.user.last_name}`);
+        
+        console.log("Token saved after registration:", response.token);
+      }
+
       message.success("Registration successful! Redirecting...");
       setTimeout(() => navigate("/term"), 2000);
     } catch (error) {
