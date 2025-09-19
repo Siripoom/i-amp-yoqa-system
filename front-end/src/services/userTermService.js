@@ -15,18 +15,31 @@ export const getUserTerms = async () => {
 export const createUserTerms = async (userTermsData) => {
   try {
     const token = localStorage.getItem("token");
+    console.log("🚀 userTermService - Token:", token);
+    console.log("📦 userTermService - Data:", userTermsData);
+
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
     const response = await axios.post(
       `${API_URL}/api/user-terms`,
       userTermsData,
       {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       }
     );
+
+    console.log("✅ userTermService - Response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Error creating user terms:", error);
+    console.error(
+      "❌ userTermService - Error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };

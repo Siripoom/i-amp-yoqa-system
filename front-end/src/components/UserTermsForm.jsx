@@ -59,12 +59,22 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
 
     setLoading(true);
     try {
+      // Debug: ตรวจสอบ token ก่อนส่ง request
+      const token = localStorage.getItem("token");
+      console.log("🔑 Token before creating user terms:", token);
+      
+      if (!token) {
+        message.error("ไม่พบ token การยืนยันตัวตน กรุณาล็อกอินใหม่");
+        return;
+      }
+
       const termData = {
         fullName: values.fullName,
         privacyConsents: privacyConsents,
         termsAccepted: termsAccepted,
       };
 
+      console.log("📝 Sending user terms data:", termData);
       await createUserTerms(termData);
       message.success("ยืนยันข้อกำหนดและเงื่อนไขเรียบร้อยแล้ว");
       

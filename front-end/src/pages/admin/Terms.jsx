@@ -186,7 +186,7 @@ const UserPage = () => {
         <Space direction="vertical" size="small">
           {record.privacyConsents && (
             <>
-              <Tag color={record.privacyConsents.registration ? "green" : "red"}>
+              {/* <Tag color={record.privacyConsents.registration ? "green" : "red"}>
                 ลงทะเบียน: {record.privacyConsents.registration ? "✓" : "✗"}
               </Tag>
               <Tag color={record.privacyConsents.monitoring ? "green" : "red"}>
@@ -197,7 +197,7 @@ const UserPage = () => {
               </Tag>
               <Tag color={record.privacyConsents.communication ? "green" : "red"}>
                 ติดต่อสื่อสาร: {record.privacyConsents.communication ? "✓" : "✗"}
-              </Tag>
+              </Tag> */}
               <Tag color={record.privacyConsents.publicity ? "blue" : "default"}>
                 ประชาสัมพันธ์: {record.privacyConsents.publicity ? "✓" : "✗"}
               </Tag>
