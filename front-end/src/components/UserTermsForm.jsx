@@ -61,6 +61,8 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
     try {
       const termData = {
         fullName: values.fullName,
+        privacyConsents: privacyConsents,
+        termsAccepted: termsAccepted,
       };
 
       await createUserTerms(termData);

@@ -21,6 +21,7 @@ import {
   Row,
   Col,
   Popconfirm,
+  Checkbox,
 } from "antd";
 import {
   SearchOutlined,
@@ -103,7 +104,13 @@ const UserPage = () => {
     setEditingUserTerm(record);
     form.setFieldsValue({
       fullName: record.fullName,
-      accepted: record.accepted,
+      termsAccepted: record.termsAccepted,
+      // Set privacy consents
+      registrationConsent: record.privacyConsents?.registration || false,
+      monitoringConsent: record.privacyConsents?.monitoring || false,
+      planningConsent: record.privacyConsents?.planning || false,
+      communicationConsent: record.privacyConsents?.communication || false,
+      publicityConsent: record.privacyConsents?.publicity || false,
     });
     setIsModalVisible(true);
   };
@@ -111,7 +118,19 @@ const UserPage = () => {
   // Handle update
   const handleUpdate = async (values) => {
     try {
-      await updateUserTerms(editingUserTerm._id, values);
+      const updateData = {
+        fullName: values.fullName,
+        termsAccepted: values.termsAccepted,
+        privacyConsents: {
+          registration: values.registrationConsent,
+          monitoring: values.monitoringConsent,
+          planning: values.planningConsent,
+          communication: values.communicationConsent,
+          publicity: values.publicityConsent,
+        },
+      };
+      
+      await updateUserTerms(editingUserTerm._id, updateData);
       message.success("User terms updated successfully");
       setIsModalVisible(false);
       setEditingUserTerm(null);
@@ -160,13 +179,34 @@ const UserPage = () => {
       ),
     },
     {
-      title: "อนุญาตให้ใช้ภาพในการเผยแพร่",
-      dataIndex: "accepted",
-      key: "accepted",
-      render: (accepted) => (
-        <Tag color={accepted ? "green" : "orange"}>
-          {accepted ? "Accepted" : "Pending"}
-        </Tag>
+      title: "ข้อยินยอม",
+      key: "consents",
+      width: 300,
+      render: (_, record) => (
+        <Space direction="vertical" size="small">
+          {record.privacyConsents && (
+            <>
+              <Tag color={record.privacyConsents.registration ? "green" : "red"}>
+                ลงทะเบียน: {record.privacyConsents.registration ? "✓" : "✗"}
+              </Tag>
+              <Tag color={record.privacyConsents.monitoring ? "green" : "red"}>
+                ติดตามผล: {record.privacyConsents.monitoring ? "✓" : "✗"}
+              </Tag>
+              <Tag color={record.privacyConsents.planning ? "green" : "red"}>
+                วางแผนการสอน: {record.privacyConsents.planning ? "✓" : "✗"}
+              </Tag>
+              <Tag color={record.privacyConsents.communication ? "green" : "red"}>
+                ติดต่อสื่อสาร: {record.privacyConsents.communication ? "✓" : "✗"}
+              </Tag>
+              <Tag color={record.privacyConsents.publicity ? "blue" : "default"}>
+                ประชาสัมพันธ์: {record.privacyConsents.publicity ? "✓" : "✗"}
+              </Tag>
+            </>
+          )}
+          {record.termsAccepted && (
+            <Tag color="purple">ยอมรับข้อกำหนด: ✓</Tag>
+          )}
+        </Space>
       ),
     },
     {
@@ -323,16 +363,42 @@ const UserPage = () => {
               </Form.Item>
 
               <Form.Item
-                label="Status"
-                name="accepted"
-                rules={[
-                  { required: true, message: "Please select the status!" },
-                ]}
+                label="ยอมรับข้อกำหนดทั่วไป"
+                name="termsAccepted"
+                valuePropName="checked"
               >
-                <Select placeholder="Select status">
-                  <Option value={true}>Accepted</Option>
-                  <Option value={false}>Pending</Option>
-                </Select>
+                <Checkbox>ยอมรับข้อกำหนดและเงื่อนไขการใช้บริการ</Checkbox>
+              </Form.Item>
+
+              <Divider>ข้อยินยอมความเป็นส่วนตัว</Divider>
+
+              <Form.Item
+                label="ข้อยินยอมที่จำเป็น"
+                style={{ marginBottom: '8px' }}
+              >
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Form.Item name="registrationConsent" valuePropName="checked" style={{ marginBottom: '8px' }}>
+                    <Checkbox>1. การลงทะเบียนและยืนยันตัวบุคคล (จำเป็น)</Checkbox>
+                  </Form.Item>
+                  <Form.Item name="monitoringConsent" valuePropName="checked" style={{ marginBottom: '8px' }}>
+                    <Checkbox>2. การติดตามและประเมินผล (จำเป็น)</Checkbox>
+                  </Form.Item>
+                  <Form.Item name="planningConsent" valuePropName="checked" style={{ marginBottom: '8px' }}>
+                    <Checkbox>3. การวางแผนการจัดการเรียนการสอน (จำเป็น)</Checkbox>
+                  </Form.Item>
+                  <Form.Item name="communicationConsent" valuePropName="checked" style={{ marginBottom: '8px' }}>
+                    <Checkbox>4. การติดต่อสื่อสารและแจ้งข่าวสาร (จำเป็น)</Checkbox>
+                  </Form.Item>
+                </Space>
+              </Form.Item>
+
+              <Form.Item
+                label="ข้อยินยอมเสริม"
+                style={{ marginBottom: '16px' }}
+              >
+                <Form.Item name="publicityConsent" valuePropName="checked" style={{ marginBottom: '0' }}>
+                  <Checkbox>5. การประชาสัมพันธ์และใช้ภาพในการเผยแพร่ (ไม่บังคับ)</Checkbox>
+                </Form.Item>
               </Form.Item>
 
               <Form.Item className="mb-0 flex justify-end">

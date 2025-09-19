@@ -13,14 +13,17 @@ export const getUserTerms = async () => {
 };
 
 export const createUserTerms = async (userTermsData) => {
-  const fullName = userTermsData;
   try {
     const token = localStorage.getItem("token");
-    const response = await axios.post(`${API_URL}/api/user-terms`, fullName, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.post(
+      `${API_URL}/api/user-terms`,
+      userTermsData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error creating user terms:", error);
