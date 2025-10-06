@@ -6,9 +6,9 @@ const fs = require("fs");
 // สำหรับการสร้าง DOCX จาก template
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
-const { formatNumber } = require('../utils/formatters');
-const { exec } = require('child_process');
-const { promisify } = require('util');
+const { formatNumber } = require("../utils/formatters");
+const { exec } = require("child_process");
+const { promisify } = require("util");
 const execAsync = promisify(exec);
 
 // ฟังก์ชันสำหรับแทนที่ฟอนต์ใน DOCX
@@ -17,54 +17,78 @@ function replaceFontsInDocx(docxBuffer) {
     const zip = new PizZip(docxBuffer);
 
     // อ่านและแก้ไขไฟล์ styles.xml
-    const stylesXml = zip.file('word/styles.xml');
+    const stylesXml = zip.file("word/styles.xml");
     if (stylesXml) {
       let stylesContent = stylesXml.asText();
-      console.log('Original styles.xml found');
+      console.log("Original styles.xml found");
 
       // แทนที่ฟอนต์ทุกแบบเป็น TH Sarabun New
-      stylesContent = stylesContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="TH Sarabun New"');
-      stylesContent = stylesContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="TH Sarabun New"');
-      stylesContent = stylesContent.replace(/w:cs="[^"]*"/g, 'w:cs="TH Sarabun New"');
-      stylesContent = stylesContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="TH Sarabun New"');
+      stylesContent = stylesContent.replace(
+        /w:ascii="[^"]*"/g,
+        'w:ascii="TH Sarabun New"'
+      );
+      stylesContent = stylesContent.replace(
+        /w:hAnsi="[^"]*"/g,
+        'w:hAnsi="TH Sarabun New"'
+      );
+      stylesContent = stylesContent.replace(
+        /w:cs="[^"]*"/g,
+        'w:cs="TH Sarabun New"'
+      );
+      stylesContent = stylesContent.replace(
+        /w:eastAsia="[^"]*"/g,
+        'w:eastAsia="TH Sarabun New"'
+      );
 
-      zip.file('word/styles.xml', stylesContent);
+      zip.file("word/styles.xml", stylesContent);
     }
 
     // อ่านและแก้ไขไฟล์ document.xml
-    const docXml = zip.file('word/document.xml');
+    const docXml = zip.file("word/document.xml");
     if (docXml) {
       let docContent = docXml.asText();
-      console.log('Original document.xml found');
+      console.log("Original document.xml found");
 
       // แทนที่ฟอนต์ทุกแบบเป็น TH Sarabun New
-      docContent = docContent.replace(/w:ascii="[^"]*"/g, 'w:ascii="TH Sarabun New"');
-      docContent = docContent.replace(/w:hAnsi="[^"]*"/g, 'w:hAnsi="TH Sarabun New"');
+      docContent = docContent.replace(
+        /w:ascii="[^"]*"/g,
+        'w:ascii="TH Sarabun New"'
+      );
+      docContent = docContent.replace(
+        /w:hAnsi="[^"]*"/g,
+        'w:hAnsi="TH Sarabun New"'
+      );
       docContent = docContent.replace(/w:cs="[^"]*"/g, 'w:cs="TH Sarabun New"');
-      docContent = docContent.replace(/w:eastAsia="[^"]*"/g, 'w:eastAsia="TH Sarabun New"');
+      docContent = docContent.replace(
+        /w:eastAsia="[^"]*"/g,
+        'w:eastAsia="TH Sarabun New"'
+      );
 
-      zip.file('word/document.xml', docContent);
+      zip.file("word/document.xml", docContent);
     }
 
     // อ่านและแก้ไขไฟล์ fontTable.xml (ถ้ามี)
-    const fontTableXml = zip.file('word/fontTable.xml');
+    const fontTableXml = zip.file("word/fontTable.xml");
     if (fontTableXml) {
       let fontTableContent = fontTableXml.asText();
-      console.log('Original fontTable.xml found');
+      console.log("Original fontTable.xml found");
 
       // แทนที่ชื่อฟอนต์ทั้งหมดเป็น TH Sarabun New
-      fontTableContent = fontTableContent.replace(/w:name="[^"]*"/g, 'w:name="TH Sarabun New"');
+      fontTableContent = fontTableContent.replace(
+        /w:name="[^"]*"/g,
+        'w:name="TH Sarabun New"'
+      );
 
-      zip.file('word/fontTable.xml', fontTableContent);
+      zip.file("word/fontTable.xml", fontTableContent);
     }
 
-    console.log('Font replacement completed');
+    console.log("Font replacement completed");
     return zip.generate({
-      type: 'nodebuffer',
-      compression: 'DEFLATE'
+      type: "nodebuffer",
+      compression: "DEFLATE",
     });
   } catch (error) {
-    console.error('Error replacing fonts:', error);
+    console.error("Error replacing fonts:", error);
     return docxBuffer; // ถ้าเกิดข้อผิดพลาด ให้ส่งไฟล์เดิมกลับไป
   }
 }
@@ -82,35 +106,36 @@ async function generateReceiptNumber() {
   endOfDay.setHours(23, 59, 59, 999);
 
   // สร้างรูปแบบวันที่ YYYYMMDD จาก today โดยตรง
-  const dateStr = today.getFullYear() +
-    String(today.getMonth() + 1).padStart(2, '0') +
-    String(today.getDate()).padStart(2, '0');
+  const dateStr =
+    today.getFullYear() +
+    String(today.getMonth() + 1).padStart(2, "0") +
+    String(today.getDate()).padStart(2, "0");
 
   // หาเลขล่าสุดของวันนี้
   const latestReceipt = await Receipt.findOne({
     createdAt: {
       $gte: startOfDay,
-      $lte: endOfDay
-    }
+      $lte: endOfDay,
+    },
   }).sort({ receiptNumber: -1 });
 
   // เริ่มที่ 0001 ทุกวัน
   let nextNumber = 1;
   if (latestReceipt) {
-    const currentNumber = parseInt(latestReceipt.receiptNumber.split('-')[1]);
+    const currentNumber = parseInt(latestReceipt.receiptNumber.split("-")[1]);
     nextNumber = currentNumber + 1;
   }
 
   // สร้างเลขใบเสร็จใหม่
-  const receiptNumber = `R${dateStr}-${String(nextNumber).padStart(4, '0')}`;
+  const receiptNumber = `R${dateStr}-${String(nextNumber).padStart(4, "0")}`;
 
   // ตรวจสอบซ้ำอีกครั้ง
   const existingReceipt = await Receipt.findOne({
     receiptNumber,
     createdAt: {
       $gte: startOfDay,
-      $lte: endOfDay
-    }
+      $lte: endOfDay,
+    },
   });
 
   if (existingReceipt) {
@@ -162,13 +187,16 @@ exports.downloadReceiptDOCX = async (req, res) => {
       return res.status(404).json({ message: "Receipt not found" });
     }
 
-    const templatePath = path.resolve(__dirname, '../templates/receipt-template.docx');
+    const templatePath = path.resolve(
+      __dirname,
+      "../templates/receipt-template.docx"
+    );
     const content = fs.readFileSync(templatePath);
 
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
-      linebreaks: true
+      linebreaks: true,
     });
 
     // เตรียมข้อมูลสำหรับตาราง
@@ -177,24 +205,24 @@ exports.downloadReceiptDOCX = async (req, res) => {
       detail: item.name,
       quantity: `${item.quantity} คอร์ส`,
       unitPrice: formatNumber(item.price),
-      amount: formatNumber(item.quantity * item.price)
+      amount: formatNumber(item.quantity * item.price),
     }));
 
     // เตรียมข้อมูลทั้งหมดสำหรับ template
     const data = {
       // ข้อมูลบริษัท
-      companyName: receipt.companyInfo?.name || 'YOQA Studio',
-      companyAddress: receipt.companyInfo?.address || '',
-      companyPhone: receipt.companyInfo?.phone || '',
+      companyName: receipt.companyInfo?.name || "YOQA Studio",
+      companyAddress: receipt.companyInfo?.address || "",
+      companyPhone: receipt.companyInfo?.phone || "",
 
       // ข้อมูลใบเสร็จ
       receiptNumber: receipt.receiptNumber,
-      date: new Date(receipt.createdAt).toLocaleDateString('th-TH'),
+      date: new Date(receipt.createdAt).toLocaleDateString("th-TH"),
 
       // ข้อมูลลูกค้า
       customerName: receipt.customerName,
-      customerAddress: receipt.customerAddress || '',
-      customerPhone: receipt.customerPhone || '',
+      customerAddress: receipt.customerAddress || "",
+      customerPhone: receipt.customerPhone || "",
 
       // ข้อมูลตาราง
       items: rows,
@@ -204,27 +232,32 @@ exports.downloadReceiptDOCX = async (req, res) => {
       amountInThai: convertToThaiWords(receipt.totalAmount),
 
       // ราคาเต็ม (ถ้ามี)
-      originalPrice: '35,000.00'
+      originalPrice: "35,000.00",
     };
 
     // Render template
     doc.render(data);
 
     const buf = doc.getZip().generate({
-      type: 'nodebuffer',
-      compression: 'DEFLATE'
+      type: "nodebuffer",
+      compression: "DEFLATE",
     });
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    res.setHeader('Content-Disposition', `attachment; filename=receipt-${receipt.receiptNumber}.docx`);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=receipt-${receipt.receiptNumber}.docx`
+    );
 
     return res.send(buf);
-
   } catch (err) {
-    console.error('Error generating DOCX:', err);
+    console.error("Error generating DOCX:", err);
     return res.status(500).json({
       message: "Error generating DOCX file",
-      error: err.message
+      error: err.message,
     });
   }
 };
@@ -240,35 +273,42 @@ exports.downloadReceiptPDF = async (req, res) => {
     }
 
     // ตรวจสอบไฟล์ template
-    const templatePath = path.resolve(__dirname, '../templates/receipt-template.docx');
+    const templatePath = path.resolve(
+      __dirname,
+      "../templates/receipt-template.docx"
+    );
 
     if (!fs.existsSync(templatePath)) {
-      console.error('Template file not found at:', templatePath);
+      console.error("Template file not found at:", templatePath);
       return res.status(500).json({
         message: "Template file missing. Please check server configuration.",
-        error: "Template file not found"
+        error: "Template file not found",
       });
     }
 
     // ตรวจสอบ LibreOffice ก่อนใช้งาน
     try {
-      await execAsync('libreoffice --version');
-      console.log('LibreOffice is available');
+      await execAsync("libreoffice --version");
+      console.log("LibreOffice is available");
     } catch (libreOfficeError) {
-      console.error('LibreOffice not available:', libreOfficeError.message);
+      console.error("LibreOffice not available:", libreOfficeError.message);
       return res.status(500).json({
-        message: "PDF conversion not available. LibreOffice is not installed on the server.",
+        message:
+          "PDF conversion not available. LibreOffice is not installed on the server.",
         error: "LibreOffice not available",
-        details: "Please contact administrator to install LibreOffice"
+        details: "Please contact administrator to install LibreOffice",
       });
     }
 
     // ตรวจสอบฟอนต์ THSarabunNew
     try {
-      await execAsync('fc-list | grep -i thsarabun');
-      console.log('THSarabunNew fonts are available');
+      await execAsync("fc-list | grep -i thsarabun");
+      console.log("THSarabunNew fonts are available");
     } catch (fontError) {
-      console.warn('THSarabunNew fonts not found, using system fonts:', fontError.message);
+      console.warn(
+        "THSarabunNew fonts not found, using system fonts:",
+        fontError.message
+      );
     }
 
     const content = fs.readFileSync(templatePath);
@@ -276,7 +316,7 @@ exports.downloadReceiptPDF = async (req, res) => {
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
-      linebreaks: true
+      linebreaks: true,
     });
 
     // เตรียมข้อมูลสำหรับตาราง (เหมือนกับ DOCX)
@@ -285,24 +325,24 @@ exports.downloadReceiptPDF = async (req, res) => {
       detail: item.name,
       quantity: `${item.quantity} คอร์ส`,
       unitPrice: formatNumber(item.price),
-      amount: formatNumber(item.quantity * item.price)
+      amount: formatNumber(item.quantity * item.price),
     }));
 
     // เตรียมข้อมูลทั้งหมดสำหรับ template
     const data = {
       // ข้อมูลบริษัท
-      companyName: receipt.companyInfo?.name || 'YOQA Studio',
-      companyAddress: receipt.companyInfo?.address || '',
-      companyPhone: receipt.companyInfo?.phone || '',
+      companyName: receipt.companyInfo?.name || "YOQA Studio",
+      companyAddress: receipt.companyInfo?.address || "",
+      companyPhone: receipt.companyInfo?.phone || "",
 
       // ข้อมูลใบเสร็จ
       receiptNumber: receipt.receiptNumber,
-      date: new Date(receipt.createdAt).toLocaleDateString('th-TH'),
+      date: new Date(receipt.createdAt).toLocaleDateString("th-TH"),
 
       // ข้อมูลลูกค้า
       customerName: receipt.customerName,
-      customerAddress: receipt.customerAddress || '',
-      customerPhone: receipt.customerPhone || '',
+      customerAddress: receipt.customerAddress || "",
+      customerPhone: receipt.customerPhone || "",
 
       // ข้อมูลตาราง
       items: rows,
@@ -312,7 +352,7 @@ exports.downloadReceiptPDF = async (req, res) => {
       amountInThai: convertToThaiWords(receipt.totalAmount),
 
       // ราคาเต็ม (ถ้ามี)
-      originalPrice: '35,000.00'
+      originalPrice: "35,000.00",
     };
 
     // Render template
@@ -320,28 +360,36 @@ exports.downloadReceiptPDF = async (req, res) => {
 
     // สร้างไฟล์ DOCX ใน memory
     let docxBuffer = doc.getZip().generate({
-      type: 'nodebuffer',
-      compression: 'DEFLATE'
+      type: "nodebuffer",
+      compression: "DEFLATE",
     });
 
     // แทนที่ฟอนต์เป็น THSarabunNew
     docxBuffer = replaceFontsInDocx(docxBuffer);
 
     // สร้างไฟล์ชั่วคราว
-    const tempDir = path.join(__dirname, '../tmp');
+    const tempDir = path.join(__dirname, "../tmp");
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    const tempDocxPath = path.join(tempDir, `receipt-${receipt.receiptNumber}-${Date.now()}.docx`);
-    const tempPdfPath = path.join(tempDir, `receipt-${receipt.receiptNumber}-${Date.now()}.pdf`);
+    const tempDocxPath = path.join(
+      tempDir,
+      `receipt-${receipt.receiptNumber}-${Date.now()}.docx`
+    );
+    const tempPdfPath = path.join(
+      tempDir,
+      `receipt-${receipt.receiptNumber}-${Date.now()}.pdf`
+    );
 
     // เขียนไฟล์ DOCX ชั่วคราว
     fs.writeFileSync(tempDocxPath, docxBuffer);
 
     try {
       // แปลง DOCX เป็น PDF ด้วย LibreOffice
-      await execAsync(`libreoffice --headless --convert-to pdf --outdir "${tempDir}" "${tempDocxPath}"`);
+      await execAsync(
+        `libreoffice --headless --convert-to pdf --outdir "${tempDir}" "${tempDocxPath}"`
+      );
 
       // อ่านไฟล์ PDF ที่สร้างขึ้น
       const pdfBuffer = fs.readFileSync(tempPdfPath);
@@ -351,33 +399,32 @@ exports.downloadReceiptPDF = async (req, res) => {
       fs.unlinkSync(tempPdfPath);
 
       // ส่ง PDF กลับไป
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=receipt-${receipt.receiptNumber}.pdf`);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=receipt-${receipt.receiptNumber}.pdf`
+      );
       return res.send(pdfBuffer);
-
     } catch (conversionError) {
       // ลบไฟล์ชั่วคราวในกรณีที่เกิดข้อผิดพลาด
       if (fs.existsSync(tempDocxPath)) fs.unlinkSync(tempDocxPath);
       if (fs.existsSync(tempPdfPath)) fs.unlinkSync(tempPdfPath);
 
-      console.error('Error converting DOCX to PDF:', conversionError);
+      console.error("Error converting DOCX to PDF:", conversionError);
       return res.status(500).json({
-        message: "Error converting to PDF. Please make sure LibreOffice is installed.",
-        error: conversionError.message
+        message:
+          "Error converting to PDF. Please make sure LibreOffice is installed.",
+        error: conversionError.message,
       });
     }
-
   } catch (err) {
-    console.error('Error generating PDF from template:', err);
+    console.error("Error generating PDF from template:", err);
     return res.status(500).json({
       message: "Error generating PDF file",
-      error: err.message
+      error: err.message,
     });
   }
 };
-
-
-
 
 // สร้างใบเสร็จแบบ manual (สำหรับกรณีที่ส่งข้อมูลมาเอง)
 exports.createManualReceipt = async (req, res) => {
@@ -459,7 +506,7 @@ exports.getReceiptsByCustomer = async (req, res) => {
 // ดึงใบเสร็จทั้งหมด
 exports.getAllReceipts = async (req, res) => {
   try {
-    console.log('📋 Getting all receipts...');
+    console.log("📋 Getting all receipts...");
 
     const receipts = await Receipt.find({})
       .sort({ createdAt: -1 }) // เรียงจากวันที่ล่าสุด
@@ -469,7 +516,7 @@ exports.getAllReceipts = async (req, res) => {
 
     res.json(receipts);
   } catch (err) {
-    console.error('Error getting all receipts:', err);
+    console.error("Error getting all receipts:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -481,14 +528,14 @@ exports.getReceiptsByDateRange = async (req, res) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
 
-    console.log('📅 Searching receipts from:', startDate, 'to:', endDate);
+    console.log("📅 Searching receipts from:", startDate, "to:", endDate);
 
     // เพิ่ม sort ที่ database query โดยตรง
     const receipts = await Receipt.find({
       createdAt: {
         $gte: startDate,
-        $lte: endDate
-      }
+        $lte: endDate,
+      },
     })
       .sort({ createdAt: -1 }) // เรียงจากวันที่ล่าสุด
       .exec();
@@ -497,53 +544,62 @@ exports.getReceiptsByDateRange = async (req, res) => {
 
     res.json(receipts);
   } catch (err) {
-    console.error('Error getting receipts by date range:', err);
+    console.error("Error getting receipts by date range:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
-
-
 // ฟังก์ชันแปลงตัวเลขเป็นคำอ่านภาษาไทย
 function convertToThaiWords(number) {
-  const units = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
-  const tens = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+  const units = [
+    "",
+    "หนึ่ง",
+    "สอง",
+    "สาม",
+    "สี่",
+    "ห้า",
+    "หก",
+    "เจ็ด",
+    "แปด",
+    "เก้า",
+  ];
+  const tens = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
 
-  if (number === 0) return 'ศูนย์';
+  if (number === 0) return "ศูนย์";
 
-  let result = '';
+  let result = "";
   let num = Math.floor(number);
 
   if (num >= 1000000) {
-    result += convertToThaiWords(Math.floor(num / 1000000)) + 'ล้าน';
+    result += convertToThaiWords(Math.floor(num / 1000000)) + "ล้าน";
     num %= 1000000;
   }
 
   if (num >= 100000) {
-    result += convertToThaiWords(Math.floor(num / 100000)) + 'แสน';
+    result += convertToThaiWords(Math.floor(num / 100000)) + "แสน";
     num %= 100000;
   }
 
   if (num >= 10000) {
-    result += convertToThaiWords(Math.floor(num / 10000)) + 'หมื่น';
+    result += convertToThaiWords(Math.floor(num / 10000)) + "หมื่น";
     num %= 10000;
   }
 
   if (num >= 1000) {
-    result += convertToThaiWords(Math.floor(num / 1000)) + 'พัน';
+    result += convertToThaiWords(Math.floor(num / 1000)) + "พัน";
     num %= 1000;
   }
 
   if (num >= 100) {
-    result += convertToThaiWords(Math.floor(num / 100)) + 'ร้อย';
+    result += convertToThaiWords(Math.floor(num / 100)) + "ร้อย";
     num %= 100;
   }
 
   if (num >= 10) {
     if (num >= 20) {
-      result += units[Math.floor(num / 10)] + 'สิบ';
+      result += units[Math.floor(num / 10)] + "สิบ";
     } else {
-      result += 'สิบ';
+      result += "สิบ";
     }
     num %= 10;
   }
@@ -552,7 +608,7 @@ function convertToThaiWords(number) {
     result += units[num];
   }
 
-  return result + 'บาทถ้วน';
+  return result + "บาทถ้วน";
 }
 
 // พิมพ์ใบเสร็จ (ส่งข้อมูลสำหรับพิมพ์)
@@ -593,32 +649,32 @@ exports.getReceiptsByUserId = async (req, res) => {
     // ดึงใบเสร็จที่เกี่ยวข้องกับ user นี้
     const receipts = await Receipt.find({
       $or: [
-        { 'customerName': { $regex: userId, $options: 'i' } }, // ค้นหาจากชื่อลูกค้า
-        { 'orderId': { $exists: true } } // หรือมี orderId (จะต้องเชื่อมโยงกับ order ที่มี user_id)
-      ]
+        { customerName: { $regex: userId, $options: "i" } }, // ค้นหาจากชื่อลูกค้า
+        { orderId: { $exists: true } }, // หรือมี orderId (จะต้องเชื่อมโยงกับ order ที่มี user_id)
+      ],
     })
       .populate({
-        path: 'orderId',
+        path: "orderId",
         match: { user_id: userId },
-        select: 'user_id order_date status'
+        select: "user_id order_date status",
       })
       .sort({ createdAt: -1 });
 
     // กรองเฉพาะใบเสร็จที่เกี่ยวข้องกับ user นี้จริงๆ
-    const userReceipts = receipts.filter(receipt =>
-      receipt.orderId && receipt.orderId.user_id === userId
+    const userReceipts = receipts.filter(
+      (receipt) => receipt.orderId && receipt.orderId.user_id === userId
     );
 
     res.json({
       success: true,
-      data: userReceipts
+      data: userReceipts,
     });
   } catch (err) {
-    console.error('Error getting receipts by user ID:', err);
+    console.error("Error getting receipts by user ID:", err);
     res.status(500).json({
       success: false,
       message: "เกิดข้อผิดพลาดในการดึงข้อมูลใบเสร็จ",
-      error: err.message
+      error: err.message,
     });
   }
 };
@@ -628,26 +684,28 @@ exports.getReceiptByOrderId = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const receipt = await Receipt.findOne({ orderId })
-      .populate('orderId', 'user_id order_date status product_id quantity');
+    const receipt = await Receipt.findOne({ orderId }).populate(
+      "orderId",
+      "user_id order_date status product_id quantity"
+    );
 
     if (!receipt) {
       return res.status(404).json({
         success: false,
-        message: "ไม่พบใบเสร็จสำหรับคำสั่งซื้อนี้"
+        message: "ไม่พบใบเสร็จสำหรับคำสั่งซื้อนี้",
       });
     }
 
     res.json({
       success: true,
-      data: receipt
+      data: receipt,
     });
   } catch (err) {
-    console.error('Error getting receipt by order ID:', err);
+    console.error("Error getting receipt by order ID:", err);
     res.status(500).json({
       success: false,
       message: "เกิดข้อผิดพลาดในการดึงข้อมูลใบเสร็จ",
-      error: err.message
+      error: err.message,
     });
   }
 };
