@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: i-amp-yoqa-backend
+    env: node
+    region: singapore
+    buildCommand: cd back-end && npm install
+    startCommand: cd back-end && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.0.0
+    # Native environment (supports apt packages via Aptfile)
+    nativeEnvironment:
+      - key: APT_PACKAGES
+        value: libreoffice libreoffice-writer fonts-thai-tlwg

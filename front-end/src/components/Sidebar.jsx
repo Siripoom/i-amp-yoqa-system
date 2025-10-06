@@ -63,13 +63,13 @@ const Sidebar = () => {
         >
           <ReadOutlined /> <span>Courses</span>
         </NavLink>
-        {/* <NavLink
-          to="/admin/sales-report"
+        <NavLink
+          to="/"
           activeClassName="active"
           className="nav-item"
         >
-          <FileTextOutlined /> <span>Sales Report</span>
-        </NavLink> */}
+          <FileTextOutlined /> <span>Home</span>
+        </NavLink>
         <NavLink
           to="/admin/users"
           activeClassName="active"
