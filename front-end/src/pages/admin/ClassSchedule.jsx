@@ -372,8 +372,18 @@ const Schedule = () => {
   const getReservationsDataSource = () => {
     if (!reservations || reservations.length === 0) return [];
 
+    const today = moment().startOf('day'); // วันปัจจุบันเวลา 00:00:00
+
     return reservations
       .filter((r) => r.status === "Reserved") // Only show active reservations
+      .filter((r) => {
+        // Filter only from today onwards
+        if (r.class_id && r.class_id.start_time) {
+          const classDate = moment(r.class_id.start_time);
+          return classDate.isSameOrAfter(today);
+        }
+        return false;
+      })
       .filter((r) => {
         // If there's search text, filter by name
         if (searchText && r.user_id && r.user_id.first_name) {
@@ -393,7 +403,7 @@ const Schedule = () => {
         let endTime = "N/A";
 
         if (classInfo && classInfo.start_time) {
-          date = moment(classInfo.start_time).format("YYYY-MM-DD");
+          date = moment(classInfo.start_time).format("DD/MM/YYYY");
           startTime = moment(classInfo.start_time).format("HH:mm");
         }
 

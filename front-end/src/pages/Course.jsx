@@ -10,6 +10,7 @@ import {
   Typography,
   Image,
   Carousel,
+  Select,
 } from "antd";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,6 +23,8 @@ import {
   StockOutlined,
   LeftOutlined,
   RightOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined,
 } from "@ant-design/icons";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
@@ -39,6 +42,8 @@ const Course = () => {
   const [goods, setGoods] = useState([]);
   const [isGoodsModalVisible, setIsGoodsModalVisible] = useState(false);
   const [selectedGoods, setSelectedGoods] = useState(null);
+  const [productSortOrder, setProductSortOrder] = useState("asc");
+  const [goodsSortOrder, setGoodsSortOrder] = useState("desc");
   const navigate = useNavigate();
 
   const structuredData = {
@@ -58,12 +63,12 @@ const Course = () => {
     fetchGoods();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (sortOrder = "asc") => {
     setLoading(true);
     try {
       const response = await getProductsWithComputedFields({
         sortBy: "price",
-        sortOrder: "asc",
+        sortOrder: sortOrder,
       });
       if (response.status === "success") {
         setProducts(response.data);
@@ -77,13 +82,13 @@ const Course = () => {
     setLoading(false);
   };
 
-  const fetchGoods = async () => {
+  const fetchGoods = async (sortOrder = "desc") => {
     setGoodsLoading(true);
     try {
       const response = await goodsService.getAllGoods({
         limit: 8,
-        sortBy: "createdAt",
-        sortOrder: "desc",
+        sortBy: "price",
+        sortOrder: sortOrder,
       });
       if (response.status === "success") {
         setGoods(response.data || []);
@@ -257,6 +262,18 @@ const Course = () => {
   const handleGoodsModalCancel = () => {
     setIsGoodsModalVisible(false);
     setSelectedGoods(null);
+  };
+
+  // ฟังก์ชันสำหรับเปลี่ยน sort order ของ products
+  const handleProductSortChange = (value) => {
+    setProductSortOrder(value);
+    fetchProducts(value);
+  };
+
+  // ฟังก์ชันสำหรับเปลี่ยน sort order ของ goods
+  const handleGoodsSortChange = (value) => {
+    setGoodsSortOrder(value);
+    fetchGoods(value);
   };
 
   // ฟังก์ชันสร้าง ProductCard
@@ -580,13 +597,43 @@ const Course = () => {
         <Navbar />
         <div className="container mx-auto py-12 px-6">
           {/* Course Promotions Section */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-blue-900 mb-2">
-              Course Promotions
-            </h2>
-            <p className="text-gray-600">
-              เลือกแพ็คเกจที่เหมาะกับคุณ พร้อมโปรโมชั่นพิเศษ
-            </p>
+          <div className="mb-8">
+            <div className="text-center mb-4">
+              <h2 className="text-3xl font-bold text-blue-900 mb-2">
+                Course Promotions
+              </h2>
+              <p className="text-gray-600">
+                เลือกแพ็คเกจที่เหมาะกับคุณ พร้อมโปรโมชั่นพิเศษ
+              </p>
+            </div>
+            <div className="flex justify-end mb-4">
+              <Space>
+                <span className="text-gray-600">เรียงตามราคา:</span>
+                <Select
+                  value={productSortOrder}
+                  onChange={handleProductSortChange}
+                  style={{ width: 180 }}
+                  options={[
+                    {
+                      value: "asc",
+                      label: (
+                        <span>
+                          <SortAscendingOutlined /> ต่ำไปสูง
+                        </span>
+                      ),
+                    },
+                    {
+                      value: "desc",
+                      label: (
+                        <span>
+                          <SortDescendingOutlined /> สูงไปต่ำ
+                        </span>
+                      ),
+                    },
+                  ]}
+                />
+              </Space>
+            </div>
           </div>
 
           {loading ? (
@@ -620,13 +667,43 @@ const Course = () => {
           {/* Goods Section */}
           <Divider className="my-16" />
 
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-purple-900 mb-2">
-              🛍️ Yoga Accessories & Goods
-            </h2>
-            <p className="text-gray-600">
-              อุปกรณ์โยคะและสินค้าคุณภาพดี เสริมการออกกำลังกายของคุณ
-            </p>
+          <div className="mb-8">
+            <div className="text-center mb-4">
+              <h2 className="text-3xl font-bold text-purple-900 mb-2">
+                🛍️ Yoga Accessories & Goods
+              </h2>
+              <p className="text-gray-600">
+                อุปกรณ์โยคะและสินค้าคุณภาพดี เสริมการออกกำลังกายของคุณ
+              </p>
+            </div>
+            <div className="flex justify-end mb-4">
+              <Space>
+                <span className="text-gray-600">เรียงตามราคา:</span>
+                <Select
+                  value={goodsSortOrder}
+                  onChange={handleGoodsSortChange}
+                  style={{ width: 180 }}
+                  options={[
+                    {
+                      value: "asc",
+                      label: (
+                        <span>
+                          <SortAscendingOutlined /> ต่ำไปสูง
+                        </span>
+                      ),
+                    },
+                    {
+                      value: "desc",
+                      label: (
+                        <span>
+                          <SortDescendingOutlined /> สูงไปต่ำ
+                        </span>
+                      ),
+                    },
+                  ]}
+                />
+              </Space>
+            </div>
           </div>
 
           {goodsLoading ? (
