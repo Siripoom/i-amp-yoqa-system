@@ -35,6 +35,27 @@ const Sidebar = () => {
         >
           <DashboardOutlined /> <span>Dashboard</span>
         </NavLink>
+          <NavLink
+            to="/admin/schedule"
+            activeClassName="active"
+            className="nav-item"
+          >
+            <CalendarOutlined /> <span>Schedule</span>
+          </NavLink>
+          <NavLink
+            to="/admin/terms"
+            activeClassName="active"
+            className="nav-item"
+          >
+            <ReadOutlined /> <span>Terms</span>
+          </NavLink>
+          <NavLink
+            to="/admin/users"
+            activeClassName="active"
+            className="nav-item"
+          >
+            <UserOutlined /> <span>Users</span>
+          </NavLink>
         <NavLink
           to="/admin/orders"
           activeClassName="active"
@@ -47,7 +68,7 @@ const Sidebar = () => {
           activeClassName="active"
           className="nav-item"
         >
-          <AppstoreOutlined /> <span>Promotion</span>
+          <AppstoreOutlined /> <span>Courses</span>
         </NavLink>
         <NavLink
           to="/admin/goods"
@@ -61,36 +82,15 @@ const Sidebar = () => {
           activeClassName="active"
           className="nav-item"
         >
-          <ReadOutlined /> <span>Courses</span>
+          <ReadOutlined /> <span>Class</span>
         </NavLink>
-        <NavLink
+        {/* <NavLink
           to="/"
           activeClassName="active"
           className="nav-item"
         >
           <FileTextOutlined /> <span>Home</span>
-        </NavLink>
-        <NavLink
-          to="/admin/users"
-          activeClassName="active"
-          className="nav-item"
-        >
-          <UserOutlined /> <span>Users</span>
-        </NavLink>
-        <NavLink
-          to="/admin/terms"
-          activeClassName="active"
-          className="nav-item"
-        >
-          <ReadOutlined /> <span>Terms</span>
-        </NavLink>
-        <NavLink
-          to="/admin/schedule"
-          activeClassName="active"
-          className="nav-item"
-        >
-          <CalendarOutlined /> <span>Schedule</span>
-        </NavLink>
+        </NavLink> */}
         <NavLink
           to="/admin/finance"
           activeClassName="active"

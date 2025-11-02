@@ -56,6 +56,10 @@ const Schedule = () => {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [members, setMembers] = useState([]);
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
@@ -71,6 +75,7 @@ const Schedule = () => {
   useEffect(() => {
     fetchData();
     fetchReservations();
+    fetchMembers();
   }, []);
 
   const fetchData = async () => {
@@ -119,6 +124,58 @@ const Schedule = () => {
       message.error("Failed to load reservations");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch all members
+  const fetchMembers = async () => {
+    try {
+      const userData = await getUsers();
+      const memberUsers = userData.users.filter(
+        (user) => user.role_id === "Member"
+      );
+      setMembers(memberUsers);
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      message.error("Failed to load members");
+    }
+  };
+
+  // Handle opening reservation modal
+  const handleOpenReservationModal = () => {
+    if (!canManageReservations) {
+      message.warning("You don't have permission to create reservations.");
+      return;
+    }
+    setSelectedClass(null);
+    setSelectedMember(null);
+    setIsReservationModalOpen(true);
+  };
+
+  // Handle creating reservation
+  const handleCreateReservation = async () => {
+    if (!selectedClass || !selectedMember) {
+      message.warning("Please select both a class and a member");
+      return;
+    }
+
+    try {
+      await reservationService.adminCreateReservation(
+        selectedClass,
+        selectedMember
+      );
+      message.success("Reservation created successfully!");
+      setIsReservationModalOpen(false);
+      setSelectedClass(null);
+      setSelectedMember(null);
+      // Refresh data
+      fetchReservations();
+      fetchData();
+    } catch (error) {
+      console.error("Error creating reservation:", error);
+      message.error(
+        error.message || "Failed to create reservation. Please try again."
+      );
     }
   };
 
@@ -606,8 +663,140 @@ const Schedule = () => {
               scroll={{ x: "max-content" }}
             />
           </div>
+
+          {/* Create Reservation Section */}
+          {canManageReservations && (
+            <div style={{ padding: "16px", marginTop: "20px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "16px",
+                }}
+              >
+                <Title level={4}>Create Reservation for Member</Title>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleOpenReservationModal}
+                >
+                  Create Reservation
+                </Button>
+              </div>
+            </div>
+          )}
         </Content>
       </Layout>
+
+      {/* Modal for Creating Reservation */}
+      <Modal
+        title="Create Reservation for Member"
+        open={isReservationModalOpen}
+        onCancel={() => {
+          setIsReservationModalOpen(false);
+          setSelectedClass(null);
+          setSelectedMember(null);
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setIsReservationModalOpen(false);
+              setSelectedClass(null);
+              setSelectedMember(null);
+            }}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleCreateReservation}
+            disabled={!selectedClass || !selectedMember}
+          >
+            Create Reservation
+          </Button>,
+        ]}
+      >
+        <div style={{ marginBottom: "16px" }}>
+          <Text type="secondary">
+            Select a class and a member to create a reservation on their behalf.
+            The member must have remaining sessions available.
+          </Text>
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <Title level={5}>Select Class</Title>
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Select a class"
+            value={selectedClass}
+            onChange={setSelectedClass}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={events
+              .filter((event) => {
+                // Only show future classes
+                return new Date(event.start) > new Date();
+              })
+              .sort((a, b) => new Date(a.start) - new Date(b.start))
+              .map((event) => ({
+                label: `${event.title} - ${moment(event.start).format(
+                  "DD/MM/YYYY HH:mm"
+                )} (${event.instructor})`,
+                value: event.id,
+              }))}
+          />
+        </div>
+
+        <div>
+          <Title level={5}>Select Member</Title>
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Select a member"
+            value={selectedMember}
+            onChange={setSelectedMember}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={members
+              .filter((member) => member.remaining_session > 0)
+              .map((member) => ({
+                label: `${
+                  member.nickname
+                    ? `${member.nickname} ${member.first_name}`
+                    : member.first_name
+                } ${member.last_name} (${member.remaining_session} sessions)`,
+                value: member._id,
+              }))}
+          />
+          {selectedMember && (
+            <div style={{ marginTop: "8px" }}>
+              <Text type="secondary">
+                {(() => {
+                  const member = members.find((m) => m._id === selectedMember);
+                  if (member) {
+                    return `Remaining sessions: ${member.remaining_session}${
+                      member.sessions_expiry_date
+                        ? ` | Expires: ${moment(
+                            member.sessions_expiry_date
+                          ).format("DD/MM/YYYY")}`
+                        : ""
+                    }`;
+                  }
+                  return "";
+                })()}
+              </Text>
+            </div>
+          )}
+        </div>
+      </Modal>
 
       {/* Modal สำหรับเพิ่ม/แก้ไข/ทำซ้ำคลาส */}
       <Modal

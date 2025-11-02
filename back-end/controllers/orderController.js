@@ -436,27 +436,32 @@ exports.getOrdersByUserId = async (req, res) => {
     const requestingUserId = req.user.userId; // จาก JWT token
     const requestingUserRole = req.user.role; // จาก JWT token
 
-    console.log('🔍 Debug getOrdersByUserId:');
-    console.log('  - Requested user_id:', user_id);
-    console.log('  - Requesting user ID:', requestingUserId);
-    console.log('  - Requesting user role:', requestingUserRole);
+    console.log("🔍 Debug getOrdersByUserId:");
+    console.log("  - Requested user_id:", user_id);
+    console.log("  - Requesting user ID:", requestingUserId);
+    console.log("  - Requesting user role:", requestingUserRole);
 
     // ตรวจสอบสิทธิ์: user สามารถดู orders ของตัวเอง หรือ admin สามารถดู orders ของทุกคน
-    if (requestingUserId !== user_id && requestingUserRole !== "admin" && requestingUserRole !== "SuperAdmin" && requestingUserRole !== "Accounting") {
-      console.log('❌ Access denied - user cannot view orders');
+    if (
+      requestingUserId !== user_id &&
+      requestingUserRole !== "admin" &&
+      requestingUserRole !== "SuperAdmin" &&
+      requestingUserRole !== "Accounting"
+    ) {
+      console.log("❌ Access denied - user cannot view orders");
       return res.status(403).json({
-        message: "Access denied. You can only view your own orders."
+        message: "Access denied. You can only view your own orders.",
       });
     }
 
-    console.log('✅ Access granted - searching for orders...');
+    console.log("✅ Access granted - searching for orders...");
     const orders = await Order.find({ user_id })
       .populate("user_id")
       .populate("product_id")
       .populate("goods_id")
       .sort({ createdAt: -1 });
 
-    console.log('📊 Found orders:', orders.length);
+    console.log("📊 Found orders:", orders.length);
 
     // ส่งข้อมูลกลับแม้ว่าจะไม่มี orders ก็ตาม
     res.status(200).json({
@@ -511,16 +516,49 @@ exports.updateOrderStatus = async (req, res) => {
     // Get existing order
     const existingOrder = await Order.findById(id)
       .populate("product_id")
-      .populate("goods_id");
+      .populate("goods_id")
+      .populate("user_id");
     if (!existingOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
 
     const previousStatus = existingOrder.status;
 
+    // ===== คืนค่าเดิมก่อน (ถ้า order เดิมเคยได้รับการอนุมัติแล้ว) =====
+    if (previousStatus === "อนุมัติ") {
+      const user = existingOrder.user_id;
+
+      if (existingOrder.order_type === "product" && existingOrder.product_id) {
+        // สำหรับ product: รีเซ็ต sessions กลับเป็น 0 และลบวันหมดอายุ
+        if (existingOrder.product_id.sessions && existingOrder.total_sessions) {
+          await User.findByIdAndUpdate(user._id, {
+            $set: {
+              remaining_session: 0,
+              sessions_expiry_date: null,
+              first_used_date: null,
+            },
+          });
+          console.log(
+            `Reverted product order - reset sessions to 0 for user ${user._id}`
+          );
+        }
+      } else if (
+        existingOrder.order_type === "goods" &&
+        existingOrder.goods_id
+      ) {
+        // คืนสต็อกที่เคยลดไป
+        await Goods.findByIdAndUpdate(existingOrder.goods_id._id, {
+          $inc: { stock: existingOrder.quantity },
+        });
+        console.log(
+          `Reverted ${existingOrder.quantity} stock to goods ${existingOrder.goods_id._id}`
+        );
+      }
+    }
+
     // Update order with new status and approval date if being approved
     const updateData = { status, invoice_number: invoice };
-    if (previousStatus === "รออนุมัติ" && status === "อนุมัติ") {
+    if (status === "อนุมัติ") {
       updateData.approval_date = new Date();
     }
 
@@ -530,8 +568,8 @@ exports.updateOrderStatus = async (req, res) => {
       .populate("product_id")
       .populate("goods_id");
 
-    // Handle status change from pending to approved
-    if (previousStatus === "รออนุมัติ" && status === "อนุมัติ") {
+    // ===== ใช้ค่าใหม่ (ถ้าสถานะใหม่เป็น "อนุมัติ") =====
+    if (status === "อนุมัติ") {
       const user = order.user_id;
 
       // อัพเดทสถานะรายรับเป็น confirmed เมื่อ order ได้รับการอนุมัติ
@@ -540,8 +578,8 @@ exports.updateOrderStatus = async (req, res) => {
           { order_id: order._id },
           {
             status: "confirmed",
-            income_date: new Date(), // อัพเดทวันที่รายรับ
-            payment_method: "approved", // อัพเดท payment method
+            income_date: new Date(),
+            payment_method: "approved",
           }
         );
         console.log("Income status updated to confirmed for order:", order._id);
@@ -550,22 +588,25 @@ exports.updateOrderStatus = async (req, res) => {
       }
 
       if (order.order_type === "product" && order.product_id) {
-        // สำหรับ product orders - เพิ่ม sessions ให้ user
+        // สำหรับ product orders - รีเซ็ต sessions และวันหมดอายุให้ user
         const product = order.product_id;
         if (product.sessions) {
-          const initialExpiryDate = new Date();
-          initialExpiryDate.setDate(initialExpiryDate.getDate() + 90);
+          // คำนวณวันหมดอายุใหม่จาก total_duration
+          const newExpiryDate = new Date();
+          newExpiryDate.setDate(newExpiryDate.getDate() + order.total_duration);
 
+          // รีเซ็ต remaining_session และ sessions_expiry_date ทั้งหมด
+          // ลบ first_used_date เพื่อให้เริ่มนับใหม่เมื่อใช้งานครั้งแรก
           await User.findByIdAndUpdate(user._id, {
-            $inc: { remaining_session: order.total_sessions },
             $set: {
-              sessions_expiry_date:
-                user.sessions_expiry_date &&
-                  user.sessions_expiry_date > new Date()
-                  ? user.sessions_expiry_date
-                  : initialExpiryDate,
+              remaining_session: order.total_sessions, // รีเซ็ตเป็นจำนวนใหม่
+              sessions_expiry_date: newExpiryDate, // ตั้งวันหมดอายุใหม่
+              first_used_date: null, // รีเซ็ตวันที่ใช้งานครั้งแรก
             },
           });
+          console.log(
+            `Reset ${order.total_sessions} sessions for user ${user._id} with new expiry date: ${newExpiryDate}`
+          );
         }
       } else if (order.order_type === "goods" && order.goods_id) {
         // สำหรับ goods orders - ลดสต็อก
@@ -573,22 +614,11 @@ exports.updateOrderStatus = async (req, res) => {
         await Goods.findByIdAndUpdate(goods._id, {
           $inc: { stock: -order.quantity },
         });
+        console.log(`Reduced ${order.quantity} stock from goods ${goods._id}`);
       }
     }
 
-    // หากยกเลิก order ของ goods ให้คืนสต็อก
-    if (
-      previousStatus === "อนุมัติ" &&
-      status === "ยกเลิก" &&
-      order.order_type === "goods" &&
-      order.goods_id
-    ) {
-      await Goods.findByIdAndUpdate(order.goods_id._id, {
-        $inc: { stock: order.quantity },
-      });
-    }
-
-    // หากยกเลิก order ให้อัพเดทสถานะรายรับ
+    // ===== หากยกเลิก order ให้อัพเดทสถานะรายรับ =====
     if (status === "ยกเลิก") {
       try {
         await Income.findOneAndUpdate(

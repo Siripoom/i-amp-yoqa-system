@@ -64,6 +64,19 @@ const reservationService = {
       throw error.response ? error.response.data : error;
     }
   },
+
+  // 📌 จองคลาสในนาม Member (สำหรับผู้ดูแลระบบ)
+  adminCreateReservation: async (classId, userId) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/admin/reserve`, {
+        class_id: classId,
+        user_id: userId,
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
 };
 
 export default reservationService;
