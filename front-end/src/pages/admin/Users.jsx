@@ -488,7 +488,11 @@ const UserPage = () => {
           <Table
             columns={columns}
             dataSource={users.filter((user) =>
-              user.first_name?.toLowerCase().includes(searchText)
+              user.first_name?.toLowerCase().includes(searchText) ||
+              user.last_name?.toLowerCase().includes(searchText) ||
+              user.nickname?.toLowerCase().includes(searchText) ||
+              user.email?.toLowerCase().includes(searchText) ||
+              user.code?.toLowerCase().includes(searchText)
             )}
             pagination={{ position: ["bottomCenter"], pageSize: 10 }}
             rowKey="_id"

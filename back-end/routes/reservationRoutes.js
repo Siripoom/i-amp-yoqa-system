@@ -6,6 +6,9 @@ const { authenticate } = require("../middlewares/auth");
 // POST: จองคลาส
 router.post("/reserve", reservationController.createReservation);
 
+// POST: จองคลาสในนาม Member (สำหรับ Admin)
+router.post("/admin/reserve", reservationController.adminCreateReservation);
+
 // GET: ดูรายการคลาสที่จองไว้ของ Member
 router.get("/user/:user_id", reservationController.getUserReservations);
 

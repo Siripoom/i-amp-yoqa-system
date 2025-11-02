@@ -168,6 +168,105 @@ exports.getAllReservations = async (req, res) => {
   }
 };
 
+// จองคลาสในนาม Member (สำหรับ Admin)
+exports.adminCreateReservation = async (req, res) => {
+  try {
+    const { class_id, user_id } = req.body;
+
+    // Check if class exists
+    const yogaClass = await Class.findById(class_id);
+    if (!yogaClass) return res.status(404).json({ message: "Class not found" });
+
+    // Get user
+    const user = await User.findById(user_id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Check if user has sessions
+    if (user.remaining_session === 0) {
+      return res.status(400).json({
+        message: "Cannot reserve class, user has no remaining sessions",
+      });
+    }
+
+    // Check expiration date
+    const today = new Date();
+    if (user.sessions_expiry_date && user.sessions_expiry_date < today) {
+      return res.status(400).json({
+        message: "User's sessions have expired. Please purchase a new promotion.",
+      });
+    }
+
+    // Check if user already has a reservation for this class
+    const existingReservation = await Reservation.findOne({
+      class_id,
+      user_id,
+      status: "Reserved",
+    });
+
+    if (existingReservation) {
+      return res.status(400).json({
+        message: "User already has a reservation for this class",
+      });
+    }
+
+    // If this is the first time using sessions
+    if (!user.first_used_date) {
+      // Set first used date
+      user.first_used_date = today;
+
+      // Find the most recent approved order for this user
+      const latestOrder = await Order.findOne({
+        user_id: user_id,
+        status: "อนุมัติ",
+      })
+        .sort({ approval_date: -1 })
+        .populate("product_id");
+
+      // If we have an order with a duration, calculate new expiry based on product duration
+      if (
+        latestOrder &&
+        latestOrder.product_id &&
+        latestOrder.product_id.duration
+      ) {
+        const newExpiryDate = new Date();
+        newExpiryDate.setDate(
+          newExpiryDate.getDate() + latestOrder.total_duration
+        );
+        user.sessions_expiry_date = newExpiryDate;
+      }
+
+      // Update the order's first used date
+      if (latestOrder) {
+        latestOrder.first_used_date = today;
+        await latestOrder.save();
+      }
+    }
+
+    // Decrement user's session count & save user
+    user.remaining_session -= 1;
+    await user.save();
+
+    // Update class participants
+    const displayName = user.nickname
+      ? `${user.nickname} ${user.first_name}`
+      : user.first_name;
+    yogaClass.participants.push(displayName);
+    yogaClass.amount += 1;
+    await yogaClass.save();
+
+    // Create the reservation
+    const newReservation = new Reservation({ class_id, user_id });
+    await newReservation.save();
+
+    res.status(201).json({
+      message: "Reservation created successfully by admin",
+      reservation: newReservation,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // Add this new function to your reservationController.js file
 
 // ยกเลิกการจองโดยใช้ ID โดยตรง (สำหรับการดูแลระบบ)
