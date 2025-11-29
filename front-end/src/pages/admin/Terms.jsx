@@ -29,6 +29,7 @@ import {
   DeleteOutlined,
   CalendarOutlined,
   UserOutlined,
+  FilePdfOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -40,6 +41,7 @@ import {
 } from "../../services/userTermService";
 
 import moment from "moment";
+import html2pdf from "html2pdf.js";
 const { Sider, Content } = Layout;
 const { Option } = Select;
 
@@ -154,19 +156,131 @@ const UserPage = () => {
     }
   };
 
+  // Handle export to PDF with Thai font support
+  const handleExportPDF = (record) => {
+    try {
+      // Create HTML content for PDF
+      const htmlContent = `
+        <div style="font-family: 'Sarabun', 'Arial', sans-serif; padding: 40px; max-width: 800px;">
+          <h1 style="text-align: center; color: #1890ff; margin-bottom: 10px;">
+            ข้อตกลงและความยินยอม / User Terms and Consent Agreement
+          </h1>
+          <hr style="border: 1px solid #1890ff; margin-bottom: 30px;">
+
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+              ข้อมูลผู้ใช้ / User Information
+            </h2>
+            <p><strong>ชื่อ-นามสกุล / Full Name:</strong> ${record.fullName || "N/A"}</p>
+            <p><strong>วันที่ยอมรับ / Accepted Date:</strong> ${record.acceptedAt ? moment(record.acceptedAt).format("DD/MM/YYYY HH:mm") : "ยังไม่ได้ยอมรับ / Not accepted"}</p>
+            <p><strong>วันที่สร้าง / Created Date:</strong> ${record.createdAt ? moment(record.createdAt).format("DD/MM/YYYY HH:mm") : "N/A"}</p>
+          </div>
+
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+              ข้อกำหนดและเงื่อนไข / Terms & Conditions
+            </h2>
+            <p><strong>สถานะ / Status:</strong>
+              <span style="color: ${record.termsAccepted ? '#52c41a' : '#ff4d4f'}; font-weight: bold;">
+                ${record.termsAccepted ? '✓ ยอมรับแล้ว / Accepted' : '✗ ยังไม่ยอมรับ / Not Accepted'}
+              </span>
+            </p>
+          </div>
+
+          <div style="margin-bottom: 30px;">
+            <h2 style="color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+              ข้อยินยอมความเป็นส่วนตัว / Privacy Consents
+            </h2>
+            ${record.privacyConsents ? `
+              <div style="line-height: 2;">
+                <p style="margin: 10px 0;">
+                  <strong>1. การลงทะเบียนและยืนยันตัวบุคคล / Registration and Identity Verification:</strong>
+                  <span style="color: ${record.privacyConsents.registration ? '#52c41a' : '#ff4d4f'};">
+                    ${record.privacyConsents.registration ? '✓ ยอมรับ / Accepted' : '✗ ไม่ยอมรับ / Not Accepted'}
+                  </span>
+                </p>
+                <p style="margin: 10px 0;">
+                  <strong>2. การติดตามและประเมินผล / Monitoring and Evaluation:</strong>
+                  <span style="color: ${record.privacyConsents.monitoring ? '#52c41a' : '#ff4d4f'};">
+                    ${record.privacyConsents.monitoring ? '✓ ยอมรับ / Accepted' : '✗ ไม่ยอมรับ / Not Accepted'}
+                  </span>
+                </p>
+                <p style="margin: 10px 0;">
+                  <strong>3. การวางแผนการจัดการเรียนการสอน / Teaching Planning:</strong>
+                  <span style="color: ${record.privacyConsents.planning ? '#52c41a' : '#ff4d4f'};">
+                    ${record.privacyConsents.planning ? '✓ ยอมรับ / Accepted' : '✗ ไม่ยอมรับ / Not Accepted'}
+                  </span>
+                </p>
+                <p style="margin: 10px 0;">
+                  <strong>4. การติดต่อสื่อสารและแจ้งข่าวสาร / Communication and Notifications:</strong>
+                  <span style="color: ${record.privacyConsents.communication ? '#52c41a' : '#ff4d4f'};">
+                    ${record.privacyConsents.communication ? '✓ ยอมรับ / Accepted' : '✗ ไม่ยอมรับ / Not Accepted'}
+                  </span>
+                </p>
+                <p style="margin: 10px 0;">
+                  <strong>5. การประชาสัมพันธ์และใช้ภาพในการเผยแพร่ / Publicity and Image Usage:</strong>
+                  <span style="color: ${record.privacyConsents.publicity ? '#1890ff' : '#8c8c8c'};">
+                    ${record.privacyConsents.publicity ? '✓ ยอมรับ / Accepted' : '✗ ไม่ยอมรับ / Not Accepted'}
+                  </span>
+                </p>
+              </div>
+            ` : '<p>ไม่มีข้อมูล / No data available</p>'}
+          </div>
+
+          <hr style="border: 1px solid #f0f0f0; margin: 30px 0;">
+          <p style="text-align: center; color: #8c8c8c; font-size: 12px;">
+            เอกสารนี้สร้างเมื่อ / Document generated on: ${moment().format("DD/MM/YYYY HH:mm")}
+          </p>
+        </div>
+      `;
+
+      // Create a temporary element
+      const element = document.createElement("div");
+      element.innerHTML = htmlContent;
+      document.body.appendChild(element);
+
+      // PDF options
+      const opt = {
+        margin: 10,
+        filename: `Terms_${record.fullName?.replace(/\s/g, "_")}_${moment().format("YYYYMMDD")}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      };
+
+      // Generate PDF
+      html2pdf()
+        .set(opt)
+        .from(element)
+        .save()
+        .then(() => {
+          document.body.removeChild(element);
+          message.success("PDF exported successfully!");
+        })
+        .catch((error) => {
+          document.body.removeChild(element);
+          message.error("Failed to export PDF");
+          console.error("Error exporting PDF:", error);
+        });
+    } catch (error) {
+      message.error("Failed to export PDF");
+      console.error("Error exporting PDF:", error);
+    }
+  };
+
   // Table columns
   const columns = [
-    {
-      title: "ID",
-      dataIndex: "_id",
-      key: "_id",
-      width: 200,
-      render: (text) => (
-        <Tooltip title={text}>
-          <span className="font-mono text-xs">{text?.substring(0, 8)}...</span>
-        </Tooltip>
-      ),
-    },
+    // {
+    //   title: "ID",
+    //   dataIndex: "_id",
+    //   key: "_id",
+    //   width: 200,
+    //   render: (text) => (
+    //     <Tooltip title={text}>
+    //       <span className="font-mono text-xs">{text?.substring(0, 8)}...</span>
+    //     </Tooltip>
+    //   ),
+    // },
     {
       title: "Full Name",
       dataIndex: "fullName",
@@ -222,48 +336,48 @@ const UserPage = () => {
         </div>
       ),
     },
-    // {
-    //   title: "Created Date",
-    //   dataIndex: "createdAt",
-    //   key: "createdAt",
-    //   render: (date) => (
-    //     <span>
-    //       {date ? moment(date).format("DD/MM/YYYY HH:mm") : "N/A"}
-    //     </span>
-    //   ),
-    // },
-    // {
-    //   title: "Actions",
-    //   key: "actions",
-    //   width: 150,
-    //   render: (_, record) => (
-    //     <Space size="small">
-    //       <Tooltip title="Edit">
-    //         <Button
-    //           type="primary"
-    //           icon={<EditOutlined />}
-    //           size="small"
-    //           onClick={() => handleEdit(record)}
-    //         />
-    //       </Tooltip>
-    //       <Tooltip title="Delete">
-    //         <Popconfirm
-    //           title="Are you sure you want to delete this user terms?"
-    //           onConfirm={() => handleDelete(record._id)}
-    //           okText="Yes"
-    //           cancelText="No"
-    //         >
-    //           <Button
-    //             type="primary"
-    //             danger
-    //             icon={<DeleteOutlined />}
-    //             size="small"
-    //           />
-    //         </Popconfirm>
-    //       </Tooltip>
-    //     </Space>
-    //   ),
-    // },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 150,
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="Export PDF">
+            <Button
+              type="primary"
+              icon={<FilePdfOutlined />}
+              size="small"
+              onClick={() => handleExportPDF(record)}
+            >
+              Export
+            </Button>
+          </Tooltip>
+          {/* <Tooltip title="Edit">
+            <Button
+              type="default"
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Popconfirm
+              title="Are you sure you want to delete this user terms?"
+              onConfirm={() => handleDelete(record._id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button
+                type="primary"
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+              />
+            </Popconfirm>
+          </Tooltip> */}
+        </Space>
+      ),
+    },
   ];
 
   return (

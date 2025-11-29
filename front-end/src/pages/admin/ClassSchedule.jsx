@@ -13,8 +13,11 @@ import {
   Tag,
   Table,
   Popconfirm,
+  Collapse,
+  Tabs,
+  Card,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, DownloadOutlined, CalendarOutlined } from "@ant-design/icons";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import { useState, useEffect } from "react";
 import moment from "moment";
@@ -41,6 +44,7 @@ import {
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 const localizer = momentLocalizer(moment);
 
@@ -60,6 +64,11 @@ const Schedule = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
   const [members, setMembers] = useState([]);
+
+  // States for historical data
+  const [dateRange, setDateRange] = useState(null);
+  const [historicalSearchText, setHistoricalSearchText] = useState("");
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
@@ -425,7 +434,7 @@ const Schedule = () => {
     }
   };
 
-  // Generate data source for reservations table
+  // Generate data source for upcoming reservations table
   const getReservationsDataSource = () => {
     if (!reservations || reservations.length === 0) return [];
 
@@ -484,6 +493,110 @@ const Schedule = () => {
       });
   };
 
+  // Generate data source for historical attendance
+  const getHistoricalAttendanceDataSource = () => {
+    if (!reservations || reservations.length === 0) return [];
+
+    const today = moment().startOf('day');
+
+    return reservations
+      .filter((r) => {
+        // Filter past classes only
+        if (r.class_id && r.class_id.start_time) {
+          const classDate = moment(r.class_id.start_time);
+          return classDate.isBefore(today);
+        }
+        return false;
+      })
+      .filter((r) => {
+        // Filter by date range if selected
+        if (dateRange && dateRange.length === 2 && r.class_id && r.class_id.start_time) {
+          const classDate = moment(r.class_id.start_time);
+          const startDate = moment(dateRange[0].toDate()).startOf('day');
+          const endDate = moment(dateRange[1].toDate()).endOf('day');
+          return classDate.isSameOrAfter(startDate) && classDate.isSameOrBefore(endDate);
+        }
+        return true;
+      })
+      .filter((r) => {
+        // Filter by search text (member name)
+        if (historicalSearchText && r.user_id && r.user_id.first_name) {
+          return r.user_id.first_name
+            .toLowerCase()
+            .includes(historicalSearchText.toLowerCase());
+        }
+        return true;
+      })
+      .map((reservation, index) => {
+        const classInfo = reservation.class_id;
+        const userData = reservation.user_id || {};
+
+        let date = "N/A";
+        let startTime = "N/A";
+        let endTime = "N/A";
+
+        if (classInfo && classInfo.start_time) {
+          date = moment(classInfo.start_time).format("DD/MM/YYYY");
+          startTime = moment(classInfo.start_time).format("HH:mm");
+        }
+
+        if (classInfo && classInfo.end_time) {
+          endTime = moment(classInfo.end_time).format("HH:mm");
+        }
+
+        return {
+          key: index,
+          id: reservation._id,
+          className: classInfo ? classInfo.title : "N/A",
+          date: date,
+          startTime: startTime,
+          endTime: endTime,
+          instructor: classInfo ? classInfo.instructor : "N/A",
+          userName: userData.first_name || "Unknown",
+          userId: userData._id,
+          reservationId: reservation._id,
+          status: reservation.status,
+        };
+      });
+  };
+
+  // Export historical data to CSV
+  const exportHistoricalData = () => {
+    const data = getHistoricalAttendanceDataSource();
+
+    if (data.length === 0) {
+      message.warning("No data to export");
+      return;
+    }
+
+    // Create CSV content
+    const headers = ["Date", "Class", "Time", "Instructor", "Member", "Status"];
+    const csvContent = [
+      headers.join(","),
+      ...data.map(row => [
+        row.date,
+        `"${row.className}"`,
+        `${row.startTime} - ${row.endTime}`,
+        `"${row.instructor}"`,
+        `"${row.userName}"`,
+        row.status
+      ].join(","))
+    ].join("\n");
+
+    // Create and download file
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `attendance_history_${moment().format("YYYY-MM-DD")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    message.success("Data exported successfully!");
+  };
+
   const reservationsColumns = [
     {
       title: "Class",
@@ -497,7 +610,7 @@ const Schedule = () => {
       key: "date",
       sorter: (a, b) => {
         if (a.date === "N/A" || b.date === "N/A") return 0;
-        return moment(a.date).diff(moment(b.date));
+        return moment(a.date, "DD/MM/YYYY").diff(moment(b.date, "DD/MM/YYYY"));
       },
     },
     {
@@ -528,7 +641,7 @@ const Schedule = () => {
     {
       title: "Action",
       key: "action",
-      render: (_, record) => 
+      render: (_, record) =>
         canManageReservations ? (
           <Popconfirm
             title="Cancel this reservation?"
@@ -550,6 +663,53 @@ const Schedule = () => {
         ) : (
           <Text type="secondary">View Only</Text>
         )
+    },
+  ];
+
+  // Columns for historical attendance table
+  const historicalColumns = [
+    {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      sorter: (a, b) => {
+        if (a.date === "N/A" || b.date === "N/A") return 0;
+        return moment(a.date, "DD/MM/YYYY").diff(moment(b.date, "DD/MM/YYYY"));
+      },
+      defaultSortOrder: "descend",
+    },
+    {
+      title: "Class",
+      dataIndex: "className",
+      key: "className",
+      sorter: (a, b) => a.className.localeCompare(b.className),
+    },
+    {
+      title: "Time",
+      key: "time",
+      render: (_, record) => `${record.startTime} - ${record.endTime}`,
+    },
+    {
+      title: "Instructor",
+      dataIndex: "instructor",
+      key: "instructor",
+      sorter: (a, b) => a.instructor.localeCompare(b.instructor),
+    },
+    {
+      title: "Member",
+      dataIndex: "userName",
+      key: "userName",
+      sorter: (a, b) => a.userName.localeCompare(b.userName),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={status === "Reserved" ? "blue" : status === "Cancelled" ? "red" : "default"}>
+          {status}
+        </Tag>
+      ),
     },
   ];
 
@@ -625,42 +785,135 @@ const Schedule = () => {
             />
           </div>
 
-          {/* Reservations List */}
+          {/* Reservations Management with Tabs */}
           <div style={{ padding: "16px", marginTop: "20px" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "16px",
-              }}
-            >
-              <Title level={4}>Reservation Management</Title>
-              <Input
-                placeholder="Search by member name"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 300 }}
-                allowClear
-                prefix={<SearchOutlined />}
-              />
-              {canManageReservations && (
-                <Button
-                  onClick={fetchReservations}
-                  type="primary"
-                  icon={<ReloadOutlined />}
-                >
-                  Refresh Reservations
-                </Button>
-              )}
-            </div>
-            <Table
-              columns={reservationsColumns}
-              dataSource={getReservationsDataSource()}
-              loading={loading}
-              pagination={{ pageSize: 10 }}
-              size="middle"
-              scroll={{ x: "max-content" }}
+            <Title level={4}>Reservation Management</Title>
+
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: "upcoming",
+                  label: (
+                    <span>
+                      <CalendarOutlined />
+                      Upcoming Reservations
+                    </span>
+                  ),
+                  children: (
+                    <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        <Input
+                          placeholder="Search by member name"
+                          value={searchText}
+                          onChange={(e) => setSearchText(e.target.value)}
+                          style={{ width: 300 }}
+                          allowClear
+                          prefix={<SearchOutlined />}
+                        />
+                        {canManageReservations && (
+                          <Button
+                            onClick={fetchReservations}
+                            type="primary"
+                            icon={<ReloadOutlined />}
+                          >
+                            Refresh
+                          </Button>
+                        )}
+                      </div>
+                      <Table
+                        columns={reservationsColumns}
+                        dataSource={getReservationsDataSource()}
+                        loading={loading}
+                        pagination={{ pageSize: 10 }}
+                        size="middle"
+                        scroll={{ x: "max-content" }}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: "history",
+                  label: (
+                    <span>
+                      <CalendarOutlined />
+                      Historical Attendance
+                    </span>
+                  ),
+                  children: (
+                    <div>
+                      <Card style={{ marginBottom: "16px" }}>
+                        <Space direction="vertical" style={{ width: "100%" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: "12px",
+                            }}
+                          >
+                            <Space wrap>
+                              <RangePicker
+                                value={dateRange}
+                                onChange={setDateRange}
+                                format="DD/MM/YYYY"
+                                placeholder={["Start Date", "End Date"]}
+                                style={{ width: 280 }}
+                              />
+                              <Input
+                                placeholder="Search by member name"
+                                value={historicalSearchText}
+                                onChange={(e) => setHistoricalSearchText(e.target.value)}
+                                style={{ width: 250 }}
+                                allowClear
+                                prefix={<SearchOutlined />}
+                              />
+                              <Button
+                                onClick={() => {
+                                  setDateRange(null);
+                                  setHistoricalSearchText("");
+                                }}
+                              >
+                                Clear Filters
+                              </Button>
+                            </Space>
+                            <Button
+                              type="primary"
+                              icon={<DownloadOutlined />}
+                              onClick={exportHistoricalData}
+                            >
+                              Export to CSV
+                            </Button>
+                          </div>
+                          <Text type="secondary">
+                            Showing {getHistoricalAttendanceDataSource().length} past attendance records
+                          </Text>
+                        </Space>
+                      </Card>
+                      <Table
+                        columns={historicalColumns}
+                        dataSource={getHistoricalAttendanceDataSource()}
+                        loading={loading}
+                        pagination={{
+                          pageSize: 10,
+                          showTotal: (total) => `Total ${total} records`,
+                        }}
+                        size="middle"
+                        scroll={{ x: "max-content" }}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
             />
           </div>
 
