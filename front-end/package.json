@@ -21,6 +21,8 @@
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "framer-motion": "^11.13.1",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.536.0",
     "moment": "^2.30.1",

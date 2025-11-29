@@ -48,6 +48,9 @@ const OrderPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState("all");
+
   // Modal states
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -59,8 +62,8 @@ const OrderPage = () => {
 
   // Define permissions based on role
   const canCreate = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
-  const canEdit = userRole === "SuperAdmin";
-  const canDelete = userRole === "SuperAdmin";
+  const canEdit = userRole === "SuperAdmin" || userRole === "Admin"; // Admin can now approve orders
+  const canDelete = userRole === "SuperAdmin"; // Only SuperAdmin can delete
   const canView = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
 
   // Create order modal states
@@ -868,16 +871,43 @@ const OrderPage = () => {
     },
   ];
 
+  // Filter data by status
+  const filterByStatus = (orders) => {
+    if (statusFilter === "all") return orders;
+
+    return orders.filter((order) => {
+      const normalizedStatus = order.status === "รออนุมติ" ? "รออนุมัติ" : order.status;
+
+      if (statusFilter === "approved") return normalizedStatus === "อนุมัติ";
+      if (statusFilter === "pending") return normalizedStatus === "รออนุมัติ";
+      if (statusFilter === "cancelled") return normalizedStatus === "ยกเลิก";
+
+      return true;
+    });
+  };
+
   // Get current data and columns based on active tab
   const getCurrentData = () => {
+    let data, columns;
+
     switch (activeTab) {
       case "product":
-        return { data: productOrders, columns: productOrdersColumns };
+        data = productOrders;
+        columns = productOrdersColumns;
+        break;
       case "goods":
-        return { data: goodsOrders, columns: goodsOrdersColumns };
+        data = goodsOrders;
+        columns = goodsOrdersColumns;
+        break;
       default:
-        return { data: allOrders, columns: allOrdersColumns };
+        data = allOrders;
+        columns = allOrdersColumns;
     }
+
+    // Apply status filter
+    const filteredData = filterByStatus(data);
+
+    return { data: filteredData, columns };
   };
 
   const { data: currentData, columns: currentColumns } = getCurrentData();
@@ -908,7 +938,7 @@ const OrderPage = () => {
               fontSize: "14px",
               color: "#856404"
             }}>
-              <strong>⚠️ Admin Role:</strong> You can view and create orders but cannot edit or delete existing orders.
+              <strong>⚠️ Admin Role:</strong> You can view and create orders but cannot delete existing orders.
             </div>
           )}
 
@@ -926,20 +956,61 @@ const OrderPage = () => {
             </div>
           )}
 
-          <div className="order-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold m-0">Orders</h2>
-            {canCreate && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={showCreateOrderModal}
-                className="create-order-button w-full sm:w-auto"
+          <div className="order-header flex flex-col gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold m-0">Orders</h2>
+              {canCreate && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={showCreateOrderModal}
+                  className="create-order-button w-full sm:w-auto"
+                  size="large"
+                >
+                  <span className="hidden sm:inline">Create Order</span>
+                  <span className="sm:hidden">New Order</span>
+                </Button>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-gray-700">Filter by Status:</span>
+              <Select
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: 200 }}
                 size="large"
               >
-                <span className="hidden sm:inline">Create Order</span>
-                <span className="sm:hidden">New Order</span>
-              </Button>
-            )}
+                <Option value="all">
+                  <Space>
+                    <Badge status="default" />
+                    ทั้งหมด (All)
+                  </Space>
+                </Option>
+                <Option value="pending">
+                  <Space>
+                    <Badge status="processing" />
+                    รออนุมัติ (Pending)
+                  </Space>
+                </Option>
+                <Option value="approved">
+                  <Space>
+                    <Badge status="success" />
+                    อนุมัติ (Approved)
+                  </Space>
+                </Option>
+                <Option value="cancelled">
+                  <Space>
+                    <Badge status="error" />
+                    ยกเลิก (Cancelled)
+                  </Space>
+                </Option>
+              </Select>
+              <span className="text-sm text-gray-500">
+                ({currentData.length} {currentData.length === 1 ? 'order' : 'orders'})
+              </span>
+            </div>
           </div>
 
           {/* Tabs สำหรับแยกประเภท Order */}

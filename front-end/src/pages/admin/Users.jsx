@@ -27,6 +27,7 @@ import {
   CalendarOutlined,
   HistoryOutlined,
   UserOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -38,6 +39,7 @@ import {
   deleteUser,
 } from "../../services/userService";
 import reservationService from "../../services/reservationService";
+import orderService from "../../services/orderService";
 import moment from "moment";
 import dayjs from "dayjs";
 const { Sider, Content } = Layout;
@@ -56,6 +58,12 @@ const UserPage = () => {
   const [selectedUserHistory, setSelectedUserHistory] = useState(null);
   const [userReservations, setUserReservations] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // ส่วนสำหรับแสดงประวัติการซื้อ
+  const [orderDrawerVisible, setOrderDrawerVisible] = useState(false);
+  const [selectedUserOrders, setSelectedUserOrders] = useState(null);
+  const [userOrders, setUserOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
@@ -111,6 +119,33 @@ const UserPage = () => {
       message.error("Failed to fetch reservation history.");
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  // ฟังก์ชันสำหรับดึงประวัติการซื้อของผู้ใช้
+  const fetchUserOrders = async (userId, userName) => {
+    if (!canViewHistory) {
+      message.warning("You don't have permission to view user orders.");
+      return;
+    }
+
+    setLoadingOrders(true);
+    setOrderDrawerVisible(true);
+    setSelectedUserOrders(userName);
+    setUserOrders([]);
+
+    try {
+      const response = await orderService.getOrdersByUserId(userId);
+      if (response && response.data) {
+        setUserOrders(response.data);
+      } else {
+        message.info("No order history found for this user.");
+      }
+    } catch (error) {
+      console.error("Error fetching order history:", error);
+      message.error("Failed to fetch order history.");
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -325,6 +360,7 @@ const UserPage = () => {
           {canViewHistory && (
             <Button
               type="primary"
+               shape="circle"
               icon={<HistoryOutlined />}
               onClick={() =>
                 fetchUserHistory(
@@ -334,7 +370,23 @@ const UserPage = () => {
               }
               title="View Reservation History"
             >
-              History
+              
+            </Button>
+          )}
+          {canViewHistory && (
+            <Button
+              type="default"
+               shape="circle"
+              icon={<ShoppingOutlined />}
+              onClick={() =>
+                fetchUserOrders(
+                  record._id,
+                  `${record.first_name} ${record.last_name}`
+                )
+              }
+              title="View Order History"
+            >
+            
             </Button>
           )}
         </Space>
@@ -419,6 +471,144 @@ const UserPage = () => {
                         "DD MMM YYYY HH:mm"
                       )}
                     </p>
+                  </div>
+                }
+              />
+            </List.Item>
+          );
+        }}
+        pagination={{
+          pageSize: 5,
+          showSizeChanger: true,
+          pageSizeOptions: ["5", "10", "15", "20"],
+        }}
+      />
+    );
+  };
+
+  // แสดงข้อมูลการซื้อในรูปแบบที่อ่านง่าย
+  const renderOrderList = () => {
+    if (loadingOrders) {
+      return (
+        <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16 }}>Loading order history...</div>
+        </div>
+      );
+    }
+
+    if (!userOrders || userOrders.length === 0) {
+      return <Empty description="No order history found" />;
+    }
+
+    return (
+      <List
+        itemLayout="horizontal"
+        dataSource={userOrders}
+        renderItem={(order) => {
+          const isProduct = order.order_type === "product";
+          const item = isProduct ? order.product_id : order.goods_id;
+
+          // ตรวจสอบว่า item มีข้อมูลหรือไม่
+          const itemName = isProduct
+            ? item?.sessions && item?.duration
+              ? `${item.sessions} Sessions - ${item.duration} Days`
+              : "Product Package"
+            : item?.goods || "Goods Item";
+
+          // กำหนดสีของสถานะ
+          const getStatusColor = (status) => {
+            switch (status) {
+              case "อนุมัติ":
+                return "green";
+              case "รออนุมัติ":
+                return "orange";
+              case "ยกเลิก":
+                return "red";
+              default:
+                return "default";
+            }
+          };
+
+          // Format order date
+          const orderDate = order.createdAt
+            ? moment(order.createdAt).format("DD MMM YYYY HH:mm")
+            : "N/A";
+
+          const approvalDate = order.approval_date
+            ? moment(order.approval_date).format("DD MMM YYYY HH:mm")
+            : "N/A";
+
+          return (
+            <List.Item>
+              <List.Item.Meta
+                avatar={
+                  <Avatar
+                    icon={<ShoppingOutlined />}
+                    style={{
+                      backgroundColor: isProduct ? "#1890ff" : "#722ed1",
+                    }}
+                  />
+                }
+                title={
+                  <Space>
+                    <span>{itemName}</span>
+                    <Tag color={isProduct ? "blue" : "purple"}>
+                      {isProduct ? "Product" : "Goods"}
+                    </Tag>
+                    <Tag color={getStatusColor(order.status)}>
+                      {order.status}
+                    </Tag>
+                  </Space>
+                }
+                description={
+                  <div>
+                    <p>
+                      <strong>Order Date:</strong> {orderDate}
+                    </p>
+                    {order.status === "อนุมัติ" && (
+                      <p>
+                        <strong>Approval Date:</strong> {approvalDate}
+                      </p>
+                    )}
+                    <p>
+                      <strong>Quantity:</strong> {order.quantity || 1}
+                    </p>
+                    {isProduct && (
+                      <>
+                        <p>
+                          <strong>Total Sessions:</strong>{" "}
+                          {order.total_sessions || 0}
+                        </p>
+                        <p>
+                          <strong>Duration:</strong> {order.total_duration || 0}{" "}
+                          days
+                        </p>
+                      </>
+                    )}
+                    {!isProduct && (
+                      <>
+                        {order.size && (
+                          <p>
+                            <strong>Size:</strong> {order.size}
+                          </p>
+                        )}
+                        {order.color && (
+                          <p>
+                            <strong>Color:</strong> {order.color}
+                          </p>
+                        )}
+                      </>
+                    )}
+                    <p>
+                      <strong>Total Price:</strong>{" "}
+                      {(order.total_price || 0).toLocaleString()} ฿
+                    </p>
+                    {order.invoice_number && (
+                      <p>
+                        <strong>Invoice Number:</strong> {order.invoice_number}
+                      </p>
+                    )}
                   </div>
                 }
               />
@@ -527,7 +717,7 @@ const UserPage = () => {
           >
             <Form form={form} layout="vertical">
               <Form.Item name="email" label="Email">
-                <Input disabled={userRole === "Accounting" || editingUser} />
+                <Input disabled={userRole !== "SuperAdmin"} />
               </Form.Item>
               <Form.Item name="password" label="Password">
                 <Input.Password disabled={userRole === "Accounting"} />
@@ -708,6 +898,63 @@ const UserPage = () => {
               <div className="user-history-list">
                 <h3>Reservation Details</h3>
                 {renderReservationList()}
+              </div>
+            </div>
+          </Drawer>
+
+          {/* Drawer สำหรับแสดงประวัติการซื้อ */}
+          <Drawer
+            title={
+              <Space>
+                <ShoppingOutlined />
+                <span>
+                  {selectedUserOrders
+                    ? `${selectedUserOrders}'s Order History`
+                    : "Order History"}
+                </span>
+              </Space>
+            }
+            placement="right"
+            width={700}
+            onClose={() => setOrderDrawerVisible(false)}
+            visible={orderDrawerVisible}
+            extra={
+              <Button
+                type="primary"
+                onClick={() => setOrderDrawerVisible(false)}
+              >
+                Close
+              </Button>
+            }
+          >
+            <div>
+              <div className="user-order-summary">
+                <h3>Order Summary</h3>
+                <div style={{ marginBottom: 16 }}>
+                  <p>
+                    <strong>Total Orders: </strong>
+                    {userOrders.length}
+                  </p>
+                  <p>
+                    <strong>Product Orders: </strong>
+                    {userOrders.filter((item) => item.order_type === "product").length}
+                  </p>
+                  <p>
+                    <strong>Goods Orders: </strong>
+                    {userOrders.filter((item) => item.order_type === "goods").length}
+                  </p>
+                  <p>
+                    <strong>Total Amount: </strong>
+                    {userOrders.reduce((sum, order) => sum + (order.total_price || 0), 0).toLocaleString()} ฿
+                  </p>
+                </div>
+              </div>
+
+              <Divider />
+
+              <div className="user-order-list">
+                <h3>Order Details</h3>
+                {renderOrderList()}
               </div>
             </div>
           </Drawer>
