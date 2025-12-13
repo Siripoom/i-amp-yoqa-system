@@ -993,8 +993,8 @@ const Schedule = () => {
             }
             options={events
               .filter((event) => {
-                // Only show future classes
-                return new Date(event.start) > new Date();
+                // Allow admin to book until class ends
+                return new Date(event.end) > new Date();
               })
               .sort((a, b) => new Date(a.start) - new Date(b.start))
               .map((event) => ({
