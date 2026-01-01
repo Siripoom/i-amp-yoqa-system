@@ -590,31 +590,23 @@ exports.updateOrderStatus = async (req, res) => {
       }
 
       if (order.order_type === "product" && order.product_id) {
-        // สำหรับ product orders - บวกสะสม sessions และปรับวันหมดอายุตามเงื่อนไข
+        // สำหรับ product orders - บวกสะสม sessions และตั้งวันหมดอายุเป็น 90 วันเสมอ
         const product = order.product_id;
         if (product.sessions) {
-          const currentUser = await User.findById(user._id);
-          const hasUsed = currentUser.first_used_date !== null && currentUser.first_used_date !== undefined;
-
-          // คำนวณวันหมดอายุใหม่
+          // ตั้งวันหมดอายุเป็น 90 วันเสมอเมื่ออนุมัติ order
           let newExpiryDate = new Date();
-          if (!hasUsed) {
-            // ถ้ายังไม่เคยใช้ ให้วันหมดอายุเป็น 90 วัน
-            newExpiryDate.setDate(newExpiryDate.getDate() + 90);
-            console.log(`User ${user._id} has not used sessions yet. Setting expiry to 90 days.`);
-          } else {
-            // ถ้าเคยใช้แล้ว ให้วันหมดอายุตาม product ที่ซื้อ
-            newExpiryDate.setDate(newExpiryDate.getDate() + order.total_duration);
-            console.log(`User ${user._id} has used sessions. Setting expiry to ${order.total_duration} days.`);
-          }
+          newExpiryDate.setDate(newExpiryDate.getDate() + 90);
 
-          // บวกสะสม remaining_session และอัพเดท sessions_expiry_date
+          // บวกสะสม remaining_session, อัพเดทวันหมดอายุเป็น 90 วัน และบันทึก duration ของคอร์ส
           await User.findByIdAndUpdate(user._id, {
             $inc: { remaining_session: order.total_sessions }, // บวกสะสมจำนวน sessions
-            $set: { sessions_expiry_date: newExpiryDate }, // อัพเดทวันหมดอายุใหม่
+            $set: {
+              sessions_expiry_date: newExpiryDate, // อัพเดทวันหมดอายุเป็น 90 วันเสมอ
+              product_duration: product.duration, // บันทึก duration ของคอร์สล่าสุด
+            },
           });
           console.log(
-            `Added ${order.total_sessions} sessions for user ${user._id} with new expiry date: ${newExpiryDate}`
+            `Added ${order.total_sessions} sessions for user ${user._id} with 90-day expiry (${newExpiryDate}). Product duration saved: ${product.duration} days.`
           );
         }
       } else if (order.order_type === "goods" && order.goods_id) {

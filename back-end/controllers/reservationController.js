@@ -32,41 +32,38 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    // If this is the first time using sessions
-    if (!user.first_used_date) {
-      // Set first used date
-      user.first_used_date = today;
+    // ตรวจสอบว่าต้องเปลี่ยนวันหมดอายุจาก 90 วัน เป็นตามคอร์สหรือไม่
+    if (user.product_duration && user.product_duration > 0 && user.sessions_expiry_date) {
+      // คำนวณจำนวนวันที่เหลือจนถึงวันหมดอายุ
+      const daysUntilExpiry = Math.ceil(
+        (user.sessions_expiry_date - today) / (1000 * 60 * 60 * 24)
+      );
 
-      // Find the most recent approved order for this user
-      const latestOrder = await Order.findOne({
-        user_id: user_id,
-        status: "อนุมัติ",
-      })
-        .sort({ approval_date: -1 })
-        .populate("product_id");
+      console.log(`🔍 User ${user._id} session check:`);
+      console.log(`   Days until expiry: ${daysUntilExpiry}`);
+      console.log(`   Product duration: ${user.product_duration}`);
 
-      // If we have an order with a duration, calculate new expiry based on product duration
-      if (
-        latestOrder &&
-        latestOrder.product_id &&
-        latestOrder.product_id.duration
-      ) {
+      // ถ้าวันหมดอายุอยู่ในช่วง 85-95 วัน แสดงว่าเป็น 90 วันที่ตั้งเมื่ออนุมัติ
+      // ให้เปลี่ยนเป็นตามคอร์ส
+      if (daysUntilExpiry >= 85 && daysUntilExpiry <= 95) {
         const newExpiryDate = new Date();
-        newExpiryDate.setDate(
-          newExpiryDate.getDate() + latestOrder.total_duration
-        );
+        newExpiryDate.setDate(newExpiryDate.getDate() + user.product_duration);
         user.sessions_expiry_date = newExpiryDate;
+        console.log(
+          `✅ Expiry changed from 90 days to ${user.product_duration} days. New expiry: ${newExpiryDate}`
+        );
       }
+    }
 
-      // Update the order's first used date
-      if (latestOrder) {
-        latestOrder.first_used_date = today;
-        await latestOrder.save();
-      }
+    // If this is the first time using sessions, set first_used_date
+    if (!user.first_used_date) {
+      user.first_used_date = today;
+      console.log(`📅 First used date set for user ${user._id}`);
     }
 
     // Decrement user's session count & save user
     user.remaining_session -= 1;
+    console.log(`📉 Session decremented. Remaining: ${user.remaining_session}`);
     await user.save();
 
     // Update class participants
@@ -209,41 +206,38 @@ exports.adminCreateReservation = async (req, res) => {
       });
     }
 
-    // If this is the first time using sessions
-    if (!user.first_used_date) {
-      // Set first used date
-      user.first_used_date = today;
+    // ตรวจสอบว่าต้องเปลี่ยนวันหมดอายุจาก 90 วัน เป็นตามคอร์สหรือไม่
+    if (user.product_duration && user.product_duration > 0 && user.sessions_expiry_date) {
+      // คำนวณจำนวนวันที่เหลือจนถึงวันหมดอายุ
+      const daysUntilExpiry = Math.ceil(
+        (user.sessions_expiry_date - today) / (1000 * 60 * 60 * 24)
+      );
 
-      // Find the most recent approved order for this user
-      const latestOrder = await Order.findOne({
-        user_id: user_id,
-        status: "อนุมัติ",
-      })
-        .sort({ approval_date: -1 })
-        .populate("product_id");
+      console.log(`🔍 User ${user._id} session check:`);
+      console.log(`   Days until expiry: ${daysUntilExpiry}`);
+      console.log(`   Product duration: ${user.product_duration}`);
 
-      // If we have an order with a duration, calculate new expiry based on product duration
-      if (
-        latestOrder &&
-        latestOrder.product_id &&
-        latestOrder.product_id.duration
-      ) {
+      // ถ้าวันหมดอายุอยู่ในช่วง 85-95 วัน แสดงว่าเป็น 90 วันที่ตั้งเมื่ออนุมัติ
+      // ให้เปลี่ยนเป็นตามคอร์ส
+      if (daysUntilExpiry >= 85 && daysUntilExpiry <= 95) {
         const newExpiryDate = new Date();
-        newExpiryDate.setDate(
-          newExpiryDate.getDate() + latestOrder.total_duration
-        );
+        newExpiryDate.setDate(newExpiryDate.getDate() + user.product_duration);
         user.sessions_expiry_date = newExpiryDate;
+        console.log(
+          `✅ Expiry changed from 90 days to ${user.product_duration} days. New expiry: ${newExpiryDate}`
+        );
       }
+    }
 
-      // Update the order's first used date
-      if (latestOrder) {
-        latestOrder.first_used_date = today;
-        await latestOrder.save();
-      }
+    // If this is the first time using sessions, set first_used_date
+    if (!user.first_used_date) {
+      user.first_used_date = today;
+      console.log(`📅 First used date set for user ${user._id}`);
     }
 
     // Decrement user's session count & save user
     user.remaining_session -= 1;
+    console.log(`📉 Session decremented. Remaining: ${user.remaining_session}`);
     await user.save();
 
     // Update class participants
