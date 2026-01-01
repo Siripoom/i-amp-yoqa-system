@@ -45,6 +45,12 @@ const Dashboard = () => {
   const [courses, setCourses] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
 
+  // State สำหรับข้อมูลปีก่อนหน้า
+  const [lastYearOrders, setLastYearOrders] = useState([]);
+  const [lastYearTotalSales, setLastYearTotalSales] = useState(0);
+  const [lastYearUsers, setLastYearUsers] = useState([]);
+  const [lastYearCourses, setLastYearCourses] = useState([]);
+
   useEffect(() => {
     fetchUsers();
     fetchOrders();
@@ -56,6 +62,17 @@ const Dashboard = () => {
       const response = await getCourses();
       if (response.status === "success") {
         setCourses(response.courses);
+
+        // กรอง courses ที่สร้างในปีปัจจุบัน
+        const currentYear = new Date().getFullYear();
+        const filteredCourses = response.courses.filter((course) => {
+          if (course.created_at) {
+            const courseYear = new Date(course.created_at).getFullYear();
+            return courseYear === currentYear;
+          }
+          return false;
+        });
+        setLastYearCourses(filteredCourses);
       } else {
         message.error("Failed to fetch courses.");
       }
@@ -69,6 +86,17 @@ const Dashboard = () => {
       const response = await getUsers();
       if (response.status === "success") {
         setUsers(response.users); // Extract `users` from the response
+
+        // กรองผู้ใช้ที่สร้างในปีปัจจุบัน
+        const currentYear = new Date().getFullYear();
+        const filteredUsers = response.users.filter((user) => {
+          if (user.created_at) {
+            const userYear = new Date(user.created_at).getFullYear();
+            return userYear === currentYear;
+          }
+          return false;
+        });
+        setLastYearUsers(filteredUsers);
       } else {
         message.error("Failed to fetch users.");
       }
@@ -90,6 +118,23 @@ const Dashboard = () => {
           return sum + (order.product_id?.price || 0);
         }, 0);
         setTotalSales(total);
+
+        // กรองคำสั่งซื้อที่สั่งในปีปัจจุบัน
+        const currentYear = new Date().getFullYear();
+        const filteredOrders = response.data.filter((order) => {
+          if (order.order_date) {
+            const orderYear = new Date(order.order_date).getFullYear();
+            return orderYear === currentYear;
+          }
+          return false;
+        });
+        setLastYearOrders(filteredOrders);
+
+        // คำนวณยอดขายของปีปัจจุบัน
+        const currentYearTotal = filteredOrders.reduce((sum, order) => {
+          return sum + (order.product_id?.price || 0);
+        }, 0);
+        setLastYearTotalSales(currentYearTotal);
       } else {
         message.error("Failed to fetch orders.");
       }
@@ -189,79 +234,108 @@ const Dashboard = () => {
     }
   };
 
-  const revenueDataOptions = {
-    weekly: {
-      labels: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ],
+  // ฟังก์ชันคำนวณข้อมูล Revenue จากข้อมูลจริง
+  const calculateRevenueData = (timeframe) => {
+    if (!orders || orders.length === 0) {
+      return {
+        labels: [],
+        datasets: [
+          { label: "Products", backgroundColor: "#3b82f6", data: [] },
+          { label: "Courses", backgroundColor: "#10b981", data: [] },
+        ],
+      };
+    }
+
+    const now = new Date();
+    let labels = [];
+    let productData = [];
+    let courseData = [];
+
+    if (timeframe === "weekly") {
+      // สัปดาห์ที่แล้ว (7 วัน)
+      labels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      productData = new Array(7).fill(0);
+      courseData = new Array(7).fill(0);
+
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay() + 1); // เริ่มจันทร์
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      orders.forEach((order) => {
+        if (order.order_date) {
+          const orderDate = new Date(order.order_date);
+          const daysDiff = Math.floor((orderDate - startOfWeek) / (1000 * 60 * 60 * 24));
+
+          if (daysDiff >= 0 && daysDiff < 7) {
+            const price = order.product_id?.price || 0;
+            // ใช้ order_type แทนการตรวจสอบ product_id
+            if (order.order_type === "product") {
+              productData[daysDiff] += price;
+            } else if (order.order_type === "goods") {
+              courseData[daysDiff] += price;
+            }
+          }
+        }
+      });
+    } else if (timeframe === "monthly") {
+      // เดือนนี้ แบ่งเป็น 4 สัปดาห์
+      labels = ["Week 1", "Week 2", "Week 3", "Week 4"];
+      productData = new Array(4).fill(0);
+      courseData = new Array(4).fill(0);
+
+      orders.forEach((order) => {
+        if (order.order_date) {
+          const orderDate = new Date(order.order_date);
+          if (orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear()) {
+            const weekIndex = Math.min(Math.floor((orderDate.getDate() - 1) / 7), 3);
+            const price = order.product_id?.price || 0;
+
+            if (order.order_type === "product") {
+              productData[weekIndex] += price;
+            } else if (order.order_type === "goods") {
+              courseData[weekIndex] += price;
+            }
+          }
+        }
+      });
+    } else if (timeframe === "yearly") {
+      // ปีนี้ แบ่งเป็น 12 เดือน
+      labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      productData = new Array(12).fill(0);
+      courseData = new Array(12).fill(0);
+
+      orders.forEach((order) => {
+        if (order.order_date) {
+          const orderDate = new Date(order.order_date);
+          if (orderDate.getFullYear() === now.getFullYear()) {
+            const monthIndex = orderDate.getMonth();
+            const price = order.product_id?.price || 0;
+
+            if (order.order_type === "product") {
+              productData[monthIndex] += price;
+            } else if (order.order_type === "goods") {
+              courseData[monthIndex] += price;
+            }
+          }
+        }
+      });
+    }
+
+    return {
+      labels,
       datasets: [
         {
           label: "Products",
           backgroundColor: "#3b82f6",
-          data: [12000, 15000, 18000, 10000, 14000, 16000, 20000],
+          data: productData,
         },
         {
           label: "Courses",
           backgroundColor: "#10b981",
-          data: [10000, 12000, 14000, 13000, 10000, 15000, 17000],
+          data: courseData,
         },
       ],
-    },
-    monthly: {
-      labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-      datasets: [
-        {
-          label: "Products",
-          backgroundColor: "#3b82f6",
-          data: [45000, 52000, 48000, 50000],
-        },
-        {
-          label: "Courses",
-          backgroundColor: "#10b981",
-          data: [35000, 40000, 38000, 42000],
-        },
-      ],
-    },
-    yearly: {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      datasets: [
-        {
-          label: "Products",
-          backgroundColor: "#3b82f6",
-          data: [
-            100000, 120000, 110000, 95000, 130000, 140000, 125000, 135000,
-            145000, 150000, 160000, 170000,
-          ],
-        },
-        {
-          label: "Courses",
-          backgroundColor: "#10b981",
-          data: [
-            90000, 100000, 95000, 85000, 110000, 120000, 105000, 115000, 125000,
-            130000, 140000, 150000,
-          ],
-        },
-      ],
-    },
+    };
   };
 
   return (
@@ -279,7 +353,7 @@ const Dashboard = () => {
             <div className="sales-summary-header">
               <div>
                 <h3 className="font-semibold text-lg text-gray-800">
-                  Today Sales
+                  This Year Sales ({new Date().getFullYear()})
                 </h3>
                 <p className="text-gray-500">Sales Summary</p>
               </div>
@@ -302,8 +376,7 @@ const Dashboard = () => {
                     className="summary-icon"
                     style={{ color: "#f87171", fontSize: 30 }}
                   />
-                  <h4>{totalSales.toLocaleString()} THB</h4>{" "}
-                  {/* ✅ แสดงผลรวม */}
+                  <h4>{lastYearTotalSales.toLocaleString()} THB</h4>
                   <p>Total Sales</p>
                 </Card>
               </Col>
@@ -314,9 +387,8 @@ const Dashboard = () => {
                     className="summary-icon"
                     style={{ color: "#fbbf24", fontSize: 30 }}
                   />
-                  <h4>{orders.length}</h4>
+                  <h4>{lastYearOrders.length}</h4>
                   <p>Total Order</p>
-                  {/* <span className="summary-change">+5% from yesterday</span> */}
                 </Card>
               </Col>
               <Col xs={24} sm={12} lg={6}>
@@ -325,9 +397,8 @@ const Dashboard = () => {
                     className="summary-icon"
                     style={{ color: "#34d399", fontSize: 30 }}
                   />
-                  <h4>{courses.length}</h4>
+                  <h4>{lastYearCourses.length}</h4>
                   <p>Product Sold</p>
-                  {/* <span className="summary-change">+1.2% from yesterday</span> */}
                 </Card>
               </Col>
               <Col xs={24} sm={12} lg={6}>
@@ -336,9 +407,8 @@ const Dashboard = () => {
                     className="summary-icon"
                     style={{ color: "#a78bfa", fontSize: 30 }}
                   />
-                  <h4>{users.length}</h4>
+                  <h4>{lastYearUsers.length}</h4>
                   <p>New Customers</p>
-                  {/* <span className="summary-change">+0.5% from yesterday</span> */}
                 </Card>
               </Col>
             </Row>
@@ -417,7 +487,7 @@ const Dashboard = () => {
 
                 <Bar
                   className="total-revenue-chart"
-                  data={revenueDataOptions[timeframe]}
+                  data={calculateRevenueData(timeframe)}
                   options={{
                     responsive: true,
                     plugins: {

@@ -297,16 +297,17 @@ const UserPage = () => {
 
   const columns = [
     { title: "Code", dataIndex: "code", key: "code" },
+    { title: "Nickname", dataIndex: "nickname", key: "nickname" },
     { title: "First Name", dataIndex: "first_name", key: "first_name" },
     { title: "Last Name", dataIndex: "last_name", key: "last_name" },
-    { title: "Nickname", dataIndex: "nickname", key: "nickname" },
     { title: "Email", dataIndex: "email", key: "email" },
-    {
-      title: "Birth Date",
-      dataIndex: "birth_date",
-      key: "birth_date",
-      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : null),
-    },
+    // {
+    //   title: "Birth Date",
+    //   dataIndex: "birth_date",
+    //   key: "birth_date",
+    //   render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : null),
+    // },
+    {title: "Phone", dataIndex: "phone", key: "phone" },
     {
       title: "Remaining Session",
       dataIndex: "remaining_session",

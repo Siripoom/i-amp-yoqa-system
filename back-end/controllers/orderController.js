@@ -41,15 +41,17 @@ async function createReceiptFromOrder(order, user, item) {
       customerPhone: user.phone || order.phone_number,
       customerAddress: user.address || order.address,
       companyInfo: {
-        name: "YOQA Studio",
-        address: "123 ถนนสุขุมวิท กรุงเทพฯ 10110",
-        phone: "02-xxx-xxxx",
+        name: "I AMP YOQA",
+        address:
+          "88/139 The Tara Village Soi.8, Phrayasuren 35 Road, Bang Chan, Khet Khlong Sam Wa, Bangkok 10510",
+        phone: "0991636169",
       },
       items: [
         {
-          name: item.sessions && item.duration
-            ? `${item.sessions} Sessions ${item.duration} Days`
-            : item.goods || "สินค้า",
+          name:
+            item.sessions && item.duration
+              ? `${item.sessions} Sessions ${item.duration} Days`
+              : item.goods || "สินค้า",
           quantity: order.quantity || 1,
           price: order.unit_price || order.total_price || 0,
         },
