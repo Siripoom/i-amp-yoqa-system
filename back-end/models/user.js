@@ -64,6 +64,10 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  product_duration: {
+    type: Number,
+    default: null,
+  },
   special_rights: {
     type: String,
   },
