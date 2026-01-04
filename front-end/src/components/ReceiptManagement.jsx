@@ -444,9 +444,9 @@ const ReceiptManagement = () => {
 
             {selectedReceipt.companyInfo && (
               <Card size="small" title="ข้อมูลบริษัท" style={{ marginTop: 16 }}>
-                <p><strong>ชื่อบริษัท:</strong> {selectedReceipt.companyInfo.name}</p>
-                <p><strong>ที่อยู่:</strong> {selectedReceipt.companyInfo.address}</p>
-                <p><strong>เบอร์โทร:</strong> {selectedReceipt.companyInfo.phone}</p>
+                <p><strong>ชื่อบริษัท:</strong> I AMP YOQA</p>
+                <p><strong>ที่อยู่:</strong> 88/139 The Tara Village Soi.8, Phrayasuren 35 Road, Bang Chan, Khet Khlong Sam Wa, Bangkok 10510</p>
+                <p><strong>เบอร์โทร:</strong> 0991636169</p>
               </Card>
             )}
 
