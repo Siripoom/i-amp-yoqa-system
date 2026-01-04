@@ -211,9 +211,10 @@ exports.downloadReceiptDOCX = async (req, res) => {
     // เตรียมข้อมูลทั้งหมดสำหรับ template
     const data = {
       // ข้อมูลบริษัท
-      companyName: receipt.companyInfo?.name || "YOQA Studio",
-      companyAddress: receipt.companyInfo?.address || "",
-      companyPhone: receipt.companyInfo?.phone || "",
+      companyName: "I AMP YOQA",
+      companyAddress:
+        "88/139 The Tara Village Soi.8, Phrayasuren 35 Road, Bang Chan, Khet Khlong Sam Wa, Bangkok 10510",
+      companyPhone: "0991636169",
 
       // ข้อมูลใบเสร็จ
       receiptNumber: receipt.receiptNumber,
