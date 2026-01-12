@@ -6,6 +6,15 @@ const userTermsSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    OtherName: {
+      type: String,
+      required: true,
+    },
+    OtherPhone: {
+      type: String,
+      required: true,
+    },
+
     // เก็บข้อมูลการยินยอมแต่ละข้อแยกกัน
     privacyConsents: {
       registration: {

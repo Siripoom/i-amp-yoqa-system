@@ -43,6 +43,8 @@ exports.createUserTerms = async (req, res) => {
 
     const userTermsData = new UserTerms({
       fullName,
+      otherName: req.body.otherName,
+      otherPhone: req.body.otherPhone,
       privacyConsents: {
         registration: privacyConsents.registration || false,
         monitoring: privacyConsents.monitoring || false,

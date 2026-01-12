@@ -339,6 +339,20 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
           >
             <Input placeholder="กรุณากรอกชื่อ-นามสกุล" size="large" />
           </Form.Item>
+          <Form.Item
+            label="ชื่อ-นามสกุล กรณีติดต่อไม่ได้ เช่น พ่อ แม่ หรืออื่นๆที่เกี่ยวข้อง"
+            name="otherName"
+            rules={[{ required: true, message: "กรุณากรอกชื่อ-นามสกุล" }]}
+          >
+            <Input placeholder="กรุณากรอกชื่อ-นามสกุล" size="large" />
+          </Form.Item>
+          <Form.Item
+            label="เบอร์โทรศัพท์ติดต่อ กรณีฉุกเฉิน"
+            name="otherPhone"
+            rules={[{ required: true, message: "กรุณากรอกเบอร์โทรศัพท์ติดต่อ" }]}
+          >
+            <Input placeholder="กรุณากรอกเบอร์โทรศัพท์ติดต่อ" size="large" />
+          </Form.Item>
 
           <Paragraph style={{ marginBottom: "16px" }}>
             ข้าพเจ้าตกลงให้ความยินยอมแก่ไอแอมป์โยคะ ไอแอมป์โยคะ ในการเก็บรวบรวม
