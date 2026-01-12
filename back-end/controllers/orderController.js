@@ -448,7 +448,7 @@ exports.getOrdersByUserId = async (req, res) => {
     // ตรวจสอบสิทธิ์: user สามารถดู orders ของตัวเอง หรือ admin สามารถดู orders ของทุกคน
     if (
       requestingUserId !== user_id &&
-      requestingUserRole !== "admin" &&
+      requestingUserRole !== "Admin" &&
       requestingUserRole !== "SuperAdmin" &&
       requestingUserRole !== "Accounting"
     ) {

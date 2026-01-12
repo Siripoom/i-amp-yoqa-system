@@ -33,7 +33,12 @@ router.put(
 router.put("/:id/status", orderController.updateOrderStatus);
 
 // ดึงรายการ Order ทั้งหมดของ User ID ที่กำหนด
-router.get("/user/:user_id", authenticate, authorizeUserOrAdmin, orderController.getOrdersByUserId);
+router.get(
+  "/user/:user_id",
+  authenticate,
+  authorizeUserOrAdmin,
+  orderController.getOrdersByUserId
+);
 
 // ลบคำสั่งซื้อ
 router.delete("/:id", orderController.deleteOrder);
