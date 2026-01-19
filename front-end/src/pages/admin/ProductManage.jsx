@@ -30,6 +30,10 @@ import {
   FireOutlined,
   PercentageOutlined,
   TagsOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  UndoOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -40,6 +44,8 @@ import {
   updateProduct,
   deleteProduct,
   toggleHotSale,
+  toggleActive,
+  restoreProduct,
 } from "../../services/productService";
 import dayjs from "dayjs";
 
@@ -59,7 +65,9 @@ const ProductPage = () => {
     onPromotion: undefined,
     sortBy: "price",
     sortOrder: "asc",
+    includeInactive: "true", // Admin should see inactive products
   });
+  const [showDeleted, setShowDeleted] = useState(false);
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
@@ -72,7 +80,7 @@ const ProductPage = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [filterOptions]);
+  }, [filterOptions, showDeleted]);
 
   useEffect(() => {
     filterProducts();
@@ -81,7 +89,11 @@ const ProductPage = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await getProductsWithComputedFields(filterOptions);
+      const params = {
+        ...filterOptions,
+        includeDeleted: showDeleted ? "true" : "false",
+      };
+      const response = await getProductsWithComputedFields(params);
       if (response.status === "success") {
         setProducts(response.data);
       } else {
@@ -244,7 +256,7 @@ const ProductPage = () => {
       message.warning("You don't have permission to modify hot sale status.");
       return;
     }
-    
+
     try {
       await toggleHotSale(productId);
       message.success(
@@ -253,6 +265,38 @@ const ProductPage = () => {
       fetchProducts();
     } catch (error) {
       message.error("Failed to update hot sale status");
+    }
+  };
+
+  const handleToggleActive = async (productId, currentStatus) => {
+    if (!canEdit) {
+      message.warning("You don't have permission to modify active status.");
+      return;
+    }
+
+    try {
+      await toggleActive(productId);
+      message.success(
+        `Product ${!currentStatus ? "activated" : "deactivated"} successfully`
+      );
+      fetchProducts();
+    } catch (error) {
+      message.error("Failed to update active status");
+    }
+  };
+
+  const handleRestore = async (productId) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to restore products.");
+      return;
+    }
+
+    try {
+      await restoreProduct(productId);
+      message.success("Product restored successfully");
+      fetchProducts();
+    } catch (error) {
+      message.error("Failed to restore product");
     }
   };
 
@@ -266,8 +310,10 @@ const ProductPage = () => {
       onPromotion: undefined,
       sortBy: "price",
       sortOrder: "asc",
+      includeInactive: "true",
     });
     setSearchText("");
+    setShowDeleted(false);
   };
 
   const formatPrice = (price) => {
@@ -341,6 +387,23 @@ const ProductPage = () => {
       render: (record) => (
         <Space direction="vertical" size="small">
           <div>
+            {record.isDeleted && (
+              <Tag color="red" icon={<StopOutlined />}>
+                Deleted
+              </Tag>
+            )}
+            {!record.isDeleted && record.isActive === false && (
+              <Tag color="default" icon={<EyeInvisibleOutlined />}>
+                Inactive
+              </Tag>
+            )}
+            {!record.isDeleted && record.isActive !== false && (
+              <Tag color="green" icon={<EyeOutlined />}>
+                Active
+              </Tag>
+            )}
+          </div>
+          <div>
             {record.hotSale && (
               <Tag color="orange" icon={<FireOutlined />}>
                 Hot Sale
@@ -351,9 +414,6 @@ const ProductPage = () => {
                 On Promotion
               </Tag>
             )}
-            {!record.hotSale && !record.isPromotionActive && (
-              <Tag color="default">Regular</Tag>
-            )}
           </div>
         </Space>
       ),
@@ -361,10 +421,11 @@ const ProductPage = () => {
     {
       title: "Actions",
       key: "actions",
-      width: 150,
+      width: 220,
       render: (record) => (
-        <Space size="small">
-          {canEdit && (
+        <Space size="small" wrap>
+          {/* Edit Button - disabled for deleted products */}
+          {canEdit && !record.isDeleted && (
             <Tooltip title="Edit Product">
               <Button
                 type="primary"
@@ -375,7 +436,36 @@ const ProductPage = () => {
             </Tooltip>
           )}
 
-          {canToggleHotSale && (
+          {/* Toggle Active Button - only for non-deleted products */}
+          {canEdit && !record.isDeleted && (
+            <Popconfirm
+              title={`${record.isActive !== false ? "Deactivate" : "Activate"} Product?`}
+              description={`Are you sure you want to ${
+                record.isActive !== false
+                  ? "hide this product from customers"
+                  : "show this product to customers"
+              }?`}
+              onConfirm={() => handleToggleActive(record._id, record.isActive !== false)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Tooltip
+                title={
+                  record.isActive !== false ? "Hide from customers" : "Show to customers"
+                }
+              >
+                <Button
+                  size="small"
+                  icon={record.isActive !== false ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                  type={record.isActive !== false ? "default" : "primary"}
+                  style={record.isActive === false ? { backgroundColor: '#52c41a', borderColor: '#52c41a' } : {}}
+                />
+              </Tooltip>
+            </Popconfirm>
+          )}
+
+          {/* Hot Sale Toggle - only for non-deleted products */}
+          {canToggleHotSale && !record.isDeleted && (
             <Popconfirm
               title={`${record.hotSale ? "Remove from" : "Add to"} Hot Sale?`}
               description={`Are you sure you want to ${
@@ -397,6 +487,26 @@ const ProductPage = () => {
                   icon={<FireOutlined />}
                   type={record.hotSale ? "primary" : "default"}
                   danger={record.hotSale}
+                />
+              </Tooltip>
+            </Popconfirm>
+          )}
+
+          {/* Restore Button - only for deleted products */}
+          {canDelete && record.isDeleted && (
+            <Popconfirm
+              title="Restore Product?"
+              description="Are you sure you want to restore this product?"
+              onConfirm={() => handleRestore(record._id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Tooltip title="Restore Product">
+                <Button
+                  size="small"
+                  icon={<UndoOutlined />}
+                  type="primary"
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
                 />
               </Tooltip>
             </Popconfirm>
@@ -452,6 +562,19 @@ const ProductPage = () => {
                   onChange={handleSearch}
                   allowClear
                 />
+              </Col>
+              <Col xs={24} sm={12} md={4}>
+                <Space>
+                  <Switch
+                    checked={showDeleted}
+                    onChange={(checked) => setShowDeleted(checked)}
+                    checkedChildren="Deleted"
+                    unCheckedChildren="Active"
+                  />
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    {showDeleted ? 'Show Deleted' : 'Hide Deleted'}
+                  </span>
+                </Space>
               </Col>
               <Col xs={24} sm={12} md={2}>
                 <Button onClick={resetFilters} type="default">

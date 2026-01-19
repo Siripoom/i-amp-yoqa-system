@@ -73,6 +73,10 @@ export const getProducts = async (params = {}) => {
       queryParams.append("onPromotion", params.onPromotion);
     if (params.minPrice) queryParams.append("minPrice", params.minPrice);
     if (params.maxPrice) queryParams.append("maxPrice", params.maxPrice);
+    if (params.includeDeleted !== undefined)
+      queryParams.append("includeDeleted", params.includeDeleted);
+    if (params.includeInactive !== undefined)
+      queryParams.append("includeInactive", params.includeInactive);
 
     const queryString = queryParams.toString();
     const url = queryString
@@ -167,6 +171,42 @@ export const toggleHotSale = async (productId) => {
   try {
     const response = await axios.patch(
       `${API_BASE_URL}/api/products/${productId}/toggle-hot-sale`
+    );
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// Toggle active status (show/hide from customer view)
+export const toggleActive = async (productId) => {
+  try {
+    const response = await axios.patch(
+      `${API_BASE_URL}/api/products/${productId}/toggle-active`
+    );
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// Restore soft deleted product
+export const restoreProduct = async (productId) => {
+  try {
+    const response = await axios.patch(
+      `${API_BASE_URL}/api/products/${productId}/restore`
+    );
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// Permanently delete product
+export const permanentDeleteProduct = async (productId) => {
+  try {
+    const response = await axios.delete(
+      `${API_BASE_URL}/api/products/${productId}/permanent`
     );
     return handleResponse(response);
   } catch (error) {

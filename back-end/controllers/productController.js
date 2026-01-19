@@ -285,10 +285,22 @@ exports.getProducts = async (req, res) => {
       onPromotion,
       minPrice,
       maxPrice,
+      includeDeleted,
+      includeInactive,
     } = req.query;
 
     // Build filter object
     let filter = {};
+
+    // By default, exclude deleted products (soft delete)
+    if (includeDeleted !== "true") {
+      filter.isDeleted = { $ne: true };
+    }
+
+    // By default, exclude inactive products for customer view
+    if (includeInactive !== "true") {
+      filter.isActive = { $ne: false };
+    }
 
     if (hotSale !== undefined) {
       filter.hotSale = hotSale === "true";
@@ -423,8 +435,36 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Delete product
+// Soft delete product
 exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Check if already deleted
+    if (product.isDeleted) {
+      return res.status(400).json({ message: "Product is already deleted" });
+    }
+
+    // Soft delete - mark as deleted instead of removing from database
+    product.isDeleted = true;
+    product.isActive = false; // Also deactivate when deleted
+    product.deletedAt = new Date();
+    await product.save();
+
+    res
+      .status(200)
+      .json({ status: "success", message: "Product deleted successfully", data: product });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Permanently delete product (hard delete)
+exports.permanentDeleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
@@ -443,27 +483,49 @@ exports.deleteProduct = async (req, res) => {
 
           if (error) {
             console.error("Error deleting file from Supabase:", error.message);
-            return res
-              .status(500)
-              .json({ message: "Error deleting file from storage" });
+            // Continue with deletion even if image deletion fails
           }
         }
       } catch (error) {
         console.error("Error processing the image URL:", error.message);
-        return res
-          .status(500)
-          .json({ message: "Error processing the image URL" });
       }
     }
 
-    // Delete the product from the database
+    // Permanently delete the product from the database
     await Product.findByIdAndDelete(req.params.id);
 
     res
       .status(200)
-      .json({ status: "success", message: "Product deleted successfully" });
+      .json({ status: "success", message: "Product permanently deleted" });
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error("Error permanently deleting product:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Restore soft deleted product
+exports.restoreProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (!product.isDeleted) {
+      return res.status(400).json({ message: "Product is not deleted" });
+    }
+
+    // Restore the product
+    product.isDeleted = false;
+    product.deletedAt = null;
+    // Note: isActive remains false, admin needs to manually activate if needed
+    await product.save();
+
+    res
+      .status(200)
+      .json({ status: "success", message: "Product restored successfully", data: product });
+  } catch (error) {
+    console.error("Error restoring product:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -492,6 +554,37 @@ exports.toggleHotSale = async (req, res) => {
   }
 };
 
+// Toggle active status (show/hide from customer view)
+exports.toggleActive = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Cannot activate a deleted product
+    if (product.isDeleted && !product.isActive) {
+      return res.status(400).json({
+        message: "Cannot activate a deleted product. Please restore it first."
+      });
+    }
+
+    product.isActive = !product.isActive;
+    await product.save();
+
+    res.status(200).json({
+      status: "success",
+      message: `Product ${
+        product.isActive ? "activated" : "deactivated"
+      } successfully`,
+      data: product,
+    });
+  } catch (error) {
+    console.error("Error toggling active status:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   upload,
   createProduct: exports.createProduct,
@@ -501,5 +594,8 @@ module.exports = {
   getPromotionProducts: exports.getPromotionProducts,
   getProductById: exports.getProductById,
   deleteProduct: exports.deleteProduct,
+  permanentDeleteProduct: exports.permanentDeleteProduct,
+  restoreProduct: exports.restoreProduct,
   toggleHotSale: exports.toggleHotSale,
+  toggleActive: exports.toggleActive,
 };
