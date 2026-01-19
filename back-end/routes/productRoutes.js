@@ -6,10 +6,12 @@ const {
   getProductById,
   updateProduct,
   deleteProduct,
-  uploadImage,
+  permanentDeleteProduct,
+  restoreProduct,
   getHotSaleProducts,
   getPromotionProducts,
   toggleHotSale,
+  toggleActive,
 } = require("../controllers/productController");
 const multer = require("multer");
 
@@ -34,4 +36,8 @@ router.delete("/:id", deleteProduct);
 router.get("/hot-sale", getHotSaleProducts);
 router.get("/promotion", getPromotionProducts);
 router.patch("/:id/toggle-hot-sale", toggleHotSale);
+router.patch("/:id/toggle-active", toggleActive);
+router.patch("/:id/restore", restoreProduct);
+router.delete("/:id/permanent", permanentDeleteProduct);
+
 module.exports = router;

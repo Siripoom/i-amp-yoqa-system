@@ -36,6 +36,18 @@ const productSchema = new mongoose.Schema(
       type: String, // เก็บชื่อไฟล์ที่ใช้ใน GridFS
       required: false,
     },
+    isActive: {
+      type: Boolean, // ใช้สำหรับระบุว่าสินค้านี้แสดงให้ลูกค้าเห็นหรือไม่
+      default: true,
+    },
+    isDeleted: {
+      type: Boolean, // ใช้สำหรับ soft delete
+      default: false,
+    },
+    deletedAt: {
+      type: Date, // วันที่ลบ
+      default: null,
+    },
   },
   { timestamps: true }
 );
