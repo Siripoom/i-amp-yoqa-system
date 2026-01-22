@@ -241,6 +241,16 @@ exports.getAllGoods = async (req, res) => {
     // Build filter object
     const filter = {};
 
+    // By default, exclude deleted goods (soft delete)
+    if (req.query.includeDeleted !== "true") {
+      filter.isDeleted = { $ne: true };
+    }
+
+    // By default, exclude inactive goods for customer view
+    if (req.query.includeInactive !== "true") {
+      filter.isActive = { $ne: false };
+    }
+
     if (req.query.goods) {
       filter.goods = { $regex: req.query.goods, $options: "i" };
     }
@@ -429,8 +439,35 @@ exports.updateGoods = async (req, res) => {
   }
 };
 
-// Delete goods
+// Soft delete goods
 exports.deleteGoods = async (req, res) => {
+  try {
+    const goods = await Goods.findById(req.params.id);
+
+    if (!goods) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Check if already deleted
+    if (goods.isDeleted) {
+      return res.status(400).json({ message: "Product is already deleted" });
+    }
+
+    // Soft delete - mark as deleted instead of removing from database
+    goods.isDeleted = true;
+    goods.isActive = false; // Also deactivate when deleted
+    goods.deletedAt = new Date();
+    await goods.save();
+
+    res.json({ status: "success", message: "Product deleted successfully", data: goods });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Permanently delete goods (hard delete)
+exports.permanentDeleteGoods = async (req, res) => {
   try {
     const goods = await Goods.findById(req.params.id);
 
@@ -445,9 +482,65 @@ exports.deleteGoods = async (req, res) => {
 
     await Goods.findByIdAndDelete(req.params.id);
 
-    res.json({ status: "success", message: "Product deleted successfully" });
+    res.json({ status: "success", message: "Product permanently deleted" });
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error("Error permanently deleting product:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Restore soft deleted goods
+exports.restoreGoods = async (req, res) => {
+  try {
+    const goods = await Goods.findById(req.params.id);
+
+    if (!goods) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (!goods.isDeleted) {
+      return res.status(400).json({ message: "Product is not deleted" });
+    }
+
+    // Restore the goods
+    goods.isDeleted = false;
+    goods.deletedAt = null;
+    // Note: isActive remains false, admin needs to manually activate if needed
+    await goods.save();
+
+    res.json({ status: "success", message: "Product restored successfully", data: goods });
+  } catch (error) {
+    console.error("Error restoring product:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Toggle active status (show/hide from customer view)
+exports.toggleActive = async (req, res) => {
+  try {
+    const goods = await Goods.findById(req.params.id);
+
+    if (!goods) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Cannot activate a deleted goods
+    if (goods.isDeleted && !goods.isActive) {
+      return res.status(400).json({
+        message: "Cannot activate a deleted product. Please restore it first."
+      });
+    }
+
+    goods.isActive = !goods.isActive;
+    await goods.save();
+
+    res.json({
+      status: "success",
+      message: `Product ${goods.isActive ? "activated" : "deactivated"} successfully`,
+      data: goods,
+    });
+  } catch (error) {
+    console.error("Error toggling active status:", error);
     res.status(500).json({ message: error.message });
   }
 };

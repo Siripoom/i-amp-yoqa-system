@@ -64,6 +64,18 @@ const goods = new mongoose.Schema(
         message: "Maximum 3 images allowed",
       },
     },
+    isActive: {
+      type: Boolean, // ใช้สำหรับระบุว่าสินค้านี้แสดงให้ลูกค้าเห็นหรือไม่
+      default: true,
+    },
+    isDeleted: {
+      type: Boolean, // ใช้สำหรับ soft delete
+      default: false,
+    },
+    deletedAt: {
+      type: Date, // วันที่ลบ
+      default: null,
+    },
   },
   { timestamps: true }
 );
