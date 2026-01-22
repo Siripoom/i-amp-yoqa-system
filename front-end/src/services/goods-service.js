@@ -74,6 +74,20 @@ const goodsService = {
     }
   },
 
+  // ✅ ดึงสินค้าทั้งหมดสำหรับ Admin (รวม inactive)
+  getAllGoodsForAdmin: async (params = {}) => {
+    try {
+      const adminParams = {
+        ...params,
+        includeInactive: "true",
+      };
+      const response = await axios.get(`${API_URL}/api/goods`, { params: adminParams });
+      return handleResponse(response);
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
   // ✅ ดึงสินค้าตาม ID
   getGoodsById: async (id) => {
     try {
@@ -158,10 +172,40 @@ const goodsService = {
     }
   },
 
-  // ✅ ลบสินค้า (สำหรับ admin)
+  // ✅ ลบสินค้า (soft delete)
   deleteGoods: async (id) => {
     try {
       const response = await axios.delete(`${API_URL}/api/goods/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  // ✅ ลบสินค้าถาวร (hard delete)
+  permanentDeleteGoods: async (id) => {
+    try {
+      const response = await axios.delete(`${API_URL}/api/goods/${id}/permanent`);
+      return handleResponse(response);
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  // ✅ กู้คืนสินค้าที่ถูกลบ
+  restoreGoods: async (id) => {
+    try {
+      const response = await axios.patch(`${API_URL}/api/goods/${id}/restore`);
+      return handleResponse(response);
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  // ✅ สลับสถานะ active/inactive
+  toggleActive: async (id) => {
+    try {
+      const response = await axios.patch(`${API_URL}/api/goods/${id}/toggle-active`);
       return handleResponse(response);
     } catch (error) {
       handleError(error);

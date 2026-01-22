@@ -33,4 +33,13 @@ router.patch("/:id/stock", goodsController.updateStock);
 // Search goods
 router.get("/search/query", goodsController.searchGoods);
 
+// Toggle active status (show/hide from customer view)
+router.patch("/:id/toggle-active", goodsController.toggleActive);
+
+// Restore soft deleted goods
+router.patch("/:id/restore", goodsController.restoreGoods);
+
+// Permanently delete goods
+router.delete("/:id/permanent", goodsController.permanentDeleteGoods);
+
 module.exports = router;

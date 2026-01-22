@@ -36,6 +36,7 @@ import {
   FireOutlined,
   PercentageOutlined,
   EyeOutlined,
+  EyeInvisibleOutlined,
   TagsOutlined,
   StockOutlined,
   DollarOutlined,
@@ -44,6 +45,8 @@ import {
   BarcodeOutlined,
   LeftOutlined,
   RightOutlined,
+  UndoOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
@@ -77,6 +80,7 @@ const GoodsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
@@ -94,13 +98,15 @@ const GoodsPage = () => {
       const params = {
         page,
         limit,
+        includeInactive: "true", // Admin should see inactive goods
+        includeDeleted: showDeleted ? "true" : "false",
         ...filters,
       };
 
       const response = await goodsService.getAllGoods(params);
       setGoods(response.data || []);
       setFilteredGoods(response.data || []);
-      setTotal(response.total || 0);
+      setTotal(response.pagination?.total || response.data?.length || 0);
     } catch (error) {
       message.error("Failed to fetch goods");
       console.error("Error fetching goods:", error);
@@ -171,6 +177,7 @@ const GoodsPage = () => {
     setFilterUnit("all");
     setPriceRange([null, null]);
     setSearchText("");
+    setShowDeleted(false);
     setFilteredGoods(goods);
   };
 
@@ -346,7 +353,7 @@ const GoodsPage = () => {
       message.warning("You don't have permission to delete goods.");
       return;
     }
-    
+
     try {
       setLoading(true);
       await goodsService.deleteGoods(id);
@@ -355,6 +362,46 @@ const GoodsPage = () => {
     } catch (error) {
       message.error("Failed to delete goods");
       console.error("Error deleting goods:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (id, currentStatus) => {
+    if (!canEdit) {
+      message.warning("You don't have permission to modify active status.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await goodsService.toggleActive(id);
+      message.success(
+        `Goods ${!currentStatus ? "activated" : "deactivated"} successfully`
+      );
+      fetchGoods(currentPage, pageSize);
+    } catch (error) {
+      message.error("Failed to update active status");
+      console.error("Error toggling active status:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async (id) => {
+    if (!canDelete) {
+      message.warning("You don't have permission to restore goods.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await goodsService.restoreGoods(id);
+      message.success("Goods restored successfully");
+      fetchGoods(currentPage, pageSize);
+    } catch (error) {
+      message.error("Failed to restore goods");
+      console.error("Error restoring goods:", error);
     } finally {
       setLoading(false);
     }
@@ -573,10 +620,34 @@ const GoodsPage = () => {
       responsive: ["sm"],
     },
     {
+      title: "STATUS",
+      key: "status",
+      width: 100,
+      render: (record) => (
+        <Space direction="vertical" size="small">
+          {record.isDeleted && (
+            <Tag color="red" icon={<StopOutlined />}>
+              Deleted
+            </Tag>
+          )}
+          {!record.isDeleted && record.isActive === false && (
+            <Tag color="default" icon={<EyeInvisibleOutlined />}>
+              Inactive
+            </Tag>
+          )}
+          {!record.isDeleted && record.isActive !== false && (
+            <Tag color="green" icon={<EyeOutlined />}>
+              Active
+            </Tag>
+          )}
+        </Space>
+      ),
+    },
+    {
       title: "ACTIONS",
       key: "actions",
       fixed: "right",
-      width: 160,
+      width: 200,
       render: (record) => (
         <Space size="small" wrap>
           <Tooltip title="View Details">
@@ -587,7 +658,8 @@ const GoodsPage = () => {
               size="small"
             />
           </Tooltip>
-          {canEdit && (
+          {/* Edit Button - disabled for deleted goods */}
+          {canEdit && !record.isDeleted && (
             <Tooltip title="Edit">
               <Button
                 type="text"
@@ -597,7 +669,35 @@ const GoodsPage = () => {
               />
             </Tooltip>
           )}
-          {canDelete && (
+          {/* Toggle Active Button - only for non-deleted goods */}
+          {canEdit && !record.isDeleted && (
+            <Popconfirm
+              title={`${record.isActive !== false ? "Deactivate" : "Activate"} this item?`}
+              description={`Are you sure you want to ${
+                record.isActive !== false
+                  ? "hide this item from customers"
+                  : "show this item to customers"
+              }?`}
+              onConfirm={() => handleToggleActive(record._id, record.isActive !== false)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Tooltip
+                title={
+                  record.isActive !== false ? "Hide from customers" : "Show to customers"
+                }
+              >
+                <Button
+                  type="text"
+                  icon={record.isActive !== false ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                  size="small"
+                  style={record.isActive === false ? { color: '#52c41a' } : {}}
+                />
+              </Tooltip>
+            </Popconfirm>
+          )}
+          {/* Delete Button - only for non-deleted goods */}
+          {canDelete && !record.isDeleted && (
             <Tooltip title="Delete">
               <Popconfirm
                 title="Are you sure you want to delete this item?"
@@ -608,6 +708,25 @@ const GoodsPage = () => {
                 <Button type="text" danger icon={<DeleteOutlined />} size="small" />
               </Popconfirm>
             </Tooltip>
+          )}
+          {/* Restore Button - only for deleted goods */}
+          {canDelete && record.isDeleted && (
+            <Popconfirm
+              title="Restore this item?"
+              description="Are you sure you want to restore this item?"
+              onConfirm={() => handleRestore(record._id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Tooltip title="Restore">
+                <Button
+                  type="text"
+                  icon={<UndoOutlined />}
+                  size="small"
+                  style={{ color: '#52c41a' }}
+                />
+              </Tooltip>
+            </Popconfirm>
           )}
         </Space>
       ),
@@ -641,7 +760,7 @@ const GoodsPage = () => {
   // Effects
   useEffect(() => {
     fetchGoods(currentPage, pageSize);
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, showDeleted]);
 
   useEffect(() => {
     applyFilters();
@@ -694,7 +813,7 @@ const GoodsPage = () => {
           {/* Filters Section */}
           <Card className="mb-4">
             <Row gutter={[16, 16]} align="middle">
-              <Col xs={24} sm={12} lg={8}>
+              <Col xs={24} sm={12} lg={6}>
                 <Input
                   placeholder="Search goods..."
                   prefix={<SearchOutlined />}
@@ -704,7 +823,20 @@ const GoodsPage = () => {
                   size="large"
                 />
               </Col>
-              <Col xs={24} sm={12} lg={8}>
+              <Col xs={24} sm={12} lg={4}>
+                <Space>
+                  <Switch
+                    checked={showDeleted}
+                    onChange={(checked) => setShowDeleted(checked)}
+                    checkedChildren="Deleted"
+                    unCheckedChildren="Active"
+                  />
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    {showDeleted ? 'Show Deleted' : 'Hide Deleted'}
+                  </span>
+                </Space>
+              </Col>
+              <Col xs={24} sm={12} lg={6}>
                 {canCreate && (
                   <Button
                     type="primary"
