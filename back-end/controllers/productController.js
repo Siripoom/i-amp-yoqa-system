@@ -286,7 +286,6 @@ exports.getProducts = async (req, res) => {
       minPrice,
       maxPrice,
       includeDeleted,
-      includeInactive,
     } = req.query;
 
     // Build filter object
@@ -295,11 +294,6 @@ exports.getProducts = async (req, res) => {
     // By default, exclude deleted products (soft delete)
     if (includeDeleted !== "true") {
       filter.isDeleted = { $ne: true };
-    }
-
-    // By default, exclude inactive products for customer view
-    if (includeInactive !== "true") {
-      filter.isActive = { $ne: false };
     }
 
     if (hotSale !== undefined) {
@@ -321,7 +315,7 @@ exports.getProducts = async (req, res) => {
     // Filter by active promotion if requested
     if (onPromotion === "true") {
       products = products.filter((product) =>
-        isPromotionActive(product.promotion)
+        isPromotionActive(product.promotion),
       );
     }
 
@@ -342,7 +336,87 @@ exports.getProducts = async (req, res) => {
       // Add discount percentage
       if (productObj.isPromotionActive && product.promotion.price) {
         const discountPercentage = Math.round(
-          ((product.price - product.promotion.price) / product.price) * 100
+          ((product.price - product.promotion.price) / product.price) * 100,
+        );
+        productObj.discountPercentage = discountPercentage;
+      } else {
+        productObj.discountPercentage = 0;
+      }
+
+      return productObj;
+    });
+
+    res.status(200).json({
+      status: "success",
+      productCount: products.length,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+exports.getAllProducts = async (req, res) => {
+  try {
+    const {
+      sortBy = "price",
+      sortOrder = "asc",
+      hotSale,
+      onPromotion,
+      minPrice,
+      maxPrice,
+      includeDeleted,
+    } = req.query;
+
+    // Build filter object
+    let filter = {};
+
+    // By default, exclude deleted products (soft delete)
+    if (includeDeleted !== "true") {
+      filter.isDeleted = { $ne: true };
+    }
+
+    if (hotSale !== undefined) {
+      filter.hotSale = hotSale === "true";
+    }
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Build sort object
+    const sortObj = {};
+    sortObj[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    let products = await Product.find(filter).sort(sortObj);
+
+    // Filter by active promotion if requested
+    if (onPromotion === "true") {
+      products = products.filter((product) =>
+        isPromotionActive(product.promotion),
+      );
+    }
+
+    // Add computed fields for frontend
+    products = products.map((product) => {
+      const productObj = product.toObject();
+
+      // Add promotion status
+      productObj.isPromotionActive = isPromotionActive(product.promotion);
+
+      // Add effective price (considering active promotion)
+      if (productObj.isPromotionActive && product.promotion.price) {
+        productObj.effectivePrice = product.promotion.price;
+      } else {
+        productObj.effectivePrice = product.price;
+      }
+
+      // Add discount percentage
+      if (productObj.isPromotionActive && product.promotion.price) {
+        const discountPercentage = Math.round(
+          ((product.price - product.promotion.price) / product.price) * 100,
         );
         productObj.discountPercentage = discountPercentage;
       } else {
@@ -421,7 +495,7 @@ exports.getProductById = async (req, res) => {
     // Add discount percentage
     if (productObj.isPromotionActive && product.promotion.price) {
       const discountPercentage = Math.round(
-        ((product.price - product.promotion.price) / product.price) * 100
+        ((product.price - product.promotion.price) / product.price) * 100,
       );
       productObj.discountPercentage = discountPercentage;
     } else {
@@ -454,9 +528,11 @@ exports.deleteProduct = async (req, res) => {
     product.deletedAt = new Date();
     await product.save();
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Product deleted successfully", data: product });
+    res.status(200).json({
+      status: "success",
+      message: "Product deleted successfully",
+      data: product,
+    });
   } catch (error) {
     console.error("Error deleting product:", error);
     res.status(500).json({ message: error.message });
@@ -521,9 +597,11 @@ exports.restoreProduct = async (req, res) => {
     // Note: isActive remains false, admin needs to manually activate if needed
     await product.save();
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Product restored successfully", data: product });
+    res.status(200).json({
+      status: "success",
+      message: "Product restored successfully",
+      data: product,
+    });
   } catch (error) {
     console.error("Error restoring product:", error);
     res.status(500).json({ message: error.message });
@@ -565,7 +643,7 @@ exports.toggleActive = async (req, res) => {
     // Cannot activate a deleted product
     if (product.isDeleted && !product.isActive) {
       return res.status(400).json({
-        message: "Cannot activate a deleted product. Please restore it first."
+        message: "Cannot activate a deleted product. Please restore it first.",
       });
     }
 
@@ -590,6 +668,7 @@ module.exports = {
   createProduct: exports.createProduct,
   updateProduct: exports.updateProduct,
   getProducts: exports.getProducts,
+  getAllProducts: exports.getAllProducts,
   getHotSaleProducts: exports.getHotSaleProducts,
   getPromotionProducts: exports.getPromotionProducts,
   getProductById: exports.getProductById,

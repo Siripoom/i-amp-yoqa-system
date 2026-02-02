@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createProduct,
   getProducts,
+  getAllProducts,
   getProductById,
   updateProduct,
   deleteProduct,
@@ -23,6 +24,7 @@ router.post("/", upload.single("image"), createProduct); // 'image' is the form 
 
 // Route for retrieving all products
 router.get("/", getProducts);
+router.get("/all", getAllProducts);
 
 // Route for retrieving a product by its ID
 router.get("/:id", getProductById);

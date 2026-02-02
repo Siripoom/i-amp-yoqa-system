@@ -44,7 +44,7 @@ const createFormData = (productData) => {
       // Ensure boolean is properly handled
       formData.append(
         key,
-        productData[key] === true || productData[key] === "true"
+        productData[key] === true || productData[key] === "true",
       );
     } else if (productData[key] !== undefined && productData[key] !== null) {
       formData.append(key, productData[key]);
@@ -89,6 +89,16 @@ export const getProducts = async (params = {}) => {
     handleError(error);
   }
 };
+// Get all products without filtering/sorting
+export const getAllProducts = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/products/all`);
+    console.log(response);
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
 
 // Get hot sale products
 export const getHotSaleProducts = async () => {
@@ -114,7 +124,7 @@ export const getPromotionProducts = async () => {
 export const getProductById = async (productId) => {
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/api/products/${productId}`
+      `${API_BASE_URL}/api/products/${productId}`,
     );
     return handleResponse(response);
   } catch (error) {
@@ -131,7 +141,7 @@ export const createProduct = async (productData) => {
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
-      }
+      },
     );
     return handleResponse(response);
   } catch (error) {
@@ -146,7 +156,7 @@ export const updateProduct = async (productId, productData) => {
     const response = await axios.put(
       `${API_BASE_URL}/api/products/${productId}`,
       formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
+      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return handleResponse(response);
   } catch (error) {
@@ -158,7 +168,7 @@ export const updateProduct = async (productId, productData) => {
 export const deleteProduct = async (productId) => {
   try {
     const response = await axios.delete(
-      `${API_BASE_URL}/api/products/${productId}`
+      `${API_BASE_URL}/api/products/${productId}`,
     );
     return handleResponse(response);
   } catch (error) {
@@ -170,7 +180,7 @@ export const deleteProduct = async (productId) => {
 export const toggleHotSale = async (productId) => {
   try {
     const response = await axios.patch(
-      `${API_BASE_URL}/api/products/${productId}/toggle-hot-sale`
+      `${API_BASE_URL}/api/products/${productId}/toggle-hot-sale`,
     );
     return handleResponse(response);
   } catch (error) {
@@ -182,7 +192,7 @@ export const toggleHotSale = async (productId) => {
 export const toggleActive = async (productId) => {
   try {
     const response = await axios.patch(
-      `${API_BASE_URL}/api/products/${productId}/toggle-active`
+      `${API_BASE_URL}/api/products/${productId}/toggle-active`,
     );
     return handleResponse(response);
   } catch (error) {
@@ -194,7 +204,7 @@ export const toggleActive = async (productId) => {
 export const restoreProduct = async (productId) => {
   try {
     const response = await axios.patch(
-      `${API_BASE_URL}/api/products/${productId}/restore`
+      `${API_BASE_URL}/api/products/${productId}/restore`,
     );
     return handleResponse(response);
   } catch (error) {
@@ -206,7 +216,7 @@ export const restoreProduct = async (productId) => {
 export const permanentDeleteProduct = async (productId) => {
   try {
     const response = await axios.delete(
-      `${API_BASE_URL}/api/products/${productId}/permanent`
+      `${API_BASE_URL}/api/products/${productId}/permanent`,
     );
     return handleResponse(response);
   } catch (error) {
@@ -265,7 +275,7 @@ export const getProductsWithComputedFields = async (params = {}) => {
           : 0,
         formattedPrice: formatPrice(product.price),
         formattedEffectivePrice: formatPrice(
-          product.effectivePrice ?? getEffectivePrice(product)
+          product.effectivePrice ?? getEffectivePrice(product),
         ),
       }));
     }
@@ -283,7 +293,7 @@ export const updateMultipleProducts = async (updates) => {
     const results = await Promise.allSettled(promises);
 
     const successful = results.filter(
-      (result) => result.status === "fulfilled"
+      (result) => result.status === "fulfilled",
     );
     const failed = results.filter((result) => result.status === "rejected");
 
@@ -303,7 +313,7 @@ export const deleteMultipleProducts = async (productIds) => {
     const results = await Promise.allSettled(promises);
 
     const successful = results.filter(
-      (result) => result.status === "fulfilled"
+      (result) => result.status === "fulfilled",
     );
     const failed = results.filter((result) => result.status === "rejected");
 

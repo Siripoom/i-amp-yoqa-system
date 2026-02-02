@@ -33,7 +33,7 @@ import Header from "../../components/Header";
 import orderService from "../../services/orderService";
 import receiptService from "../../services/receiptService";
 import { getUsers } from "../../services/userService";
-import { getProducts } from "../../services/productService";
+import { getProducts,getAllProducts } from "../../services/productService";
 import goodsService from "../../services/goods-service"; // Import goods service
 import "../../styles/Order.css";
 
@@ -133,9 +133,11 @@ const OrderPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await getProducts();
+      const response = await getAllProducts();
       if (response.status === "success") {
         setProducts(response.data);
+        console.log(response.data);
+        
       }
     } catch {
       console.error("Error fetching products:", "Failed to fetch products");
