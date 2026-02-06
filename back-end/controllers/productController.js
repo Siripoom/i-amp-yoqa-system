@@ -286,6 +286,7 @@ exports.getProducts = async (req, res) => {
       minPrice,
       maxPrice,
       includeDeleted,
+      includeInactive,
     } = req.query;
 
     // Build filter object
@@ -294,6 +295,11 @@ exports.getProducts = async (req, res) => {
     // By default, exclude deleted products (soft delete)
     if (includeDeleted !== "true") {
       filter.isDeleted = { $ne: true };
+    }
+
+    // By default, exclude inactive products for customer view
+    if (includeInactive !== "true") {
+      filter.isActive = { $ne: false };
     }
 
     if (hotSale !== undefined) {

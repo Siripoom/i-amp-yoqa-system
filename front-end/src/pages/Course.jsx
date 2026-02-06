@@ -28,7 +28,7 @@ import {
 } from "@ant-design/icons";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { getProductsWithComputedFields } from "../services/productService";
+import { getProducts } from "../services/productService";
 import goodsService from "../services/goods-service";
 import image from "../assets/images/imageC1.png";
 import SEOHead from "../components/SEOHead";
@@ -66,7 +66,7 @@ const Course = () => {
   const fetchProducts = async (sortOrder = "asc") => {
     setLoading(true);
     try {
-      const response = await getProductsWithComputedFields({
+      const response = await getProducts({
         sortBy: "price",
         sortOrder: sortOrder,
       });
