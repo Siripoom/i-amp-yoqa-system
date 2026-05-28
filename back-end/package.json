@@ -40,7 +40,8 @@
     "passport": "^0.7.0",
     "passport-line": "^0.0.4",
     "pizzip": "^3.2.0",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
