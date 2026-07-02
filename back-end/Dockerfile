@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
     fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY package.json yarn.lock ./
+# Copy package files (include .yarnrc.yml so the install uses the node-modules linker)
+COPY package.json yarn.lock .yarnrc.yml ./
 
 # Install Node.js dependencies (Yarn Berry ใช้ --immutable แทน --frozen-lockfile)
 RUN yarn install --immutable

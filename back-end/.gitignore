@@ -1,0 +1,7 @@
+node_modules
+.pnp.*
+.yarn/*
+!.yarn/patches
+.env
+*.log
+.DS_Store
