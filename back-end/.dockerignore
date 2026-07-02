@@ -1,4 +1,11 @@
 node_modules
+
+# Yarn PnP artifacts ที่สร้างใหม่ตอน install ในคอนเทนเนอร์
+# (กัน binary ที่ build บน macOS มาทับ binary ของ Linux เช่น bcrypt)
+.yarn/unplugged
+.yarn/cache
+.yarn/install-state.gz
+
 npm-debug.log
 *.log
 .git

@@ -2,8 +2,9 @@ FROM node:20
 
 WORKDIR /app
 
-# เปิดใช้งาน Yarn ผ่าน Corepack
-RUN corepack enable
+# เปิดใช้งาน Yarn ผ่าน Corepack (อัปเดต corepack ให้รองรับ Yarn 4 และไม่ค้างที่ prompt)
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN npm install -g corepack@latest && corepack enable
 
 # Install system dependencies first
 RUN apt-get update && apt-get install -y \
@@ -17,8 +18,8 @@ RUN apt-get update && apt-get install -y \
 # Copy package files
 COPY package.json yarn.lock ./
 
-# Install Node.js dependencies
-RUN yarn install --frozen-lockfile
+# Install Node.js dependencies (Yarn Berry ใช้ --immutable แทน --frozen-lockfile)
+RUN yarn install --immutable
 
 # สร้างโฟลเดอร์ tmp สำหรับไฟล์ชั่วคราว
 RUN mkdir -p /app/tmp && chmod 777 /app/tmp
