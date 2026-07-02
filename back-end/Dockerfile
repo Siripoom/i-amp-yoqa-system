@@ -2,6 +2,9 @@ FROM node:20
 
 WORKDIR /app
 
+# เปิดใช้งาน Yarn ผ่าน Corepack
+RUN corepack enable
+
 # Install system dependencies first
 RUN apt-get update && apt-get install -y \
     libreoffice \
@@ -12,10 +15,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
-COPY package*.json ./
+COPY package.json yarn.lock ./
 
 # Install Node.js dependencies
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 # สร้างโฟลเดอร์ tmp สำหรับไฟล์ชั่วคราว
 RUN mkdir -p /app/tmp && chmod 777 /app/tmp
