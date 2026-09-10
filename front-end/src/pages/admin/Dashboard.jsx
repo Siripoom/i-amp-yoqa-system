@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useState, useEffect } from "react";
 import { Layout, Card, Row, Col, Button, Select, message } from "antd";
 import {
@@ -240,8 +241,8 @@ const Dashboard = () => {
       return {
         labels: [],
         datasets: [
-          { label: "Products", backgroundColor: "#3b82f6", data: [] },
-          { label: "Courses", backgroundColor: "#10b981", data: [] },
+          { label: "Products", backgroundColor: colors["primary"], data: [] },
+          { label: "Courses", backgroundColor: colors["success"], data: [] },
         ],
       };
     }
@@ -326,12 +327,12 @@ const Dashboard = () => {
       datasets: [
         {
           label: "Products",
-          backgroundColor: "#3b82f6",
+          backgroundColor: colors["primary"],
           data: productData,
         },
         {
           label: "Courses",
-          backgroundColor: "#10b981",
+          backgroundColor: colors["success"],
           data: courseData,
         },
       ],
@@ -352,10 +353,10 @@ const Dashboard = () => {
           <Card className="sales-summary-card">
             <div className="sales-summary-header">
               <div>
-                <h3 className="font-semibold text-lg text-gray-800">
+                <h3 className="font-semibold text-lg text-text">
                   This Year Sales ({new Date().getFullYear()})
                 </h3>
-                <p className="text-gray-500">Sales Summary</p>
+                <p className="text-secondary">Sales Summary</p>
               </div>
               <div>
                 <Button
@@ -374,7 +375,7 @@ const Dashboard = () => {
                 <Card className="summary-item" hoverable>
                   <DollarOutlined
                     className="summary-icon"
-                    style={{ color: "#f87171", fontSize: 30 }}
+                    style={{ color: colors["error"], fontSize: 30 }}
                   />
                   <h4>{lastYearTotalSales.toLocaleString()} THB</h4>
                   <p>Total Sales</p>
@@ -385,7 +386,7 @@ const Dashboard = () => {
                 <Card className="summary-item" hoverable>
                   <ShoppingCartOutlined
                     className="summary-icon"
-                    style={{ color: "#fbbf24", fontSize: 30 }}
+                    style={{ color: colors["warning"], fontSize: 30 }}
                   />
                   <h4>{lastYearOrders.length}</h4>
                   <p>Total Order</p>
@@ -395,7 +396,7 @@ const Dashboard = () => {
                 <Card className="summary-item" hoverable>
                   <CheckOutlined
                     className="summary-icon"
-                    style={{ color: "#34d399", fontSize: 30 }}
+                    style={{ color: colors["success"], fontSize: 30 }}
                   />
                   <h4>{lastYearCourses.length}</h4>
                   <p>Product Sold</p>
@@ -405,7 +406,7 @@ const Dashboard = () => {
                 <Card className="summary-item" hoverable>
                   <UserOutlined
                     className="summary-icon"
-                    style={{ color: "#a78bfa", fontSize: 30 }}
+                    style={{ color: colors["info"], fontSize: 30 }}
                   />
                   <h4>{lastYearUsers.length}</h4>
                   <p>New Customers</p>

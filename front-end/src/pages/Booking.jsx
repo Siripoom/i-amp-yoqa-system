@@ -1,3 +1,4 @@
+import { eventStyle } from "../theme/tokens.js";
 import {
   Button,
   Card,
@@ -142,7 +143,7 @@ const Booking = () => {
     const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
-      return <Tag color="red">หมดอายุแล้ว</Tag>;
+      return <Tag color="error">หมดอายุแล้ว</Tag>;
     }
 
     const daysLeft = expiryDate.diff(now, "days");
@@ -194,10 +195,10 @@ const Booking = () => {
           </p>
           <p>👉🏻 ตรวจเช็คสุขภาพเป็นประจำสม่ำเสมอ</p>
           <p>
-            🙏🏻 ขอบคุณที่ใช้บริการไอแอมป์โยคะ ขอให้ทุกท่านสุขภาพร่างกายแข็งแรง
+            🙏🏻 ขอบคุณที่ใช้บริการ IKED YOGA ขอให้ทุกท่านสุขภาพร่างกายแข็งแรง
           </p>
           <p>
-            🙏🏻 ขออนุญาตนำภาพบรรยากาศการฝึกลงเพจ I&apos;amp yoqa : ไอแอมป์โยคะ
+            🙏🏻 ขออนุญาตนำภาพบรรยากาศการฝึกลงช่องทางออนไลน์ของ IKED YOGA
             🖼️❤️
           </p>
         </div>
@@ -523,14 +524,14 @@ const Booking = () => {
       className="min-h-screen flex flex-col bg-gradient-to-b"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />
       <div className="flex-grow flex items-center justify-center mt-4 mb-4">
         <div className="w-full max-w-5xl p-8 rounded-2xl shadow-md bg-white">
           <div className="flex justify-between items-center mb-4">
-            <Title level={3} className="text-purple-700 mb-0">
+            <Title level={3} className="text-primary mb-0">
               จองคลาสเรียน
             </Title>
             {currentUser && (
@@ -617,9 +618,9 @@ const Booking = () => {
           </Text>
 
           {loading ? (
-            <p className="text-center text-gray-500">กำลังโหลดข้อมูลคอร์ส...</p>
+            <p className="text-center text-secondary">กำลังโหลดข้อมูลคอร์ส...</p>
           ) : events.length === 0 ? (
-            <p className="text-center text-gray-500">
+            <p className="text-center text-secondary">
               ไม่มีคอร์สที่สามารถจองได้
             </p>
           ) : (
@@ -632,11 +633,7 @@ const Booking = () => {
                     key={event.id}
                     className="p-4 rounded-lg shadow-md"
                     title={event.title}
-                    style={{
-                      backgroundColor: event.color
-                        ? `#${event.color}`
-                        : "white",
-                    }}
+                    styles={{ header: eventStyle(event.color) }}
                   >
                     <p>
                       <strong>ครูผู้สอน:</strong> {event.instructor}
@@ -644,7 +641,7 @@ const Booking = () => {
                     <div className="mb-4 mt-4">
                       <div className="bg-white p-4 rounded-lg shadow-sm">
                         {/* แสดงเวลาในรูปแบบ เวลาเริ่ม - เวลาจบ */}
-                        <p className="text-xl font-bold text-purple-800 flex items-center justify-center mb-2">
+                        <p className="text-xl font-bold text-primary flex items-center justify-center mb-2">
                           <span className="text-2xl mr-2">🕒</span>
                           <span>
                             {moment(event.date).format("HH:mm")} -{" "}
@@ -653,7 +650,7 @@ const Booking = () => {
                         </p>
 
                         {/* แสดงวันที่ในรูปแบบไทย */}
-                        <p className="text-center text-pink-600 font-medium">
+                        <p className="text-center text-primary font-medium">
                           วันที่{" "}
                           {moment(event.date).locale("th").format("D MMMM ") +
                             (parseInt(moment(event.date).format("YYYY")) + 543)}
@@ -665,19 +662,19 @@ const Booking = () => {
                     </p>
                     <p>
                       <strong>ระดับความยาก:</strong>{" "}
-                      <span className="text-red-500 text-lg">
+                      <span className="text-error text-lg">
                         {"❤️".repeat(event.difficulty)}
                       </span>
                     </p>
                     <p>
                       <strong>จำนวนคนเข้าร่วม:</strong>{" "}
-                      <span className="text-pink-500 text-lg">
+                      <span className="text-primary text-lg">
                         {event.amount}
                       </span>
                     </p>
                     <p>
                       <strong>รายชื่อคนเข้าร่วม:</strong>{" "}
-                      <span className="text-pink-500 text-sm">
+                      <span className="text-primary text-sm">
                         {event.participants && event.participants.length > 0
                           ? event.participants.join(", ")
                           : "ยังไม่มีผู้เข้าร่วม"}
@@ -689,13 +686,13 @@ const Booking = () => {
                       <>
                         <p>
                           <strong>📌 ห้องเรียน:</strong>{" "}
-                          <span className="text-purple-600">
+                          <span className="text-primary">
                             {event.roomNumber}
                           </span>
                         </p>
                         <p>
                           <strong>🔑 รหัสผ่าน:</strong>{" "}
-                          <span className="text-purple-600">
+                          <span className="text-primary">
                             {event.passcode}
                           </span>
                         </p>
@@ -705,7 +702,7 @@ const Booking = () => {
                             href={event.zoomLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 underline"
+                            className="text-primary underline"
                           >
                             เข้าร่วมคลาสผ่าน Zoom
                           </a>
@@ -716,7 +713,7 @@ const Booking = () => {
                     <div className="mt-4 text-center">
                       {event.reserved && currentUser ? (
                         <div>
-                          <span className="text-green-500 font-semibold block mb-2">
+                          <span className="text-success font-semibold block mb-2">
                             จองแล้ว ✅
                           </span>
                           {canCancelReservation(event.date) ? (
@@ -729,7 +726,7 @@ const Booking = () => {
                               ยกเลิกการจอง
                             </Button>
                           ) : (
-                            <span className="text-red-500 text-sm block">
+                            <span className="text-error text-sm block">
                               ไม่สามารถยกเลิกได้ (เหลือน้อยกว่า 5
                               นาทีก่อนเริ่มคลาส)
                             </span>
@@ -739,7 +736,7 @@ const Booking = () => {
                         <Tooltip title={bookingProps.tooltip}>
                           <Button
                             type="primary"
-                            className="bg-purple-600 text-white"
+                            className="bg-primary text-white"
                             onClick={() => handleReserveCourse(event.id)}
                             disabled={bookingProps.disabled}
                           >

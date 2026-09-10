@@ -1,6 +1,6 @@
 .goods-container {
   padding: 20px;
-  background-color: #f4f5f7;
+  background-color: var(--color-background);
 }
 
 /* Responsive container adjustments */
@@ -33,8 +33,8 @@
 }
 
 .create-goods-button {
-  background-color: #fa7e1e;
-  border-color: #fa7e1e;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .goods-filters {
@@ -64,7 +64,7 @@
   .responsive-table .ant-table {
     font-size: 12px;
   }
-  
+
   .responsive-table .ant-table-thead > tr > th,
   .responsive-table .ant-table-tbody > tr > td {
     padding: 8px 4px;
@@ -75,7 +75,7 @@
   .responsive-table .ant-table {
     font-size: 11px;
   }
-  
+
   .responsive-table .ant-table-thead > tr > th,
   .responsive-table .ant-table-tbody > tr > td {
     padding: 6px 2px;
@@ -95,12 +95,12 @@
   }
 }
 
-.ant-table-thead > tr > th {
-  background-color: #f9f9f9;
+.goods-container .ant-table-thead > tr > th {
+  background-color: var(--color-surface);
   font-weight: bold;
 }
 
-.ant-table-tbody > tr > td {
+.goods-container .ant-table-tbody > tr > td {
   padding: 16px;
 }
 
@@ -111,7 +111,7 @@
   }
 }
 
-.ant-tag {
+.goods-container .ant-tag {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.875em;
@@ -126,7 +126,7 @@
 }
 
 /* Pagination styling */
-.ant-pagination {
+.goods-container .ant-pagination {
   display: flex;
   justify-content: center;
   padding: 20px 0;
@@ -137,7 +137,7 @@
   .ant-pagination {
     padding: 16px 0;
   }
-  
+
   .ant-pagination-item {
     min-width: 28px;
     height: 28px;
@@ -152,20 +152,20 @@
     margin: 0;
     max-width: 100vw;
   }
-  
+
   .ant-modal-content {
     border-radius: 0;
   }
-  
+
   .ant-modal-footer {
     padding: 16px;
   }
-  
+
   .ant-modal-footer .ant-btn {
     margin-bottom: 8px;
     width: 100%;
   }
-  
+
   .ant-modal-footer .ant-btn:last-child {
     margin-bottom: 0;
   }
@@ -176,7 +176,7 @@
   .ant-form-item {
     margin-bottom: 16px;
   }
-  
+
   .ant-form-item-label {
     padding-bottom: 4px;
   }
@@ -188,7 +188,7 @@
     width: 80px;
     height: 80px;
   }
-  
+
   .ant-upload-list-picture-card .ant-upload-list-item {
     width: 80px;
     height: 80px;
@@ -209,7 +209,7 @@
     width: 20px;
     height: 20px;
   }
-  
+
   .ant-carousel .slick-dots li button {
     width: 6px;
     height: 6px;

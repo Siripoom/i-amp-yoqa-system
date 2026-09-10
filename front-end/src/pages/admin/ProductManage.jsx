@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useEffect, useState } from "react";
 import {
   Layout,
@@ -71,7 +72,7 @@ const ProductPage = () => {
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
-  
+
   // Define permissions based on role
   const canCreate = userRole === "SuperAdmin" || userRole === "Admin";
   const canEdit = userRole === "SuperAdmin" || userRole === "Admin";
@@ -180,12 +181,12 @@ const ProductPage = () => {
       message.warning("You don't have permission to modify product data.");
       return;
     }
-    
+
     if (editingProduct && !canEdit) {
       message.warning("You don't have permission to edit products.");
       return;
     }
-    
+
     if (!editingProduct && !canCreate) {
       message.warning("You don't have permission to create products.");
       return;
@@ -229,7 +230,7 @@ const ProductPage = () => {
       fetchProducts();
       setIsModalVisible(false);
     } catch (error) {
-      message.error("Failed to save product");
+      message.error(error.response?.data?.message || error.message || "Failed to save product");
       console.error(error);
     }
     setLoading(false);
@@ -240,7 +241,7 @@ const ProductPage = () => {
       message.warning("You don't have permission to delete products.");
       return;
     }
-    
+
     try {
       await deleteProduct(editingProduct._id);
       message.success("Product deleted successfully");
@@ -337,8 +338,8 @@ const ProductPage = () => {
             fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
           />
         ) : (
-          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-            <span className="text-gray-400 text-xs">No Image</span>
+          <div className="w-12 h-12 bg-border rounded flex items-center justify-center">
+            <span className="text-secondary text-xs">No Image</span>
           </div>
         ),
     },
@@ -347,7 +348,7 @@ const ProductPage = () => {
       dataIndex: "sessions",
       key: "sessions",
       sorter: (a, b) => a.sessions - b.sessions,
-      render: (sessions) => <Tag color="blue">{sessions} Sessions</Tag>,
+      render: (sessions) => <Tag color="processing">{sessions} Sessions</Tag>,
     },
     {
       title: "Price",
@@ -358,13 +359,13 @@ const ProductPage = () => {
         <div>
           {record.isPromotionActive && record.promotion?.price ? (
             <div>
-              <div className="text-red-500 font-bold">
+              <div className="text-error font-bold">
                 {formatPrice(record.promotion.price)}
               </div>
-              <div className="text-gray-400 line-through text-sm">
+              <div className="text-secondary line-through text-sm">
                 {formatPrice(price)}
               </div>
-              <Tag color="red" size="small">
+              <Tag color="error" size="small">
                 -{record.discountPercentage}%
               </Tag>
             </div>
@@ -379,7 +380,7 @@ const ProductPage = () => {
       dataIndex: "duration",
       key: "duration",
       sorter: (a, b) => a.duration - b.duration,
-      render: (duration) => <Tag color="green">{duration} Days</Tag>,
+      render: (duration) => <Tag color="success">{duration} Days</Tag>,
     },
     {
       title: "Status",
@@ -388,7 +389,7 @@ const ProductPage = () => {
         <Space direction="vertical" size="small">
           <div>
             {record.isDeleted && (
-              <Tag color="red" icon={<StopOutlined />}>
+              <Tag color="error" icon={<StopOutlined />}>
                 Deleted
               </Tag>
             )}
@@ -398,19 +399,19 @@ const ProductPage = () => {
               </Tag>
             )}
             {!record.isDeleted && record.isActive !== false && (
-              <Tag color="green" icon={<EyeOutlined />}>
+              <Tag color="success" icon={<EyeOutlined />}>
                 Active
               </Tag>
             )}
           </div>
           <div>
             {record.hotSale && (
-              <Tag color="orange" icon={<FireOutlined />}>
+              <Tag color="warning" icon={<FireOutlined />}>
                 Hot Sale
               </Tag>
             )}
             {record.isPromotionActive && (
-              <Tag color="red" icon={<PercentageOutlined />}>
+              <Tag color="error" icon={<PercentageOutlined />}>
                 On Promotion
               </Tag>
             )}
@@ -458,7 +459,7 @@ const ProductPage = () => {
                   size="small"
                   icon={record.isActive !== false ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                   type={record.isActive !== false ? "default" : "primary"}
-                  style={record.isActive === false ? { backgroundColor: '#52c41a', borderColor: '#52c41a' } : {}}
+                  style={record.isActive === false ? { backgroundColor: colors["success"], borderColor: colors["success"] } : {}}
                 />
               </Tooltip>
             </Popconfirm>
@@ -506,7 +507,7 @@ const ProductPage = () => {
                   size="small"
                   icon={<UndoOutlined />}
                   type="primary"
-                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                  style={{ backgroundColor: colors["success"], borderColor: colors["success"] }}
                 />
               </Tooltip>
             </Popconfirm>
@@ -527,13 +528,13 @@ const ProductPage = () => {
 
         <Content className="product-container p-6">
           {userRole === "Accounting" && (
-            <div style={{ 
-              background: "#fff3cd", 
-              border: "1px solid #ffeaa7", 
-              borderRadius: "4px", 
-              padding: "8px 12px", 
+            <div style={{
+              background: "var(--color-warning-soft)",
+              border: "1px solid var(--color-warning-soft)",
+              borderRadius: "4px",
+              padding: "8px 12px",
               marginBottom: "16px",
-              color: "#856404"
+              color: colors["warning"]
             }}>
               📖 You are in view-only mode. You can view product information but cannot make changes.
             </div>
@@ -571,7 +572,7 @@ const ProductPage = () => {
                     checkedChildren="Deleted"
                     unCheckedChildren="Active"
                   />
-                  <span style={{ fontSize: '12px', color: '#666' }}>
+                  <span style={{ fontSize: '12px', color: colors["secondary"] }}>
                     {showDeleted ? 'Show Deleted' : 'Hide Deleted'}
                   </span>
                 </Space>

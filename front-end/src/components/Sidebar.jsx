@@ -11,12 +11,12 @@ import {
   DollarOutlined,
 } from "@ant-design/icons";
 import "./Sidebar.css";
-import logo from "../assets/images/logo.png";
+import { brand } from "../config/brand.js";
 
 const Sidebar = () => {
   // Get user role from localStorage
   const userRole = localStorage.getItem("role");
-  
+
   // Define which roles can see restricted menus
   const canSeeImageSetup = userRole === "SuperAdmin" || userRole === "Admin";
   const canSeeMasterReport = userRole === "SuperAdmin" || userRole === "Admin";
@@ -24,8 +24,11 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
-        <img src={logo} alt="IAMPYOQA Logo" className="logo-icon" />
-        <h2 className="logo-text">IAMPYOQA</h2>
+        <img
+          src={brand.logoPath}
+          alt={`${brand.name} logo`}
+          className="logo-icon"
+        />
       </div>
       <nav className="sidebar-nav">
         <NavLink

@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useEffect, useState, useCallback } from "react";
 import {
   Layout,
@@ -84,7 +85,7 @@ const GoodsPage = () => {
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
-  
+
   // Define permissions based on role
   const canCreate = userRole === "SuperAdmin" || userRole === "Admin";
   const canEdit = userRole === "SuperAdmin" || userRole === "Admin";
@@ -266,12 +267,12 @@ const GoodsPage = () => {
       message.warning("You don't have permission to modify goods data.");
       return;
     }
-    
+
     if (editingGoods && !canEdit) {
       message.warning("You don't have permission to edit goods.");
       return;
     }
-    
+
     if (!editingGoods && !canCreate) {
       message.warning("You don't have permission to create goods.");
       return;
@@ -341,7 +342,7 @@ const GoodsPage = () => {
       fetchGoods(currentPage, pageSize);
       setIsModalVisible(false);
     } catch (error) {
-      message.error("Failed to save goods");
+      message.error(error.response?.data?.message || error.message || "Failed to save goods");
       console.error("Error saving goods:", error);
     } finally {
       setLoading(false);
@@ -412,7 +413,7 @@ const GoodsPage = () => {
       message.warning("You don't have permission to update stock.");
       return;
     }
-    
+
     try {
       const values = await stockForm.validateFields();
       setLoading(true);
@@ -489,7 +490,7 @@ const GoodsPage = () => {
             position: "absolute",
             top: 0,
             right: 0,
-            backgroundColor: "rgba(0,0,0,0.7)",
+            backgroundColor: "rgba(73,47,42,0.7)",
             color: "white",
             borderRadius: "50%",
             width: 18,
@@ -548,12 +549,12 @@ const GoodsPage = () => {
       render: (record) => (
         <Space direction="vertical" size="small" wrap>
           {record.size && (
-            <Tag color="geekblue" style={{ margin: 0 }} size="small">
+            <Tag color="processing" style={{ margin: 0 }} size="small">
               {record.size}
             </Tag>
           )}
           {record.color && (
-            <Tag color="orange" style={{ margin: 0 }} size="small">
+            <Tag color="warning" style={{ margin: 0 }} size="small">
               {record.color}
             </Tag>
           )}
@@ -575,7 +576,7 @@ const GoodsPage = () => {
             <Text
               strong
               style={{
-                color: isOnPromotion ? "#ff4d4f" : "#fa7e1e",
+                color: isOnPromotion ? colors["error"] : colors["accent"],
                 fontSize: "12px",
               }}
               className="sm:text-sm"
@@ -586,7 +587,7 @@ const GoodsPage = () => {
               <Text
                 delete
                 style={{
-                  color: "#999",
+                  color: colors["secondary"],
                   fontSize: "10px",
                 }}
                 className="sm:text-xs"
@@ -608,7 +609,7 @@ const GoodsPage = () => {
           <Badge
             count={stock}
             style={{
-              backgroundColor: stock > 0 ? "#52c41a" : "#ff4d4f",
+              backgroundColor: stock > 0 ? colors["success"] : colors["error"],
             }}
             showZero
           />
@@ -626,7 +627,7 @@ const GoodsPage = () => {
       render: (record) => (
         <Space direction="vertical" size="small">
           {record.isDeleted && (
-            <Tag color="red" icon={<StopOutlined />}>
+            <Tag color="error" icon={<StopOutlined />}>
               Deleted
             </Tag>
           )}
@@ -636,7 +637,7 @@ const GoodsPage = () => {
             </Tag>
           )}
           {!record.isDeleted && record.isActive !== false && (
-            <Tag color="green" icon={<EyeOutlined />}>
+            <Tag color="success" icon={<EyeOutlined />}>
               Active
             </Tag>
           )}
@@ -691,7 +692,7 @@ const GoodsPage = () => {
                   type="text"
                   icon={record.isActive !== false ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                   size="small"
-                  style={record.isActive === false ? { color: '#52c41a' } : {}}
+                  style={record.isActive === false ? { color: colors["success"] } : {}}
                 />
               </Tooltip>
             </Popconfirm>
@@ -723,7 +724,7 @@ const GoodsPage = () => {
                   type="text"
                   icon={<UndoOutlined />}
                   size="small"
-                  style={{ color: '#52c41a' }}
+                  style={{ color: colors["success"] }}
                 />
               </Tooltip>
             </Popconfirm>
@@ -768,8 +769,8 @@ const GoodsPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh", display: "flex" }}>
-      <Sider 
-        width={220} 
+      <Sider
+        width={220}
         className="lg:block hidden"
         breakpoint="lg"
         collapsedWidth="0"
@@ -782,13 +783,13 @@ const GoodsPage = () => {
 
         <Content className="goods-container p-2 sm:p-4 lg:p-6">
           {userRole === "Accounting" && (
-            <div style={{ 
-              background: "#fff3cd", 
-              border: "1px solid #ffeaa7", 
-              borderRadius: "4px", 
-              padding: "8px 12px", 
+            <div style={{
+              background: "var(--color-warning-soft)",
+              border: "1px solid var(--color-warning-soft)",
+              borderRadius: "4px",
+              padding: "8px 12px",
               marginBottom: "16px",
-              color: "#856404"
+              color: colors["warning"]
             }}>
               📖 You are in view-only mode. You can view goods information but cannot make changes.
             </div>
@@ -831,7 +832,7 @@ const GoodsPage = () => {
                     checkedChildren="Deleted"
                     unCheckedChildren="Active"
                   />
-                  <span style={{ fontSize: '12px', color: '#666' }}>
+                  <span style={{ fontSize: '12px', color: colors["secondary"] }}>
                     {showDeleted ? 'Show Deleted' : 'Hide Deleted'}
                   </span>
                 </Space>
@@ -863,7 +864,7 @@ const GoodsPage = () => {
                     style={{
                       fontSize: "18px",
                       fontWeight: "bold",
-                      color: "#1890ff",
+                      color: colors["primary"],
                     }}
                     className="sm:text-2xl"
                   >
@@ -880,7 +881,7 @@ const GoodsPage = () => {
                     style={{
                       fontSize: "18px",
                       fontWeight: "bold",
-                      color: "#52c41a",
+                      color: colors["success"],
                     }}
                     className="sm:text-2xl"
                   >
@@ -897,7 +898,7 @@ const GoodsPage = () => {
                     style={{
                       fontSize: "18px",
                       fontWeight: "bold",
-                      color: "#fa7e1e",
+                      color: colors["accent"],
                     }}
                     className="sm:text-2xl"
                   >
@@ -919,7 +920,7 @@ const GoodsPage = () => {
                     style={{
                       fontSize: "18px",
                       fontWeight: "bold",
-                      color: "#ff4d4f",
+                      color: colors["error"],
                     }}
                     className="sm:text-2xl"
                   >
@@ -1283,23 +1284,23 @@ const GoodsPage = () => {
 
                       <div>
                         {viewingGoods.size && (
-                          <Tag color="geekblue" style={{ marginRight: 8 }}>
+                          <Tag color="processing" style={{ marginRight: 8 }}>
                             Size: {viewingGoods.size}
                           </Tag>
                         )}
                         {viewingGoods.color && (
-                          <Tag color="orange" style={{ marginRight: 8 }}>
+                          <Tag color="warning" style={{ marginRight: 8 }}>
                             Color: {viewingGoods.color}
                           </Tag>
                         )}
                         {viewingGoods.hotSale && (
-                          <Tag color="red" icon={<FireOutlined />}>
+                          <Tag color="error" icon={<FireOutlined />}>
                             Hot Sale
                           </Tag>
                         )}
                         {viewingGoods.promotion &&
                           isPromotionActive(viewingGoods.promotion) && (
-                            <Tag color="orange" icon={<PercentageOutlined />}>
+                            <Tag color="warning" icon={<PercentageOutlined />}>
                               Promotion Active
                             </Tag>
                           )}
@@ -1313,8 +1314,8 @@ const GoodsPage = () => {
                             color:
                               getDisplayPrice(viewingGoods) !==
                               viewingGoods.price
-                                ? "#999"
-                                : "#fa7e1e",
+                                ? colors["secondary"]
+                                : colors["accent"],
                             fontSize: "16px",
                             textDecoration:
                               getDisplayPrice(viewingGoods) !==
@@ -1332,7 +1333,7 @@ const GoodsPage = () => {
                           <Text>Promotion Price: </Text>
                           <Text
                             strong
-                            style={{ color: "#ff4d4f", fontSize: "18px" }}
+                            style={{ color: colors["error"], fontSize: "18px" }}
                           >
                             {getDisplayPrice(viewingGoods)?.toLocaleString()}{" "}
                             THB
@@ -1346,7 +1347,7 @@ const GoodsPage = () => {
                           count={viewingGoods.stock}
                           style={{
                             backgroundColor:
-                              viewingGoods.stock > 0 ? "#52c41a" : "#ff4d4f",
+                              viewingGoods.stock > 0 ? colors["success"] : colors["error"],
                           }}
                           showZero
                         />
@@ -1379,7 +1380,7 @@ const GoodsPage = () => {
                         <Space direction="vertical" size="small">
                           <div>
                             <Text>Promotion Price: </Text>
-                            <Text strong style={{ color: "#ff4d4f" }}>
+                            <Text strong style={{ color: colors["error"] }}>
                               {viewingGoods.promotion.price?.toLocaleString()}{" "}
                               THB
                             </Text>

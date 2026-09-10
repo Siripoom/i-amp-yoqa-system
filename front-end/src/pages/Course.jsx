@@ -27,6 +27,7 @@ import {
   SortDescendingOutlined,
 } from "@ant-design/icons";
 import Footer from "../components/Footer";
+import { brand } from "../config/brand.js";
 import Navbar from "../components/Navbar";
 import { getProducts } from "../services/productService";
 import goodsService from "../services/goods-service";
@@ -49,11 +50,11 @@ const Course = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Course",
-    name: "คอร์สโยคะ IAMPYOQA",
+    name: `คอร์สโยคะ ${brand.name}`,
     description: "โปรโมชั่นคอร์สโยคะ ราคาพิเศษ",
     provider: {
       "@type": "Organization",
-      name: "IAMPYOQA",
+      name: brand.name,
     },
   };
 
@@ -184,14 +185,14 @@ const Course = () => {
       return (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-pink-600 font-bold text-lg">
+            <span className="text-primary font-bold text-lg">
               ฿{product.promotion.price.toLocaleString()}
             </span>
-            <Tag color="red" size="small" icon={<PercentageOutlined />}>
+            <Tag color="error" size="small" icon={<PercentageOutlined />}>
               -{product.discountPercentage}%
             </Tag>
           </div>
-          <div className="text-gray-500 text-sm line-through">
+          <div className="text-secondary text-sm line-through">
             ฿{product.price.toLocaleString()}
           </div>
         </div>
@@ -199,7 +200,7 @@ const Course = () => {
     }
 
     return (
-      <div className="text-gray-700 font-semibold text-lg">
+      <div className="text-text font-semibold text-lg">
         ฿{product.price.toLocaleString()}
       </div>
     );
@@ -222,14 +223,14 @@ const Course = () => {
       return (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-red-600 font-bold text-lg">
+            <span className="text-error font-bold text-lg">
               ฿{goods.promotion.price.toLocaleString()}
             </span>
-            <Tag color="red" size="small" icon={<PercentageOutlined />}>
+            <Tag color="error" size="small" icon={<PercentageOutlined />}>
               -{discountPercent}%
             </Tag>
           </div>
-          <div className="text-gray-500 text-sm line-through">
+          <div className="text-secondary text-sm line-through">
             ฿{goods.price.toLocaleString()}
           </div>
         </div>
@@ -237,7 +238,7 @@ const Course = () => {
     }
 
     return (
-      <div className="text-gray-700 font-semibold text-lg">
+      <div className="text-text font-semibold text-lg">
         ฿{goods.price.toLocaleString()}
       </div>
     );
@@ -315,7 +316,7 @@ const Course = () => {
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {isHotSale && (
                 <Tag
-                  color="orange"
+                  color="warning"
                   icon={<FireOutlined />}
                   className="shadow-md"
                 >
@@ -335,15 +336,15 @@ const Course = () => {
       >
         <div className="flex-1">
           <div className="mb-3">
-            <h3 className="font-bold text-lg text-gray-900 mb-2">
+            <h3 className="font-bold text-lg text-text mb-2">
               {product.sessions} Sessions
             </h3>
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-secondary mb-2">
               Duration: {product.duration} Days
             </div>
             {renderPrice(product)}
             {hasActivePromotion && (
-              <div className="text-xs text-red-600 mt-1">
+              <div className="text-xs text-error mt-1">
                 ⏰ Promotion ends:{" "}
                 {new Date(product.promotion.endDate).toLocaleDateString(
                   "th-TH"
@@ -361,10 +362,10 @@ const Course = () => {
               px-8 py-2 rounded-lg font-semibold transition-all duration-300
               ${
                 isHotSale
-                  ? "bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
+                  ? "bg-accent hover:bg-accent border-accent hover:border-accent"
                   : hasActivePromotion
-                  ? "bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600"
-                  : "bg-pink-400 hover:bg-pink-500 border-pink-400 hover:border-pink-500"
+                  ? "bg-error hover:bg-error border-error hover:border-error"
+                  : "bg-primary hover:bg-primary border-primary hover:border-primary"
               }
               text-white shadow-lg hover:shadow-xl hover:scale-105
             `}
@@ -425,7 +426,7 @@ const Course = () => {
     }
 
     const CardContent = (
-     
+
       <Card
       onClick={() => handleGoodsCheckout(goodsItem)}
         hoverable={!isOutOfStock}
@@ -443,7 +444,7 @@ const Course = () => {
 
             {/* Multiple Images Indicator */}
             {allImages.length > 1 && (
-              <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+              <div className="absolute bottom-2 right-2 bg-primary-dark bg-opacity-70 text-white text-xs px-2 py-1 rounded">
                 +{allImages.length - 1} more
               </div>
             )}
@@ -452,7 +453,7 @@ const Course = () => {
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {isHotSale && !isOutOfStock && (
                 <Tag
-                  color="orange"
+                  color="warning"
                   icon={<FireOutlined />}
                   className="shadow-md"
                 >
@@ -461,7 +462,7 @@ const Course = () => {
               )}
               {hasActivePromotion && !isOutOfStock && (
                 <Tag
-                  color="red"
+                  color="error"
                   icon={<PercentageOutlined />}
                   className="shadow-md"
                 >
@@ -491,11 +492,11 @@ const Course = () => {
       >
         <div className="flex-1">
           <div className="mb-3">
-            <h3 className="font-bold text-lg text-gray-900 mb-1">
+            <h3 className="font-bold text-lg text-text mb-1">
               {goodsItem.goods}
             </h3>
             {goodsItem.code && (
-              <div className="text-xs text-gray-500 mb-2 font-mono">
+              <div className="text-xs text-secondary mb-2 font-mali">
                 {goodsItem.code}
               </div>
             )}
@@ -503,12 +504,12 @@ const Course = () => {
             {/* Size and Color tags */}
             <div className="mb-2 flex flex-wrap gap-1">
               {goodsItem.size && (
-                <Tag color="geekblue" size="small">
+                <Tag color="processing" size="small">
                   {goodsItem.size}
                 </Tag>
               )}
               {goodsItem.color && (
-                <Tag color="orange" size="small">
+                <Tag color="warning" size="small">
                   {goodsItem.color}
                 </Tag>
               )}
@@ -517,7 +518,7 @@ const Course = () => {
             {renderGoodsPrice(goodsItem)}
 
             {hasActivePromotion && (
-              <div className="text-xs text-red-600 mt-1">
+              <div className="text-xs text-error mt-1">
                 ⏰ Promotion ends:{" "}
                 {new Date(goodsItem.promotion.endDate).toLocaleDateString(
                   "th-TH"
@@ -544,10 +545,10 @@ const Course = () => {
                 flex-1 font-semibold transition-all duration-300
                 ${
                   isHotSale
-                    ? "bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
+                    ? "bg-accent hover:bg-accent border-accent hover:border-accent"
                     : hasActivePromotion
-                    ? "bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600"
-                    : "bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
+                    ? "bg-error hover:bg-error border-error hover:border-error"
+                    : "bg-primary hover:bg-primary border-primary hover:border-primary"
                 }
                 text-white shadow-lg hover:shadow-xl hover:scale-105
               `}
@@ -582,7 +583,7 @@ const Course = () => {
     <>
       <SEOHead
         title="โปรโมชั่นคอร์สโยคะ"
-        description="โปรโมชั่นคอร์สโยคะ IAMPYOQA ราคาพิเศษ คอร์สหลากหลาย เหมาะกับทุกระดับ จองง่าย เริ่มเรียนได้ทันที"
+        description={`โปรโมชั่นคอร์สโยคะ ${brand.name} ราคาพิเศษ คอร์สหลากหลาย เหมาะกับทุกระดับ จองง่าย เริ่มเรียนได้ทันที`}
         keywords="โปรโมชั่นโยคะ, คอร์สโยคะ, ราคาพิเศษ, จองคอร์สโยคะ"
         url="/course"
         structuredData={structuredData}
@@ -591,7 +592,7 @@ const Course = () => {
         className="min-h-screen"
         style={{
           background:
-            "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+            "var(--color-background)",
         }}
       >
         <Navbar />
@@ -599,16 +600,16 @@ const Course = () => {
           {/* Course Promotions Section */}
           <div className="mb-8">
             <div className="text-center mb-4">
-              <h2 className="text-3xl font-bold text-blue-900 mb-2">
+              <h2 className="text-3xl font-bold text-primary mb-2">
                 Course Promotions
               </h2>
-              <p className="text-gray-600">
+              <p className="text-secondary">
                 เลือกแพ็คเกจที่เหมาะกับคุณ พร้อมโปรโมชั่นพิเศษ
               </p>
             </div>
             <div className="flex justify-end mb-4">
               <Space>
-                <span className="text-gray-600">เรียงตามราคา:</span>
+                <span className="text-secondary">เรียงตามราคา:</span>
                 <Select
                   value={productSortOrder}
                   onChange={handleProductSortChange}
@@ -639,8 +640,8 @@ const Course = () => {
           {loading ? (
             <div className="flex justify-center items-center py-20">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-                <div className="text-blue-500 font-semibold">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="text-primary font-semibold">
                   Loading courses...
                 </div>
               </div>
@@ -653,10 +654,10 @@ const Course = () => {
                 ))
               ) : (
                 <div className="col-span-full text-center py-20">
-                  <div className="text-gray-500 text-xl mb-4">
+                  <div className="text-secondary text-xl mb-4">
                     No courses available at the moment.
                   </div>
-                  <div className="text-gray-400">
+                  <div className="text-secondary">
                     Please check back later for new promotions!
                   </div>
                 </div>
@@ -669,16 +670,16 @@ const Course = () => {
 
           <div className="mb-8">
             <div className="text-center mb-4">
-              <h2 className="text-3xl font-bold text-purple-900 mb-2">
+              <h2 className="text-3xl font-bold text-primary mb-2">
                 🛍️ Yoga Accessories & Goods
               </h2>
-              <p className="text-gray-600">
+              <p className="text-secondary">
                 อุปกรณ์โยคะและสินค้าคุณภาพดี เสริมการออกกำลังกายของคุณ
               </p>
             </div>
             <div className="flex justify-end mb-4">
               <Space>
-                <span className="text-gray-600">เรียงตามราคา:</span>
+                <span className="text-secondary">เรียงตามราคา:</span>
                 <Select
                   value={goodsSortOrder}
                   onChange={handleGoodsSortChange}
@@ -709,8 +710,8 @@ const Course = () => {
           {goodsLoading ? (
             <div className="flex justify-center items-center py-20">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                <div className="text-purple-500 font-semibold">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="text-primary font-semibold">
                   Loading goods...
                 </div>
               </div>
@@ -723,10 +724,10 @@ const Course = () => {
                 ))
               ) : (
                 <div className="col-span-full text-center py-20">
-                  <div className="text-gray-500 text-xl mb-4">
+                  <div className="text-secondary text-xl mb-4">
                     No goods available at the moment.
                   </div>
-                  <div className="text-gray-400">
+                  <div className="text-secondary">
                     Please check back later for new items!
                   </div>
                 </div>
@@ -809,11 +810,11 @@ const Course = () => {
                 <div className="space-y-4">
                   {/* Title and Code */}
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h3 className="text-2xl font-bold text-text mb-2">
                       {selectedGoods.goods}
                     </h3>
                     {selectedGoods.code && (
-                      <div className="text-sm text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block">
+                      <div className="text-sm text-secondary font-mali bg-surface px-2 py-1 rounded inline-block">
                         Code: {selectedGoods.code}
                       </div>
                     )}
@@ -822,22 +823,22 @@ const Course = () => {
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2">
                     {selectedGoods.size && (
-                      <Tag color="geekblue" icon={<TagsOutlined />}>
+                      <Tag color="processing" icon={<TagsOutlined />}>
                         Size: {selectedGoods.size}
                       </Tag>
                     )}
                     {selectedGoods.color && (
-                      <Tag color="orange" icon={<TagsOutlined />}>
+                      <Tag color="warning" icon={<TagsOutlined />}>
                         Color: {selectedGoods.color}
                       </Tag>
                     )}
                     {selectedGoods.hotSale && (
-                      <Tag color="red" icon={<FireOutlined />}>
+                      <Tag color="error" icon={<FireOutlined />}>
                         Hot Sale
                       </Tag>
                     )}
                     {isPromotionActive(selectedGoods.promotion) && (
-                      <Tag color="red" icon={<PercentageOutlined />}>
+                      <Tag color="error" icon={<PercentageOutlined />}>
                         On Sale
                       </Tag>
                     )}
@@ -867,7 +868,7 @@ const Course = () => {
                       <Text strong className="block mb-2">
                         Description:
                       </Text>
-                      <div className="text-gray-600 text-sm leading-relaxed">
+                      <div className="text-secondary text-sm leading-relaxed">
                         {selectedGoods.detail}
                       </div>
                     </div>
@@ -875,11 +876,11 @@ const Course = () => {
 
                   {/* Promotion Info */}
                   {isPromotionActive(selectedGoods.promotion) && (
-                    <div className="promotion-section bg-red-50 border border-red-200 rounded-lg p-3">
-                      <Text strong className="text-red-700 block mb-1">
+                    <div className="promotion-section bg-error-soft border border-border rounded-lg p-3">
+                      <Text strong className="text-error block mb-1">
                         🎉 Special Promotion!
                       </Text>
-                      <div className="text-xs text-red-600">
+                      <div className="text-xs text-error">
                         <div>
                           Promotion Price: ฿
                           {selectedGoods.promotion.price.toLocaleString()}
@@ -896,8 +897,8 @@ const Course = () => {
 
                   {/* Stock Status */}
                   {selectedGoods.stock <= 0 && (
-                    <div className="stock-warning bg-gray-50 border border-gray-200 rounded-lg p-3">
-                      <Text className="text-gray-600">
+                    <div className="stock-warning bg-background border border-border rounded-lg p-3">
+                      <Text className="text-secondary">
                         ⚠️ This item is currently out of stock
                       </Text>
                     </div>
@@ -922,7 +923,7 @@ const Course = () => {
           z-index: 2;
           width: 40px;
           height: 40px;
-          background: rgba(0, 0, 0, 0.5);
+          background: rgba(73,47,42,0.5);
           border-radius: 50%;
         }
 

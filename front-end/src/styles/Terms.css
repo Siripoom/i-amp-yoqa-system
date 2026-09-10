@@ -1,6 +1,6 @@
 .user-container {
   padding: 20px;
-  background-color: #f4f5f7;
+  background-color: var(--color-background);
 }
 
 /* Responsive container adjustments */
@@ -33,8 +33,8 @@
 }
 
 .create-user-button {
-  background-color: #fa7e1e;
-  border-color: #fa7e1e;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .user-search {
@@ -66,7 +66,7 @@
   .responsive-table .ant-table {
     font-size: 12px;
   }
-  
+
   .responsive-table .ant-table-thead > tr > th,
   .responsive-table .ant-table-tbody > tr > td {
     padding: 8px 4px;
@@ -77,19 +77,19 @@
   .responsive-table .ant-table {
     font-size: 11px;
   }
-  
+
   .responsive-table .ant-table-thead > tr > th,
   .responsive-table .ant-table-tbody > tr > td {
     padding: 6px 2px;
   }
 }
 
-.ant-table-thead > tr > th {
-  background-color: #f9f9f9;
+.user-container .ant-table-thead > tr > th {
+  background-color: var(--color-surface);
   font-weight: bold;
 }
 
-.ant-table-tbody > tr > td {
+.user-container .ant-table-tbody > tr > td {
   padding: 16px;
 }
 
@@ -100,7 +100,7 @@
   }
 }
 
-.ant-tag {
+.user-container .ant-tag {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.875em;
@@ -114,7 +114,7 @@
   }
 }
 
-.ant-pagination {
+.user-container .ant-pagination {
   display: flex;
   justify-content: center;
   padding: 20px 0;
@@ -125,7 +125,7 @@
   .ant-pagination {
     padding: 16px 0;
   }
-  
+
   .ant-pagination-item {
     min-width: 28px;
     height: 28px;
@@ -140,20 +140,20 @@
     margin: 0;
     max-width: 100vw;
   }
-  
+
   .ant-modal-content {
     border-radius: 0;
   }
-  
+
   .ant-modal-footer {
     padding: 16px;
   }
-  
+
   .ant-modal-footer .ant-btn {
     margin-bottom: 8px;
     width: 100%;
   }
-  
+
   .ant-modal-footer .ant-btn:last-child {
     margin-bottom: 0;
   }
@@ -164,7 +164,7 @@
   .ant-form-item {
     margin-bottom: 16px;
   }
-  
+
   .ant-form-item-label {
     padding-bottom: 4px;
   }
@@ -175,11 +175,11 @@
   .ant-drawer-content {
     padding: 12px;
   }
-  
+
   .ant-drawer-header {
     padding: 12px 16px;
   }
-  
+
   .ant-drawer-body {
     padding: 16px;
   }
@@ -194,7 +194,7 @@
   .user-history-summary h3 {
     font-size: 16px;
   }
-  
+
   .user-history-summary p {
     font-size: 14px;
     margin-bottom: 8px;
@@ -209,15 +209,15 @@
   .user-history-list h3 {
     font-size: 16px;
   }
-  
+
   .ant-list-item {
     padding: 12px 0;
   }
-  
+
   .ant-list-item-meta-title {
     font-size: 14px;
   }
-  
+
   .ant-list-item-meta-description {
     font-size: 12px;
   }

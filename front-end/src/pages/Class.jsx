@@ -40,7 +40,7 @@ const Class = () => {
         className="flex-1"
         style={{
           background:
-            "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+            "var(--color-background)",
           minHeight: "100vh", // ให้แน่ใจว่าสูงเต็มหน้าจอ
         }}
       >
@@ -51,7 +51,7 @@ const Class = () => {
           {" "}
           {/* เพิ่ม padding-bottom เพื่อไม่ให้ติด footer */}
           <div className="container mx-auto px-4 py-10">
-            <Title level={2} className="text-center text-purple-700 mb-8">
+            <Title level={2} className="text-center text-primary mb-8">
               CLASS YOGA
             </Title>
 
@@ -87,7 +87,7 @@ const Class = () => {
                       }
                       style={{
                         borderRadius: "15px",
-                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        boxShadow: "0 4px 8px rgba(73,47,42,0.1)",
                         height: "100%",
                       }}
                       bodyStyle={{
@@ -96,10 +96,10 @@ const Class = () => {
                         height: "100%",
                       }}
                     >
-                      <Title level={4} className="text-center text-purple-600">
+                      <Title level={4} className="text-center text-primary">
                         {yogaClass.classname}
                       </Title>
-                      <Paragraph className="text-center text-gray-600">
+                      <Paragraph className="text-center text-secondary">
                         {yogaClass.description}
                       </Paragraph>
                     </Card>

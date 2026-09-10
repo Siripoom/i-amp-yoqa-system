@@ -170,7 +170,7 @@ const MyOrders = () => {
       const { totalSessions, totalDuration, totalPrice, quantity } = calculateTotals(order);
       return {
         title: `${order.product_id?.sessions || "N/A"} Sessions`,
-        icon: <BookOutlined className="text-blue-500" />,
+        icon: <BookOutlined className="text-primary" />,
         type: "คอร์สออนไลน์",
         details: [
           { label: "จำนวนครั้ง", value: `${totalSessions} ครั้ง` },
@@ -185,7 +185,7 @@ const MyOrders = () => {
       const totalPrice = (item?.price || 0) * (order.quantity || 1);
       return {
         title: item?.goods || "สินค้า",
-        icon: <ShoppingOutlined className="text-green-500" />,
+        icon: <ShoppingOutlined className="text-success" />,
         type: "สินค้าที่จับต้องได้",
         details: [
           { label: "รหัสสินค้า", value: item?.code || "N/A" },
@@ -257,7 +257,7 @@ const MyOrders = () => {
       className="min-h-screen flex flex-col bg-gradient-to-b"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />
@@ -266,25 +266,25 @@ const MyOrders = () => {
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
           {/* Sidebar */}
           <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
-            <Title level={4} className="text-black font-semibold">
+            <Title level={4} className="text-text font-semibold">
               Manage My Account
             </Title>
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
-                className="text-gray-400 cursor-pointer block"
+                className="text-secondary cursor-pointer block"
               >
                 My Profile
               </Link>
               <Link
                 to="/my-plane"
-                className="text-gray-400 cursor-pointer block"
+                className="text-secondary cursor-pointer block"
               >
                 My Plane
               </Link>
               <Link
                 to="/my-orders"
-                className="text-purple-600 font-semibold cursor-pointer block"
+                className="text-primary font-semibold cursor-pointer block"
               >
                 My Orders
               </Link>
@@ -293,13 +293,13 @@ const MyOrders = () => {
 
           {/* ประวัติการสั่งซื้อ */}
           <div className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md bg-white">
-            <Title level={3} className="text-purple-700">
+            <Title level={3} className="text-primary">
               ประวัติการสั่งซื้อของฉัน
             </Title>
 
             {/* แสดง Loading */}
             {loading ? (
-              <div className="text-center text-blue-500 font-semibold">
+              <div className="text-center text-primary font-semibold">
                 Loading orders...
               </div>
             ) : orders.length > 0 ? (
@@ -313,10 +313,10 @@ const MyOrders = () => {
                         <div className="flex items-center gap-2">
                           {orderInfo.icon}
                           <div>
-                            <p className="font-bold text-gray-700">
+                            <p className="font-bold text-text">
                               {orderInfo.title}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-secondary">
                               {orderInfo.type}
                             </p>
                           </div>
@@ -346,7 +346,7 @@ const MyOrders = () => {
                       {/* ปุ่มดูรายละเอียดและใบเสร็จ */}
                       <div className="mt-3 space-y-2">
                         <Button
-                          className="w-full bg-pink-100 text-pink-600 hover:bg-pink-200 border-pink-300"
+                          className="w-full bg-surface text-primary hover:bg-surface border-border"
                           onClick={() => showModal(order)}
                         >
                           ดูรายละเอียด
@@ -354,7 +354,7 @@ const MyOrders = () => {
 
                         {/* ปุ่มดึงใบเสร็จ */}
                         <Button
-                          className="w-full bg-blue-100 text-blue-600 hover:bg-blue-200 border-blue-300"
+                          className="w-full bg-surface text-primary hover:bg-surface border-border"
                           loading={receiptLoading[order._id]}
                           onClick={() => fetchReceiptForOrder(order._id)}
                         >
@@ -368,7 +368,7 @@ const MyOrders = () => {
                               size="small"
                               icon={<FilePdfOutlined />}
                               onClick={() => downloadReceiptPDF(receipts[order._id]._id, receipts[order._id].receiptNumber)}
-                              className="w-full bg-green-100 text-green-600 hover:bg-green-200 border-green-300"
+                              className="w-full bg-success-soft text-success hover:bg-success-soft border-border"
                             >
                               ดาวน์โหลด PDF
                             </Button>
@@ -380,11 +380,11 @@ const MyOrders = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-secondary py-8">
                 <p className="mb-4">คุณยังไม่มีประวัติการสั่งซื้อ</p>
                 <div className="space-x-4">
                   <Link to="/course">
-                    <Button type="primary" className="bg-pink-500">
+                    <Button type="primary" className="bg-primary">
                       ซื้อคอร์สออนไลน์
                     </Button>
                   </Link>
@@ -416,11 +416,11 @@ const MyOrders = () => {
               {getStatusTag(selectedOrder.status)}
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-md">
+            <div className="bg-background p-4 rounded-md">
               {selectedOrder.order_type === "product" ? (
                 // แสดงข้อมูลสำหรับ product (คอร์สออนไลน์)
                 <div>
-                  <h4 className="font-semibold text-blue-600 mb-3">
+                  <h4 className="font-semibold text-primary mb-3">
                     <BookOutlined /> ข้อมูลคอร์สออนไลน์
                   </h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -442,7 +442,7 @@ const MyOrders = () => {
                     </p>
                   </div>
 
-                  <div className="border-t border-gray-200 my-3"></div>
+                  <div className="border-t border-border my-3"></div>
 
                   <div className="grid grid-cols-2 gap-2">
                     {(() => {
@@ -459,7 +459,7 @@ const MyOrders = () => {
                           </p>
                           <p>
                             <strong>ราคาสุทธิ:</strong>{" "}
-                            <span className="text-red-600 font-bold">
+                            <span className="text-error font-bold">
                               {totalPrice} THB
                             </span>
                           </p>
@@ -471,7 +471,7 @@ const MyOrders = () => {
               ) : selectedOrder.order_type === "goods" ? (
                 // แสดงข้อมูลสำหรับ goods (สินค้าที่จับต้องได้)
                 <div>
-                  <h4 className="font-semibold text-green-600 mb-3">
+                  <h4 className="font-semibold text-success mb-3">
                     <ShoppingOutlined /> ข้อมูลสินค้า
                   </h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -505,7 +505,7 @@ const MyOrders = () => {
                     </p>
                     <p>
                       <strong>ราคาสุทธิ:</strong>{" "}
-                      <span className="text-red-600 font-bold">
+                      <span className="text-error font-bold">
                         {(selectedOrder?.goods_id?.price || 0) * (selectedOrder.quantity || 1)} THB
                       </span>
                     </p>
@@ -513,7 +513,7 @@ const MyOrders = () => {
 
                   {/* ข้อมูลการจัดส่งสำหรับ goods */}
                   {selectedOrder.address && (
-                    <div className="border-t border-gray-200 my-3 pt-3">
+                    <div className="border-t border-border my-3 pt-3">
                       <h5 className="font-semibold mb-2">ข้อมูลการจัดส่ง</h5>
                       <p><strong>ที่อยู่:</strong> {selectedOrder.address}</p>
                       {selectedOrder.phone_number && (
@@ -573,8 +573,8 @@ const MyOrders = () => {
 
             {/* ส่วนแสดงข้อมูลใบเสร็จ */}
             <Divider />
-            <div className="bg-blue-50 p-4 rounded-md">
-              <Title level={5} className="text-blue-700 mb-3">
+            <div className="bg-surface p-4 rounded-md">
+              <Title level={5} className="text-primary mb-3">
                 ข้อมูลใบเสร็จ
               </Title>
 
@@ -589,7 +589,7 @@ const MyOrders = () => {
                       <Button
                         icon={<FilePdfOutlined />}
                         onClick={() => downloadReceiptPDF(receipts[selectedOrder._id]._id, receipts[selectedOrder._id].receiptNumber)}
-                        className="bg-green-100 text-green-600 hover:bg-green-200 border-green-300"
+                        className="bg-success-soft text-success hover:bg-success-soft border-border"
                       >
                         ดาวน์โหลด PDF
                       </Button>
@@ -598,12 +598,12 @@ const MyOrders = () => {
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className="text-gray-500 mb-2">ยังไม่มีใบเสร็จสำหรับคำสั่งซื้อนี้</p>
+                  <p className="text-secondary mb-2">ยังไม่มีใบเสร็จสำหรับคำสั่งซื้อนี้</p>
                   <Button
                     type="primary"
                     loading={receiptLoading[selectedOrder._id]}
                     onClick={() => fetchReceiptForOrder(selectedOrder._id)}
-                    className="bg-blue-600"
+                    className="bg-primary"
                   >
                     <EyeOutlined /> ดูใบเสร็จ
                   </Button>
@@ -625,7 +625,7 @@ const MyOrders = () => {
                     height: "auto",
                     borderRadius: "8px",
                     marginTop: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    boxShadow: "0 2px 6px rgba(73,47,42,0.1)",
                   }}
                 />
               </div>
@@ -636,16 +636,16 @@ const MyOrders = () => {
             )}
 
             {selectedOrder.status === "อนุมัติ" && (
-              <div className="bg-green-50 p-3 rounded-md border border-green-200 mt-4">
-                <Text className="text-green-700">
+              <div className="bg-success-soft p-3 rounded-md border border-border mt-4">
+                <Text className="text-success">
                   การสั่งซื้อนี้ได้รับการอนุมัติแล้ว {selectedOrder.order_type === "product" ? "คุณสามารถใช้บริการได้ทันที" : "สินค้าจะถูกจัดส่งให้คุณ"}
                 </Text>
               </div>
             )}
 
             {selectedOrder.status === "รออนุมัติ" && (
-              <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 mt-4">
-                <Text className="text-yellow-700">
+              <div className="bg-warning-soft p-3 rounded-md border border-border mt-4">
+                <Text className="text-warning">
                   การสั่งซื้อนี้อยู่ระหว่างการตรวจสอบ
                   กรุณารอการยืนยันจากเจ้าหน้าที่
                 </Text>

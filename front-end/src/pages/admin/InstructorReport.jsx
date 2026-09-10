@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useEffect, useState } from "react";
 import {
   Layout,
@@ -60,7 +61,7 @@ const InstructorReport = () => {
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
-  
+
   // Define permissions based on role
   const canDelete = userRole === "SuperAdmin";
 
@@ -329,7 +330,7 @@ const InstructorReport = () => {
           count={text}
           showZero
           style={{
-            backgroundColor: text > 0 ? "#52c41a" : "#d9d9d9",
+            backgroundColor: text > 0 ? colors["success"] : colors["border"],
             fontWeight: "bold",
           }}
         />
@@ -418,7 +419,7 @@ const InstructorReport = () => {
               style={{ marginBottom: 16 }}
             />
           )}
-          
+
           <Card
             title={
               <Space direction="vertical" style={{ width: "100%" }}>
@@ -617,7 +618,7 @@ const InstructorReport = () => {
                 <Divider orientation="left">
                   รายการคลาสที่สอน
                   {selectedMonth && (
-                    <Tag color="blue" style={{ marginLeft: 8 }}>
+                    <Tag color="processing" style={{ marginLeft: 8 }}>
                       {`กรองเดือน: ${moment(selectedMonth).format(
                         "MMMM YYYY"
                       )}`}
@@ -643,7 +644,7 @@ const InstructorReport = () => {
                       <List.Item>
                         <Card style={{ width: "100%" }}>
                           <div style={{ marginBottom: 8 }}>
-                            <Tag color="blue">
+                            <Tag color="processing">
                               <BookOutlined /> {item.title}
                             </Tag>
                           </div>

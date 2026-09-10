@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useState, useEffect } from 'react';
 import {
   Layout,
@@ -540,14 +541,14 @@ const Finance = () => {
       key: 'income_type',
       render: (type) => {
         const typeObj = incomeTypes.find(t => t.value === type);
-        return <Tag color="blue">{typeObj?.label || type}</Tag>;
+        return <Tag color="processing">{typeObj?.label || type}</Tag>;
       }
     },
     {
       title: 'จำนวนเงิน',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) => <span className="font-bold text-green-600">฿{amount?.toLocaleString()}</span>,
+      render: (amount) => <span className="font-bold text-success">฿{amount?.toLocaleString()}</span>,
       align: 'right'
     },
     {
@@ -647,14 +648,14 @@ const Finance = () => {
       key: 'category',
       render: (category) => {
         const categoryObj = expenseCategories.find(c => c.value === category);
-        return <Tag color="orange">{categoryObj?.label || category}</Tag>;
+        return <Tag color="warning">{categoryObj?.label || category}</Tag>;
       }
     },
     {
       title: 'จำนวนเงิน',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) => <span className="font-bold text-red-600">฿{amount?.toLocaleString()}</span>,
+      render: (amount) => <span className="font-bold text-error">฿{amount?.toLocaleString()}</span>,
       align: 'right'
     },
     {
@@ -767,7 +768,7 @@ const Finance = () => {
               value={incomeTotal}
               precision={2}
               prefix="฿"
-              valueStyle={{ color: '#3f8600' }}
+              valueStyle={{ color: colors["success"] }}
             />
           </Col>
           <Col>
@@ -819,7 +820,7 @@ const Finance = () => {
               value={expenseTotal}
               precision={2}
               prefix="฿"
-              valueStyle={{ color: '#cf1322' }}
+              valueStyle={{ color: colors["error"] }}
             />
           </Col>
           <Col>
@@ -917,7 +918,7 @@ const Finance = () => {
                     value={profitLossData.total_income || 0}
                     precision={2}
                     prefix="฿"
-                    valueStyle={{ color: '#3f8600' }}
+                    valueStyle={{ color: colors["success"] }}
                   />
                 </Card>
               </Col>
@@ -928,7 +929,7 @@ const Finance = () => {
                     value={profitLossData.total_expense || 0}
                     precision={2}
                     prefix="฿"
-                    valueStyle={{ color: '#cf1322' }}
+                    valueStyle={{ color: colors["error"] }}
                   />
                 </Card>
               </Col>
@@ -940,7 +941,7 @@ const Finance = () => {
                     precision={2}
                     prefix="฿"
                     valueStyle={{
-                      color: (profitLossData.net_profit || 0) >= 0 ? '#3f8600' : '#cf1322'
+                      color: (profitLossData.net_profit || 0) >= 0 ? colors["success"] : colors["error"]
                     }}
                   />
                 </Card>

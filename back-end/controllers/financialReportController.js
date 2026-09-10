@@ -4,6 +4,7 @@ const FinancialSummary = require("../models/financialSummary");
 const ExcelJS = require("exceljs");
 const path = require("path");
 const fs = require("fs");
+const { companyInfo } = require("../config/brand");
 
 // F011: สร้างรายงานกำไร-ขาดทุน (P&L Statement)
 const generateProfitLossReport = async (req, res) => {
@@ -926,7 +927,7 @@ const exportFinancialReportToExcel = async (req, res) => {
     const workbook = new ExcelJS.Workbook();
 
     // ตั้งค่าข้อมูลเมตา
-    workbook.creator = "YOQA Financial System";
+    workbook.creator = `${companyInfo.name} Financial System`;
     workbook.created = new Date();
     workbook.modified = new Date();
 

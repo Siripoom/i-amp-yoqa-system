@@ -37,7 +37,7 @@ Select.propTypes = {
 
 const SelectTrigger = React.forwardRef(({ className = "", children, ...props }, ref) => {
   const { isOpen, setIsOpen } = useContext(SelectContext);
-  
+
   return (
     <button
       ref={ref}
@@ -74,7 +74,7 @@ SelectTrigger.propTypes = {
 
 const SelectValue = ({ placeholder, className = "" }) => {
   const { value } = useContext(SelectContext);
-  
+
   return (
     <span className={className}>
       {value || placeholder}
@@ -88,9 +88,9 @@ SelectValue.propTypes = {
 
 const SelectContent = ({ className = "", children, ...props }) => {
   const { isOpen } = useContext(SelectContext);
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <div
       className={`absolute top-full left-0 z-50 min-w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 ${className}`}
@@ -109,7 +109,7 @@ SelectContent.propTypes = {
 
 const SelectItem = ({ className = "", children, value, ...props }) => {
   const { onValueChange } = useContext(SelectContext);
-  
+
   return (
     <div
       className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${className}`}

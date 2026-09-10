@@ -157,11 +157,11 @@ const IncomeManagement = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      confirmed: { color: 'bg-green-100 text-green-800', label: 'ยืนยันแล้ว' },
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'รอดำเนินการ' },
-      cancelled: { color: 'bg-red-100 text-red-800', label: 'ยกเลิก' }
+      confirmed: { color: 'bg-success-soft text-success', label: 'ยืนยันแล้ว' },
+      pending: { color: 'bg-warning-soft text-warning', label: 'รอดำเนินการ' },
+      cancelled: { color: 'bg-error-soft text-error', label: 'ยกเลิก' }
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
     return (
       <Badge className={config.color}>
@@ -214,7 +214,7 @@ const IncomeManagement = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">รายละเอียด</label>
                 <Input
@@ -223,7 +223,7 @@ const IncomeManagement = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">ประเภทรายรับ</label>
                 <Select value={newIncome.income_type} onValueChange={(value) => setNewIncome({ ...newIncome, income_type: value })}>
@@ -239,7 +239,7 @@ const IncomeManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">วันที่</label>
                 <Input
@@ -249,7 +249,7 @@ const IncomeManagement = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">วิธีการชำระเงิน</label>
                 <Select value={newIncome.payment_method} onValueChange={(value) => setNewIncome({ ...newIncome, payment_method: value })}>
@@ -265,7 +265,7 @@ const IncomeManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">หมายเลขอ้างอิง</label>
                 <Input
@@ -273,7 +273,7 @@ const IncomeManagement = () => {
                   onChange={(e) => setNewIncome({ ...newIncome, reference_number: e.target.value })}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">หมายเหตุ</label>
                 <Input
@@ -281,7 +281,7 @@ const IncomeManagement = () => {
                   onChange={(e) => setNewIncome({ ...newIncome, notes: e.target.value })}
                 />
               </div>
-              
+
               <div className="flex gap-2">
                 <Button type="submit" className="flex-1">บันทึก</Button>
                 <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>ยกเลิก</Button>
@@ -298,10 +298,10 @@ const IncomeManagement = () => {
             <CardTitle className="text-sm font-medium">รายรับรวม</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{summary.formatted_total}</div>
+            <div className="text-2xl font-bold text-success">{summary.formatted_total}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">จำนวนธุรกรรม</CardTitle>
@@ -310,7 +310,7 @@ const IncomeManagement = () => {
             <div className="text-2xl font-bold">{summary.transaction_count}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">ค่าเฉลี่ยต่อธุรกรรม</CardTitle>
@@ -338,7 +338,7 @@ const IncomeManagement = () => {
                 onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
               <Input
@@ -347,7 +347,7 @@ const IncomeManagement = () => {
                 onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">ประเภทรายรับ</label>
               <Select value={filters.income_type} onValueChange={(value) => setFilters({ ...filters, income_type: value })}>
@@ -364,7 +364,7 @@ const IncomeManagement = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">สถานะ</label>
               <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
@@ -381,7 +381,7 @@ const IncomeManagement = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">ค้นหา</label>
               <Input
@@ -419,13 +419,13 @@ const IncomeManagement = () => {
                   </thead>
                   <tbody>
                     {incomes.map((income) => (
-                      <tr key={income._id} className="border-b hover:bg-gray-50">
+                      <tr key={income._id} className="border-b hover:bg-background">
                         <td className="p-2">
                           {format(new Date(income.income_date), 'dd/MM/yyyy', { locale: th })}
                         </td>
                         <td className="p-2">{income.description}</td>
                         <td className="p-2">{getIncomeTypeLabel(income.income_type)}</td>
-                        <td className="p-2 text-right font-semibold text-green-600">
+                        <td className="p-2 text-right font-semibold text-success">
                           {formatCurrency(income.amount)}
                         </td>
                         <td className="p-2">{getStatusBadge(income.status)}</td>
@@ -452,7 +452,7 @@ const IncomeManagement = () => {
 
               {/* Pagination */}
               <div className="flex justify-between items-center mt-4">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-secondary">
                   แสดง {((pagination.current_page - 1) * pagination.per_page) + 1} - {Math.min(pagination.current_page * pagination.per_page, pagination.total_records)} จาก {pagination.total_records} รายการ
                 </div>
                 <div className="flex gap-2">
@@ -488,51 +488,51 @@ const IncomeManagement = () => {
           {selectedIncome && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600">วันที่</label>
+                <label className="block text-sm font-medium text-secondary">วันที่</label>
                 <p>{format(new Date(selectedIncome.income_date), 'dd/MM/yyyy HH:mm', { locale: th })}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">รายละเอียด</label>
+                <label className="block text-sm font-medium text-secondary">รายละเอียด</label>
                 <p>{selectedIncome.description}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">ประเภทรายรับ</label>
+                <label className="block text-sm font-medium text-secondary">ประเภทรายรับ</label>
                 <p>{getIncomeTypeLabel(selectedIncome.income_type)}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">จำนวนเงิน</label>
-                <p className="text-lg font-semibold text-green-600">{formatCurrency(selectedIncome.amount)}</p>
+                <label className="block text-sm font-medium text-secondary">จำนวนเงิน</label>
+                <p className="text-lg font-semibold text-success">{formatCurrency(selectedIncome.amount)}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">สถานะ</label>
+                <label className="block text-sm font-medium text-secondary">สถานะ</label>
                 <p>{getStatusBadge(selectedIncome.status)}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">วิธีการชำระเงิน</label>
+                <label className="block text-sm font-medium text-secondary">วิธีการชำระเงิน</label>
                 <p>{paymentMethods.find(m => m.value === selectedIncome.payment_method)?.label || selectedIncome.payment_method}</p>
               </div>
-              
+
               {selectedIncome.reference_number && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">หมายเลขอ้างอิง</label>
+                  <label className="block text-sm font-medium text-secondary">หมายเลขอ้างอิง</label>
                   <p>{selectedIncome.reference_number}</p>
                 </div>
               )}
-              
+
               {selectedIncome.notes && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">หมายเหตุ</label>
+                  <label className="block text-sm font-medium text-secondary">หมายเหตุ</label>
                   <p>{selectedIncome.notes}</p>
                 </div>
               )}
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">ผู้สร้าง</label>
+                <label className="block text-sm font-medium text-secondary">ผู้สร้าง</label>
                 <p>{selectedIncome.created_by?.name || 'ระบบ'}</p>
               </div>
             </div>

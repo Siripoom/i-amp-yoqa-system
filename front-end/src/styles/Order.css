@@ -1,6 +1,6 @@
 .order-container {
   padding: 20px;
-  background-color: #f4f5f7;
+  background-color: var(--color-background);
 }
 
 /* Responsive container adjustments */
@@ -33,8 +33,8 @@
 }
 
 .create-order-button {
-  background-color: #fa7e1e;
-  border-color: #fa7e1e;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .order-filters {
@@ -61,7 +61,7 @@
     padding: 6px 8px;
     font-size: 12px;
   }
-  
+
   .order-tabs .ant-tabs-nav {
     margin-bottom: 12px;
   }
@@ -80,7 +80,7 @@
   .responsive-table .ant-table {
     font-size: 12px;
   }
-  
+
   .responsive-table .ant-table-thead > tr > th,
   .responsive-table .ant-table-tbody > tr > td {
     padding: 8px 4px;
@@ -91,19 +91,19 @@
   .responsive-table .ant-table {
     font-size: 11px;
   }
-  
+
   .responsive-table .ant-table-thead > tr > th,
   .responsive-table .ant-table-tbody > tr > td {
     padding: 6px 2px;
   }
 }
 
-.ant-table-thead > tr > th {
-  background-color: #f9f9f9;
+.order-container .ant-table-thead > tr > th {
+  background-color: var(--color-surface);
   font-weight: bold;
 }
 
-.ant-table-tbody > tr > td {
+.order-container .ant-table-tbody > tr > td {
   padding: 16px;
 }
 
@@ -114,7 +114,7 @@
   }
 }
 
-.ant-tag {
+.order-container .ant-tag {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.875em;
@@ -129,7 +129,7 @@
 }
 
 /* Pagination styling */
-.ant-pagination {
+.order-container .ant-pagination {
   display: flex;
   justify-content: center;
   padding: 20px 0;
@@ -140,7 +140,7 @@
   .ant-pagination {
     padding: 16px 0;
   }
-  
+
   .ant-pagination-item {
     min-width: 28px;
     height: 28px;
@@ -155,20 +155,20 @@
     margin: 0;
     max-width: 100vw;
   }
-  
+
   .ant-modal-content {
     border-radius: 0;
   }
-  
+
   .ant-modal-footer {
     padding: 16px;
   }
-  
+
   .ant-modal-footer .ant-btn {
     margin-bottom: 8px;
     width: 100%;
   }
-  
+
   .ant-modal-footer .ant-btn:last-child {
     margin-bottom: 0;
   }
@@ -179,7 +179,7 @@
   .ant-form-item {
     margin-bottom: 16px;
   }
-  
+
   .ant-form-item-label {
     padding-bottom: 4px;
   }

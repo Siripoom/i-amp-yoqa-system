@@ -1,17 +1,11 @@
+const { StorageChanges, respondStorageError } = require("../services/storageChanges");
 const PaymentQRCode = require("../models/paymentQrCode");
-const path = require("path");
-const { createClient } = require("@supabase/supabase-js");
-const supabase = require("../config/supabaseConfig");
-// เชื่อมต่อกับ Supabase
 const dotenv = require("dotenv");
 dotenv.config(); // Load environment variables
-const multer = require("multer");
-// Use Multer for file uploads (memory storage)
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
 
 // สร้าง QR code ใหม่
 exports.createPaymentQRCode = async (req, res) => {
+  const files = new StorageChanges();
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -20,32 +14,13 @@ exports.createPaymentQRCode = async (req, res) => {
       });
     }
 
-    // อัปโหลดรูปภาพไปยัง Supabase Storage
-    const file = req.file;
-    const ext = path.extname(file.originalname);
-    const fileName = `qrcode_${Date.now()}${ext}`;
-    const folderPath = "payment_qrcodes";
-
-    const { data, error } = await supabase.storage
-      .from("store")
-      .upload(`${folderPath}/${fileName}`, file.buffer, {
-        contentType: file.mimetype,
-      });
-
-    if (error) {
-      return res.status(500).json({
-        status: "error",
-        message: error.message,
-      });
-    }
-
-    // สร้าง URL สำหรับรูปภาพ
-    const imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+    const imageUrl = await files.upload(req.file, "payment_qrcodes");
 
     // สร้างข้อมูล QR code ใหม่
     const newPaymentQRCode = await PaymentQRCode.create({
       image: imageUrl,
     });
+    files.commit();
 
     res.status(201).json({
       status: "success",
@@ -53,11 +28,14 @@ exports.createPaymentQRCode = async (req, res) => {
       data: newPaymentQRCode,
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error creating payment QR code:", error);
     res.status(500).json({
       status: "error",
       message: error.message,
     });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -109,6 +87,7 @@ exports.getPaymentQRCodeById = async (req, res) => {
 
 // อัปเดตข้อมูล QR code
 exports.updatePaymentQRCode = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const { name, bank_name, account_name, account_number, is_active } =
       req.body;
@@ -127,40 +106,7 @@ exports.updatePaymentQRCode = async (req, res) => {
 
     // ถ้ามีการอัปโหลดรูปภาพใหม่
     if (req.file) {
-      // ลบรูปภาพเก่าจาก Supabase
-      if (imageUrl) {
-        try {
-          const oldFileName = imageUrl.split("/").pop().split("?")[0];
-
-          if (oldFileName) {
-            await supabase.storage
-              .from("store")
-              .remove([`payment_qrcodes/${oldFileName}`]);
-          }
-        } catch (error) {
-          console.error("Error deleting old image:", error);
-        }
-      }
-
-      // อัปโหลดรูปภาพใหม่
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `qrcode_${Date.now()}${ext}`;
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`payment_qrcodes/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({
-          status: "error",
-          message: error.message,
-        });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
+      imageUrl = await files.upload(req.file, "payment_qrcodes", imageUrl);
     }
 
     // ถ้าตั้งค่าเป็น active, ให้ตั้งค่า QR codes อื่นเป็น inactive
@@ -180,6 +126,8 @@ exports.updatePaymentQRCode = async (req, res) => {
       },
       { new: true }
     );
+    if (!updatedQRCode) return res.status(404).json({ status: "error", message: "QR code not found" });
+    files.commit();
 
     res.status(200).json({
       status: "success",
@@ -187,16 +135,20 @@ exports.updatePaymentQRCode = async (req, res) => {
       data: updatedQRCode,
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error updating payment QR code:", error);
     res.status(500).json({
       status: "error",
       message: error.message,
     });
+  } finally {
+    await files.finish();
   }
 };
 
 // ลบ QR code
 exports.deletePaymentQRCode = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const qrCode = await PaymentQRCode.findById(req.params.id);
 
@@ -207,33 +159,24 @@ exports.deletePaymentQRCode = async (req, res) => {
       });
     }
 
-    // ลบรูปภาพจาก Supabase
-    if (qrCode.image) {
-      try {
-        const fileName = qrCode.image.split("/").pop().split("?")[0];
-
-        if (fileName) {
-          await supabase.storage
-            .from("store")
-            .remove([`payment_qrcodes/${fileName}`]);
-        }
-      } catch (error) {
-        console.error("Error deleting image:", error);
-      }
-    }
+    files.removeAfterCommit(qrCode.image);
 
     // ลบข้อมูลจาก database
     await PaymentQRCode.findByIdAndDelete(req.params.id);
+    files.commit();
 
     res.status(200).json({
       status: "success",
       message: "ลบ QR code สำเร็จ",
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error deleting payment QR code:", error);
     res.status(500).json({
       status: "error",
       message: error.message,
     });
+  } finally {
+    await files.finish();
   }
 };

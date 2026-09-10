@@ -1,6 +1,5 @@
-import { Space } from "antd";
-import { FacebookOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
+import { brand } from "../config/brand.js";
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -11,11 +10,11 @@ const Footer = () => {
   };
 
   const handleEmailClick = () => {
-    window.location.href = "mailto:iampyoqa@gmail.com";
+    window.location.href = `mailto:${brand.email}`;
   };
 
   const handlePhoneClick = () => {
-    window.location.href = "tel:+66991636169";
+    window.location.href = `tel:${brand.phoneHref}`;
   };
 
   const handleLogin = () => {
@@ -48,29 +47,23 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gray-800 text-white py-14">
+    <footer className="bg-primary-dark text-white py-14">
       <div className="container mx-auto px-4">
         {/* Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="brand">
-            <h2 className="text-2xl font-bold cursor-pointer hover:text-pink-300 transition-colors duration-300">
-              <Link to="/" className="text-white hover:text-pink-300">
-                IAMPYOQA
+            <div className="cursor-pointer transition-transform duration-300 hover:scale-105">
+              <Link to="/" aria-label={`${brand.name} home`}>
+                <img
+                  src={brand.logoPath}
+                  alt={`${brand.name} logo`}
+                  className="w-36 h-36 object-contain rounded-2xl"
+                />
               </Link>
-            </h2>
-            <div className="social-icons mt-4 flex space-x-4">
-              <a
-                href="https://www.facebook.com/iampyoqa"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:scale-110 transition-transform duration-300"
-              >
-                <FacebookOutlined className="text-white text-xl hover:text-blue-400 transition-colors duration-300" />
-              </a>
             </div>
-            <p className="text-gray-400 text-sm mt-4">
-              @ 2024 - IAMPYOQA - Designed & Developed by Siripoom
+            <p className="text-surface text-sm mt-4">
+              @ 2024 - {brand.name} - Designed & Developed by Siripoom
             </p>
             <Link
               to="https://dbdregistered.dbd.go.th/api/public/shopinfo?param=6A693ADD3AD1C7457F18C78598EDAD1C1AF6EFDB5823CFE666A39F9441048B67"
@@ -92,28 +85,31 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-3">Support</h3>
             <div className="space-y-2">
               <p
-                className="text-sm hover:text-pink-300 cursor-pointer transition-colors duration-300"
+                className="text-sm hover:text-accent cursor-pointer transition-colors duration-300"
                 onClick={handleEmailClick}
-                title="Send email to iampyoqa@gmail.com"
+                title={`Send email to ${brand.email}`}
               >
-                📧 iampyoqa@gmail.com
+                📧 {brand.email}
               </p>
               <p
-                className="text-sm hover:text-pink-300 cursor-pointer transition-colors duration-300"
+                className="text-sm hover:text-accent cursor-pointer transition-colors duration-300"
                 onClick={handlePhoneClick}
-                title="Call 099-1636169"
+                title={`Call ${brand.phoneDisplay}`}
               >
-                📞 099-1636169
+                📞 {brand.phoneDisplay}
               </p>
               <a
-                href="https://line.me/R/ti/p/@iampyoqa"
+                href={brand.lineUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-sm hover:text-green-400 transition-colors duration-300"
+                className="block text-sm hover:text-success transition-colors duration-300"
                 title="Contact via LINE"
               >
-                💬 LINE: @iampyoqa
+                💬 LINE: {brand.lineId}
               </a>
+              <p className="text-sm text-surface leading-relaxed">
+                📍 {brand.address}
+              </p>
             </div>
           </div>
 
@@ -124,7 +120,7 @@ const Footer = () => {
               <li>
                 <button
                   onClick={handleMyAccount}
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 text-left w-full"
+                  className="text-surface hover:text-surface transition-colors duration-300 text-left w-full"
                 >
                   My Account
                 </button>
@@ -132,7 +128,7 @@ const Footer = () => {
               <li>
                 <button
                   onClick={handleLogin}
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 text-left w-full"
+                  className="text-surface hover:text-surface transition-colors duration-300 text-left w-full"
                 >
                   Login / Register
                 </button>
@@ -140,7 +136,7 @@ const Footer = () => {
               <li>
                 <button
                   onClick={handleCart}
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 text-left w-full"
+                  className="text-surface hover:text-surface transition-colors duration-300 text-left w-full"
                 >
                   My Orders
                 </button>
@@ -148,7 +144,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/course"
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 block"
+                  className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
                   Promotion
                 </Link>
@@ -156,7 +152,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/class"
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 block"
+                  className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
                   Course
                 </Link>
@@ -171,7 +167,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/contact"
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 block"
+                  className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
                   Master
                 </Link>
@@ -181,15 +177,15 @@ const Footer = () => {
                   to="https://forms.gle/uoTsFBoRRXYw9mL66"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 block"
+                  className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
-                  Work with IAMPYOQA
+                  Work with {brand.name}
                 </Link>
               </li>
               <li>
                 <Link
                   to="/booking"
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 block"
+                  className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
                   Book a Class
                 </Link>
@@ -197,7 +193,7 @@ const Footer = () => {
               <li>
                 <button
                   onClick={handleScrollToTop}
-                  className="text-gray-300 hover:text-gray-100 transition-colors duration-300 text-left w-full"
+                  className="text-surface hover:text-surface transition-colors duration-300 text-left w-full"
                 >
                   ↑ Back to Top
                 </button>
@@ -207,19 +203,19 @@ const Footer = () => {
         </div>
 
         {/* Copyright Bar */}
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center">
-          <p className="text-gray-400 text-sm">
-            © 2024 IAMPYOQA. All rights reserved. |
+        <div className="border-t border-border mt-8 pt-8 text-center">
+          <p className="text-surface text-sm">
+            © 2024 {brand.name}. All rights reserved. |
             <Link
               to="/class"
-              className="hover:text-pink-300 transition-colors duration-300 ml-1"
+              className="hover:text-accent transition-colors duration-300 ml-1"
             >
               Yoga Classes
             </Link>{" "}
             |
             <Link
               to="/course"
-              className="hover:text-pink-300 transition-colors duration-300 ml-1"
+              className="hover:text-accent transition-colors duration-300 ml-1"
             >
               Promotions
             </Link>

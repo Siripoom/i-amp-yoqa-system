@@ -77,10 +77,10 @@ const Line = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-b from-pink-100 via-pink-200 to-purple-100">
+      <div className="flex items-center justify-center h-screen bg-surface">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg font-semibold text-gray-700">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg font-semibold text-text">
             Processing LINE login...
           </p>
         </div>
@@ -90,14 +90,14 @@ const Line = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-b from-pink-100 via-pink-200 to-purple-100">
+      <div className="flex items-center justify-center h-screen bg-surface">
         <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Login Error</h1>
-          <p className="text-gray-700 mb-6">{error}</p>
+          <div className="text-error text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-error mb-2">Login Error</h1>
+          <p className="text-text mb-6">{error}</p>
           <button
             onClick={() => navigate("/auth/signin")}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded"
           >
             Go to Login Page
           </button>
@@ -107,11 +107,11 @@ const Line = () => {
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-b from-pink-100 via-pink-200 to-purple-100">
+    <div className="flex items-center justify-center h-screen bg-surface">
       <div className="text-center">
-        <div className="text-green-500 text-6xl mb-4">✅</div>
-        <h1 className="text-2xl font-bold text-green-600">Login Successful</h1>
-        <p className="text-gray-700">Redirecting...</p>
+        <div className="text-success text-6xl mb-4">✅</div>
+        <h1 className="text-2xl font-bold text-success">Login Successful</h1>
+        <p className="text-text">Redirecting...</p>
       </div>
     </div>
   );

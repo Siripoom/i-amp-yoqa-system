@@ -1,3 +1,4 @@
+const { StorageChanges, respondStorageError } = require("../services/storageChanges");
 const Order = require("../models/order");
 const User = require("../models/user");
 const Product = require("../models/product");
@@ -6,9 +7,9 @@ const Receipt = require("../models/receipt"); // เพิ่ม import Receipt 
 const Income = require("../models/income"); // เพิ่ม import Income model
 const QRCode = require("qrcode"); // เพิ่มสำหรับ QR Code
 const { createIncomeFromOrder } = require("./incomeController");
+const { companyInfo } = require("../config/brand");
 const multer = require("multer");
-const path = require("path");
-const supabase = require("../config/supabaseConfig");
+
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -40,12 +41,7 @@ async function createReceiptFromOrder(order, user, item) {
       customerName: `${user.first_name} ${user.last_name}`,
       customerPhone: user.phone || order.phone_number,
       customerAddress: user.address || order.address,
-      companyInfo: {
-        name: "I AMP YOQA",
-        address:
-          "88/139 The Tara Village Soi.8, Phrayasuren 35 Road, Bang Chan, Khet Khlong Sam Wa, Bangkok 10510",
-        phone: "0991636169",
-      },
+      companyInfo: { ...companyInfo },
       items: [
         {
           name:
@@ -74,8 +70,8 @@ async function createReceiptFromOrder(order, user, item) {
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// สร้างคำสั่งซื้อใหม่พร้อมอัปโหลดรูปภาพไปยัง Supabase
 exports.createOrder = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const {
       user_id,
@@ -123,28 +119,6 @@ exports.createOrder = async (req, res) => {
 
     let imageUrl = null;
 
-    // ถ้ามีการอัปโหลดไฟล์ ให้อัปโหลดไปยัง Supabase Storage
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `${Date.now()}${ext}`;
-      const folderPath = "orders";
-
-      // อัปโหลดไฟล์ไปยัง Supabase Storage
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-      // console.log("Image uploaded to Supabase:", imageUrl);
-    }
-
     // checkout user exists address and phone number but not exist or new data in user model save new address and phone number to user instead
     const user = await User.findById(user_id);
     if (!user) {
@@ -156,8 +130,6 @@ exports.createOrder = async (req, res) => {
     if (phone_number || !user.phone) {
       user.phone = phone_number;
     }
-    await user.save();
-
     let item = null;
     let orderData = {
       user_id,
@@ -236,7 +208,13 @@ exports.createOrder = async (req, res) => {
     }
 
     const order = new Order(orderData);
+    await order.validate();
+    if (req.file) {
+      order.image = await files.upload(req.file, "orders");
+    }
+    await user.save();
     await order.save();
+    files.commit();
 
     // F001 & F002: สร้างรายรับอัตโนมัติจากการสั่งซื้อ
     try {
@@ -271,13 +249,16 @@ exports.createOrder = async (req, res) => {
       data: order,
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error creating order:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
-// อัปเดตคำสั่งซื้อพร้อมอัปโหลดรูปภาพไปยัง Supabase
 exports.updateOrder = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {
@@ -285,49 +266,6 @@ exports.updateOrder = async (req, res) => {
     }
 
     let imageUrl = order.image;
-
-    // ลบรูปภาพเดิม (ถ้ามี)
-    if (imageUrl && typeof imageUrl === "string") {
-      try {
-        const fileName = imageUrl.split("/").pop().split("?")[0];
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`orders/${fileName}`]);
-          if (error) {
-            console.error("Error deleting file from Supabase:", error.message);
-            return res.status(500).json({
-              message: "Error deleting file from storage",
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-        return res.status(500).json({
-          message: "Error processing the image URL",
-        });
-      }
-    }
-
-    // อัปโหลดรูปภาพใหม่
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `${Date.now()}${ext}`;
-      const folderPath = "orders";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // อัปเดตข้อมูลคำสั่งซื้อ
     if (req.body.user_id) order.user_id = req.body.user_id;
@@ -342,12 +280,20 @@ exports.updateOrder = async (req, res) => {
     if (req.body.color) order.color = req.body.color;
     order.image = imageUrl;
 
+    await order.validate();
+    if (req.file) {
+      order.image = await files.upload(req.file, "orders", order.image);
+    }
     await order.save();
+    files.commit();
 
     res.status(200).json({ status: "success", data: order });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error updating order:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -389,8 +335,8 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// ลบคำสั่งซื้อพร้อมลบรูปภาพออกจาก Supabase
 exports.deleteOrder = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {
@@ -398,38 +344,21 @@ exports.deleteOrder = async (req, res) => {
     }
 
     // ลบรูปภาพ (ถ้ามี)
-    if (order.image && typeof order.image === "string") {
-      try {
-        const imageUrl = order.image;
-        const fileName = imageUrl.split("/").pop().split("?")[0];
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`orders/${fileName}`]);
-          if (error) {
-            console.error("Error deleting file from Supabase:", error.message);
-            return res.status(500).json({
-              message: "Error deleting file from storage",
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-        return res.status(500).json({
-          message: "Error processing the image URL",
-        });
-      }
-    }
+    files.removeAfterCommit(order.image);
 
     await Order.findByIdAndDelete(req.params.id);
+    files.commit();
 
     res.status(200).json({
       status: "success",
       message: "Order deleted successfully",
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error deleting order:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 

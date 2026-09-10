@@ -1,7 +1,6 @@
+const { StorageChanges, respondStorageError } = require("../services/storageChanges");
 const Master = require("../models/master");
 const multer = require("multer");
-const path = require("path");
-const supabase = require("../config/supabaseConfig"); // Import the Supabase client
 const dotenv = require("dotenv");
 dotenv.config(); // Load environment variables
 
@@ -42,33 +41,11 @@ const getYoutubeEmbedUrl = (url) => {
   return url;
 };
 
-// master creation (with Supabase file upload for image and YouTube URL for video)
 exports.createMaster = async (req, res) => {
+  const files = new StorageChanges();
   try {
     let imageUrl = req.body.image; // Default to the image URL from the request body
     let videoUrl = req.body.videoUrl; // YouTube URL
-
-    // If a file is uploaded, upload it to Supabase Storage
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname); // Get the file extension
-      const fileName = `image_${Date.now()}${ext}`; // Unique file name
-      const folderPath = "masters"; // The folder where files will be stored
-
-      // Upload the file to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from("store") // Replace with your Supabase bucket name
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      // Construct the public URL for the uploaded image
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // แปลง YouTube URL เป็น embed URL
     if (videoUrl) {
@@ -87,17 +64,25 @@ exports.createMaster = async (req, res) => {
 
     // Save master to the database
     const master = new Master(masterData);
+    await master.validate();
+    if (req.file) {
+      master.image = await files.upload(req.file, "masters");
+    }
     await master.save();
+    files.commit();
 
     res.status(201).json({ status: "success", data: master });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error creating master:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
-// master update (with Supabase file upload for image and YouTube URL for video)
 exports.updateMaster = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const master = await Master.findById(req.params.id);
     if (!master) {
@@ -108,46 +93,6 @@ exports.updateMaster = async (req, res) => {
     let videoUrl = req.body.videoUrl || master.videoUrl; // YouTube URL
 
     // Handle image deletion and update
-    if (req.file) {
-      // Delete existing image if present
-      if (imageUrl && typeof imageUrl === "string") {
-        try {
-          const fileName = imageUrl.split("/").pop().split("?")[0];
-          if (fileName) {
-            const { error } = await supabase.storage
-              .from("store")
-              .remove([`masters/${fileName}`]);
-
-            if (error) {
-              console.error(
-                "Error deleting image from Supabase:",
-                error.message
-              );
-            }
-          }
-        } catch (error) {
-          console.error("Error processing the image URL:", error.message);
-        }
-      }
-
-      // Upload new image
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `image_${Date.now()}${ext}`;
-      const folderPath = "masters";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // แปลง YouTube URL เป็น embed URL
     if (videoUrl) {
@@ -163,12 +108,20 @@ exports.updateMaster = async (req, res) => {
     master.specialization = req.body.specialization || master.specialization;
 
     // Save updated master to the database
+    await master.validate();
+    if (req.file) {
+      master.image = await files.upload(req.file, "masters", master.image);
+    }
     await master.save();
+    files.commit();
 
     res.status(200).json({ status: "success", data: master });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error updating master:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -203,6 +156,7 @@ exports.getMasterById = async (req, res) => {
 
 // Delete master
 exports.deleteMaster = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const master = await Master.findById(req.params.id);
     if (!master) {
@@ -210,31 +164,20 @@ exports.deleteMaster = async (req, res) => {
     }
 
     // Delete image if exists
-    if (master.image && typeof master.image === "string") {
-      try {
-        const fileName = master.image.split("/").pop().split("?")[0];
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`masters/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting image from Supabase:", error.message);
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-      }
-    }
+    files.removeAfterCommit(master.image);
 
     // Delete the master from the database
     await Master.findByIdAndDelete(req.params.id);
+    files.commit();
 
     res
       .status(200)
       .json({ status: "success", message: "Master deleted successfully" });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error deleting master:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };

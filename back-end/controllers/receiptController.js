@@ -7,6 +7,12 @@ const fs = require("fs");
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const { formatNumber } = require("../utils/formatters");
+const { companyInfo } = require("../config/brand");
+const {
+  currentCompanyInfo,
+  presentReceipt,
+  presentReceipts,
+} = require("../utils/receiptBrand");
 const { exec } = require("child_process");
 const { promisify } = require("util");
 const execAsync = promisify(exec);
@@ -149,7 +155,7 @@ async function generateReceiptNumber() {
 // สร้างใบเสร็จอัตโนมัติเมื่อมีการสั่งซื้อ
 exports.createReceipt = async (req, res) => {
   try {
-    const { orderId, template, companyInfo } = req.body;
+    const { orderId, template } = req.body;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
@@ -160,7 +166,7 @@ exports.createReceipt = async (req, res) => {
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       customerAddress: order.customerAddress,
-      companyInfo,
+      companyInfo: currentCompanyInfo(),
       items: order.items,
       totalAmount: order.totalAmount,
       template,
@@ -171,7 +177,7 @@ exports.createReceipt = async (req, res) => {
 
     const receipt = new Receipt(receiptData);
     await receipt.save();
-    res.status(201).json(receipt);
+    res.status(201).json(presentReceipt(receipt));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -211,10 +217,9 @@ exports.downloadReceiptDOCX = async (req, res) => {
     // เตรียมข้อมูลทั้งหมดสำหรับ template
     const data = {
       // ข้อมูลบริษัท
-      companyName: "I AMP YOQA",
-      companyAddress:
-        "88/139 The Tara Village Soi.8, Phrayasuren 35 Road, Bang Chan, Khet Khlong Sam Wa, Bangkok 10510",
-      companyPhone: "0991636169",
+      companyName: companyInfo.name,
+      companyAddress: companyInfo.address,
+      companyPhone: companyInfo.phone,
 
       // ข้อมูลใบเสร็จ
       receiptNumber: receipt.receiptNumber,
@@ -332,9 +337,9 @@ exports.downloadReceiptPDF = async (req, res) => {
     // เตรียมข้อมูลทั้งหมดสำหรับ template
     const data = {
       // ข้อมูลบริษัท
-      companyName: receipt.companyInfo?.name || "YOQA Studio",
-      companyAddress: receipt.companyInfo?.address || "",
-      companyPhone: receipt.companyInfo?.phone || "",
+      companyName: companyInfo.name,
+      companyAddress: companyInfo.address,
+      companyPhone: companyInfo.phone,
 
       // ข้อมูลใบเสร็จ
       receiptNumber: receipt.receiptNumber,
@@ -435,7 +440,6 @@ exports.createManualReceipt = async (req, res) => {
       customerName,
       customerPhone,
       customerAddress,
-      companyInfo,
       items,
       totalAmount,
       template,
@@ -457,11 +461,7 @@ exports.createManualReceipt = async (req, res) => {
       customerName,
       customerPhone: customerPhone || "",
       customerAddress: customerAddress || "",
-      companyInfo: companyInfo || {
-        name: "YOQA Studio",
-        address: "123 ถนนสุขุมวิท กรุงเทพฯ 10110",
-        phone: "02-xxx-xxxx",
-      },
+      companyInfo: currentCompanyInfo(),
       items: items || [],
       totalAmount,
       template: template || "default",
@@ -473,7 +473,7 @@ exports.createManualReceipt = async (req, res) => {
 
     const receipt = new Receipt(receiptData);
     await receipt.save();
-    res.status(201).json(receipt);
+    res.status(201).json(presentReceipt(receipt));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -485,7 +485,7 @@ exports.getReceiptByNumber = async (req, res) => {
     const { number } = req.params;
     const receipt = await Receipt.findOne({ receiptNumber: number });
     if (!receipt) return res.status(404).json({ message: "Receipt not found" });
-    res.json(receipt);
+    res.json(presentReceipt(receipt));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -498,7 +498,7 @@ exports.getReceiptsByCustomer = async (req, res) => {
     const receipts = await Receipt.find({
       customerName: { $regex: name, $options: "i" },
     });
-    res.json(receipts);
+    res.json(presentReceipts(receipts));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -515,7 +515,7 @@ exports.getAllReceipts = async (req, res) => {
 
     console.log(`📊 Found ${receipts.length} receipts`);
 
-    res.json(receipts);
+    res.json(presentReceipts(receipts));
   } catch (err) {
     console.error("Error getting all receipts:", err);
     res.status(500).json({ message: err.message });
@@ -543,7 +543,7 @@ exports.getReceiptsByDateRange = async (req, res) => {
 
     console.log(`📊 Found ${receipts.length} receipts in date range`);
 
-    res.json(receipts);
+    res.json(presentReceipts(receipts));
   } catch (err) {
     console.error("Error getting receipts by date range:", err);
     res.status(500).json({ message: err.message });
@@ -631,7 +631,7 @@ exports.printReceipt = async (req, res) => {
           phone: receipt.customerPhone,
           address: receipt.customerAddress,
         },
-        company: receipt.companyInfo,
+        company: currentCompanyInfo(),
         items: receipt.items,
         totalAmount: receipt.totalAmount,
         qrCode: receipt.qrCode,
@@ -668,7 +668,7 @@ exports.getReceiptsByUserId = async (req, res) => {
 
     res.json({
       success: true,
-      data: userReceipts,
+      data: presentReceipts(userReceipts),
     });
   } catch (err) {
     console.error("Error getting receipts by user ID:", err);
@@ -699,7 +699,7 @@ exports.getReceiptByOrderId = async (req, res) => {
 
     res.json({
       success: true,
-      data: receipt,
+      data: presentReceipt(receipt),
     });
   } catch (err) {
     console.error("Error getting receipt by order ID:", err);

@@ -140,7 +140,7 @@ const ExpenseManagement = () => {
     e.preventDefault();
     try {
       const formData = new FormData();
-      
+
       // Add expense data
       Object.entries(newExpense).forEach(([key, value]) => {
         formData.append(key, value);
@@ -253,11 +253,11 @@ const ExpenseManagement = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      approved: { color: 'bg-green-100 text-green-800', label: 'อนุมัติแล้ว' },
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'รอการอนุมัติ' },
-      rejected: { color: 'bg-red-100 text-red-800', label: 'ปฏิเสธ' }
+      approved: { color: 'bg-success-soft text-success', label: 'อนุมัติแล้ว' },
+      pending: { color: 'bg-warning-soft text-warning', label: 'รอการอนุมัติ' },
+      rejected: { color: 'bg-error-soft text-error', label: 'ปฏิเสธ' }
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
     return (
       <Badge className={config.color}>
@@ -305,7 +305,7 @@ const ExpenseManagement = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">หมวดหมู่ *</label>
                   <Select value={newExpense.category} onValueChange={(value) => setNewExpense({ ...newExpense, category: value })}>
@@ -322,7 +322,7 @@ const ExpenseManagement = () => {
                   </Select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">รายละเอียด *</label>
                 <Input
@@ -331,7 +331,7 @@ const ExpenseManagement = () => {
                   required
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">วันที่ *</label>
@@ -342,7 +342,7 @@ const ExpenseManagement = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">ผู้จำหน่าย/ร้านค้า</label>
                   <Input
@@ -351,7 +351,7 @@ const ExpenseManagement = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">หมายเลขใบเสร็จ</label>
@@ -360,7 +360,7 @@ const ExpenseManagement = () => {
                     onChange={(e) => setNewExpense({ ...newExpense, receipt_number: e.target.value })}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">วิธีการชำระเงิน</label>
                   <Select value={newExpense.payment_method} onValueChange={(value) => setNewExpense({ ...newExpense, payment_method: value })}>
@@ -377,7 +377,7 @@ const ExpenseManagement = () => {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <input
@@ -388,7 +388,7 @@ const ExpenseManagement = () => {
                   />
                   <label htmlFor="is_tax_deductible" className="text-sm font-medium">หักลดหย่อนภาษีได้</label>
                 </div>
-                
+
                 {newExpense.is_tax_deductible && (
                   <div>
                     <label className="block text-sm font-medium mb-1">ภาษีมูลค่าเพิ่ม</label>
@@ -401,7 +401,7 @@ const ExpenseManagement = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <input
@@ -412,7 +412,7 @@ const ExpenseManagement = () => {
                   />
                   <label htmlFor="is_recurring" className="text-sm font-medium">แบ่งงวดการจ่าย</label>
                 </div>
-                
+
                 {newExpense.is_recurring && (
                   <div>
                     <label className="block text-sm font-medium mb-1">จำนวนงวด</label>
@@ -426,7 +426,7 @@ const ExpenseManagement = () => {
                   </div>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">ใบเสร็จ/หลักฐาน</label>
                 <Input
@@ -434,9 +434,9 @@ const ExpenseManagement = () => {
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={(e) => setReceiptFile(e.target.files[0])}
                 />
-                <p className="text-xs text-gray-500 mt-1">รองรับไฟล์ JPG, PNG, PDF ขนาดไม่เกิน 5MB</p>
+                <p className="text-xs text-secondary mt-1">รองรับไฟล์ JPG, PNG, PDF ขนาดไม่เกิน 5MB</p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">หมายเหตุ</label>
                 <Input
@@ -444,7 +444,7 @@ const ExpenseManagement = () => {
                   onChange={(e) => setNewExpense({ ...newExpense, notes: e.target.value })}
                 />
               </div>
-              
+
               <div className="flex gap-2">
                 <Button type="submit" className="flex-1">บันทึก</Button>
                 <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>ยกเลิก</Button>
@@ -461,10 +461,10 @@ const ExpenseManagement = () => {
             <CardTitle className="text-sm font-medium">รายจ่ายรวม</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{summary.formatted_total}</div>
+            <div className="text-2xl font-bold text-error">{summary.formatted_total}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">จำนวนธุรกรรม</CardTitle>
@@ -473,7 +473,7 @@ const ExpenseManagement = () => {
             <div className="text-2xl font-bold">{summary.transaction_count}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">ค่าเฉลี่ยต่อธุรกรรม</CardTitle>
@@ -501,7 +501,7 @@ const ExpenseManagement = () => {
                 onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
               <Input
@@ -510,7 +510,7 @@ const ExpenseManagement = () => {
                 onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">หมวดหมู่</label>
               <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value })}>
@@ -527,7 +527,7 @@ const ExpenseManagement = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">สถานะ</label>
               <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
@@ -544,7 +544,7 @@ const ExpenseManagement = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">ผู้จำหน่าย</label>
               <Input
@@ -553,7 +553,7 @@ const ExpenseManagement = () => {
                 onChange={(e) => setFilters({ ...filters, vendor: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">ค้นหา</label>
               <Input
@@ -592,14 +592,14 @@ const ExpenseManagement = () => {
                   </thead>
                   <tbody>
                     {expenses.map((expense) => (
-                      <tr key={expense._id} className="border-b hover:bg-gray-50">
+                      <tr key={expense._id} className="border-b hover:bg-background">
                         <td className="p-2">
                           {format(new Date(expense.expense_date), 'dd/MM/yyyy', { locale: th })}
                         </td>
                         <td className="p-2">{expense.description}</td>
                         <td className="p-2">{getCategoryLabel(expense.category)}</td>
                         <td className="p-2">{expense.vendor || '-'}</td>
-                        <td className="p-2 text-right font-semibold text-red-600">
+                        <td className="p-2 text-right font-semibold text-error">
                           {formatCurrency(expense.amount)}
                         </td>
                         <td className="p-2">{getStatusBadge(expense.status)}</td>
@@ -633,7 +633,7 @@ const ExpenseManagement = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-green-600"
+                                  className="text-success"
                                   onClick={() => handleApproveExpense(expense._id)}
                                 >
                                   <Check className="h-4 w-4" />
@@ -641,7 +641,7 @@ const ExpenseManagement = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-600"
+                                  className="text-error"
                                   onClick={() => handleRejectExpense(expense._id, 'ปฏิเสธโดยผู้ดูแลระบบ')}
                                 >
                                   <X className="h-4 w-4" />
@@ -658,7 +658,7 @@ const ExpenseManagement = () => {
 
               {/* Pagination */}
               <div className="flex justify-between items-center mt-4">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-secondary">
                   แสดง {((pagination.current_page - 1) * pagination.per_page) + 1} - {Math.min(pagination.current_page * pagination.per_page, pagination.total_records)} จาก {pagination.total_records} รายการ
                 </div>
                 <div className="flex gap-2">
@@ -694,66 +694,66 @@ const ExpenseManagement = () => {
           {selectedExpense && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600">วันที่</label>
+                <label className="block text-sm font-medium text-secondary">วันที่</label>
                 <p>{format(new Date(selectedExpense.expense_date), 'dd/MM/yyyy HH:mm', { locale: th })}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">รายละเอียด</label>
+                <label className="block text-sm font-medium text-secondary">รายละเอียด</label>
                 <p>{selectedExpense.description}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">หมวดหมู่</label>
+                <label className="block text-sm font-medium text-secondary">หมวดหมู่</label>
                 <p>{getCategoryLabel(selectedExpense.category)}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">จำนวนเงิน</label>
-                <p className="text-lg font-semibold text-red-600">{formatCurrency(selectedExpense.amount)}</p>
+                <label className="block text-sm font-medium text-secondary">จำนวนเงิน</label>
+                <p className="text-lg font-semibold text-error">{formatCurrency(selectedExpense.amount)}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">สถานะ</label>
+                <label className="block text-sm font-medium text-secondary">สถานะ</label>
                 <p>{getStatusBadge(selectedExpense.status)}</p>
               </div>
-              
+
               {selectedExpense.vendor && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">ผู้จำหน่าย</label>
+                  <label className="block text-sm font-medium text-secondary">ผู้จำหน่าย</label>
                   <p>{selectedExpense.vendor}</p>
                 </div>
               )}
-              
+
               {selectedExpense.receipt_number && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">หมายเลขใบเสร็จ</label>
+                  <label className="block text-sm font-medium text-secondary">หมายเลขใบเสร็จ</label>
                   <p>{selectedExpense.receipt_number}</p>
                 </div>
               )}
-              
+
               {selectedExpense.vat_amount > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">ภาษีมูลค่าเพิ่ม</label>
+                  <label className="block text-sm font-medium text-secondary">ภาษีมูลค่าเพิ่ม</label>
                   <p>{formatCurrency(selectedExpense.vat_amount)}</p>
                 </div>
               )}
-              
+
               {selectedExpense.notes && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">หมายเหตุ</label>
+                  <label className="block text-sm font-medium text-secondary">หมายเหตุ</label>
                   <p>{selectedExpense.notes}</p>
                 </div>
               )}
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-600">ผู้สร้าง</label>
+                <label className="block text-sm font-medium text-secondary">ผู้สร้าง</label>
                 <p>{selectedExpense.created_by?.name || 'ระบบ'}</p>
               </div>
-              
+
               {selectedExpense.approved_by && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">ผู้อนุมัติ</label>
+                  <label className="block text-sm font-medium text-secondary">ผู้อนุมัติ</label>
                   <p>{selectedExpense.approved_by.name}</p>
                 </div>
               )}

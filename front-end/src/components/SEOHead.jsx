@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import PropTypes from "prop-types";
+import { absoluteBrandAsset, brand } from "../config/brand.js";
 
 const SEOHead = ({
   title,
@@ -10,11 +11,11 @@ const SEOHead = ({
   type = "website",
   structuredData,
 }) => {
-  const defaultTitle = "IAMPYOQA - โยคะออนไลน์ คลาสโยคะ";
+  const defaultTitle = `${brand.name} - โยคะออนไลน์ คลาสโยคะ`;
   const defaultDescription =
-    "เรียนโยคะออนไลน์กับ IAMPYOQA คลาสโยคะหลากหลายระดับ จองคอร์สง่าย ๆ พร้อมครูผู้สอนมืออาชีพ";
-  const defaultImage = "https://your-domain.com/default-og-image.jpg";
-  const siteUrl = "https://your-domain.com";
+    `เรียนโยคะออนไลน์กับ ${brand.name} คลาสโยคะหลากหลายระดับ จองคอร์สง่าย ๆ พร้อมครูผู้สอนมืออาชีพ`;
+  const defaultImage = absoluteBrandAsset(brand.socialImagePath);
+  const siteUrl = brand.siteUrl;
 
   const fullTitle = title ? `${title} | ${defaultTitle}` : defaultTitle;
   const fullUrl = url ? `${siteUrl}${url}` : siteUrl;

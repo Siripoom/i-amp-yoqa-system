@@ -10,7 +10,7 @@ const ProductDetail = () => {
       className="min-h-screen bg-gradient-to-b"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />

@@ -1,3 +1,5 @@
+import { colors } from "../theme/tokens.js";
+import { brand } from "../config/brand.js";
 import { useState } from 'react';
 import {
   Card,
@@ -54,7 +56,7 @@ const TestFinancePage = () => {
       };
 
       const result = await financeService.createManualIncome(incomeData);
-      
+
       addTestResult('Income API', 'สร้างรายรับสำเร็จ', true, result);
       message.success('ทดสอบ Income API สำเร็จ');
     } catch (error) {
@@ -80,7 +82,7 @@ const TestFinancePage = () => {
       };
 
       const result = await financeService.createExpense(expenseData);
-      
+
       addTestResult('Expense API', 'สร้างรายจ่ายสำเร็จ', true, result);
       message.success('ทดสอบ Expense API สำเร็จ');
     } catch (error) {
@@ -101,9 +103,9 @@ const TestFinancePage = () => {
         customerPhone: '0812345678',
         customerAddress: '123 ถนนทดสอบ กรุงเทพฯ',
         companyInfo: {
-          name: 'YOQA Studio Test',
-          address: '123 Test Street, Bangkok',
-          phone: '02-123-4567'
+          name: brand.name,
+          address: brand.address,
+          phone: brand.phoneDisplay,
         },
         items: [
           {
@@ -117,7 +119,7 @@ const TestFinancePage = () => {
       };
 
       const result = await receiptService.createReceipt(receiptData);
-      
+
       addTestResult('Receipt API', `สร้างใบเสร็จสำเร็จ: ${result.receiptNumber}`, true, result);
       message.success('ทดสอบ Receipt API สำเร็จ');
     } catch (error) {
@@ -137,10 +139,10 @@ const TestFinancePage = () => {
 
       // Test Profit & Loss Report
       const profitLossResult = await financeService.getProfitLossReport(startDate, endDate);
-      
+
       // Test Monthly Summary
       const monthlySummary = await financeService.getMonthlySummary(2025, 8);
-      
+
       addTestResult('Financial Reports', 'ดึงรายงานการเงินสำเร็จ', true, {
         profitLoss: profitLossResult,
         monthly: monthlySummary
@@ -168,7 +170,7 @@ const TestFinancePage = () => {
   };
 
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f0f2f5' }}>
+    <div style={{ padding: '24px', backgroundColor: colors["background"] }}>
       <Card>
         <Title level={2}>
           <Space>
@@ -176,7 +178,7 @@ const TestFinancePage = () => {
             ทดสอบระบบการเงินและใบเสร็จ
           </Space>
         </Title>
-        
+
         <Alert
           message="หน้าทดสอบระบบ"
           description="ใช้สำหรับทดสอบการทำงานของ API ระบบการเงินและการออกใบเสร็จ"
@@ -278,12 +280,12 @@ const TestFinancePage = () => {
                 </div>
                 {result.data && (
                   <details style={{ marginTop: 8 }}>
-                    <summary style={{ cursor: 'pointer', color: '#1890ff' }}>
+                    <summary style={{ cursor: 'pointer', color: colors["primary"] }}>
                       ดูรายละเอียด
                     </summary>
-                    <pre style={{ 
-                      backgroundColor: '#f5f5f5', 
-                      padding: '8px', 
+                    <pre style={{
+                      backgroundColor: colors["surface"],
+                      padding: '8px',
                       borderRadius: '4px',
                       fontSize: '12px',
                       marginTop: '8px',

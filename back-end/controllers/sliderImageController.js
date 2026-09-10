@@ -1,7 +1,7 @@
+const { StorageChanges, respondStorageError } = require("../services/storageChanges");
 const SliderImage = require("../models/sliderImage");
 const multer = require("multer");
-const path = require("path");
-const supabase = require("../config/supabaseConfig");
+
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -11,28 +11,9 @@ const upload = multer({ storage: storage });
 
 // สร้าง Slider Image ใหม่
 exports.createSliderImage = async (req, res) => {
+  const files = new StorageChanges();
   try {
     let imageUrl = req.body.image; // Default to the image URL from the request body
-
-    // If a file is uploaded, upload it to Supabase Storage
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `slider_${Date.now()}${ext}`;
-      const folderPath = "slider_images";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // Prepare slider image data
     const sliderImageData = {
@@ -44,17 +25,26 @@ exports.createSliderImage = async (req, res) => {
     };
 
     const sliderImage = new SliderImage(sliderImageData);
+    await sliderImage.validate({ pathsToSkip: req.file ? ["image"] : [] });
+    if (req.file) {
+      sliderImage.image = await files.upload(req.file, "slider_images");
+    }
     await sliderImage.save();
+    files.commit();
 
     res.status(201).json({ status: "success", data: sliderImage });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error creating slider image:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
 // อัพเดต Slider Image
 exports.updateSliderImage = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const sliderImage = await SliderImage.findById(req.params.id);
     if (!sliderImage) {
@@ -64,42 +54,8 @@ exports.updateSliderImage = async (req, res) => {
     let imageUrl = sliderImage.image;
 
     // Delete old image if exists and new file is uploaded
-    if (req.file && imageUrl && typeof imageUrl === "string") {
-      try {
-        const fileName = imageUrl.split("/").pop().split("?")[0];
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`slider_images/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting old image:", error.message);
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-      }
-    }
 
     // Upload new image if provided
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `slider_${Date.now()}${ext}`;
-      const folderPath = "slider_images";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // Update slider image data
     sliderImage.title = req.body.title || sliderImage.title;
@@ -112,12 +68,20 @@ exports.updateSliderImage = async (req, res) => {
     sliderImage.order =
       req.body.order !== undefined ? req.body.order : sliderImage.order;
 
+    await sliderImage.validate();
+    if (req.file) {
+      sliderImage.image = await files.upload(req.file, "slider_images", sliderImage.image);
+    }
     await sliderImage.save();
+    files.commit();
 
     res.status(200).json({ status: "success", data: sliderImage });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error updating slider image:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -172,38 +136,27 @@ exports.getSliderImageById = async (req, res) => {
 
 // ลบ Slider Image
 exports.deleteSliderImage = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const sliderImage = await SliderImage.findById(req.params.id);
     if (!sliderImage) {
       return res.status(404).json({ message: "Slider image not found" });
     }
 
-    // Delete image from Supabase if exists
-    if (sliderImage.image && typeof sliderImage.image === "string") {
-      try {
-        const fileName = sliderImage.image.split("/").pop().split("?")[0];
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`slider_images/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting image from Supabase:", error.message);
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-      }
-    }
+    files.removeAfterCommit(sliderImage.image);
 
     await SliderImage.findByIdAndDelete(req.params.id);
+    files.commit();
 
     res.status(200).json({
       status: "success",
       message: "Slider image deleted successfully",
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error deleting slider image:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };

@@ -62,7 +62,7 @@ const Cart = () => {
       className="min-h-screen"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />
@@ -85,7 +85,7 @@ const Cart = () => {
             placeholder="Coupon code"
             className="w-full md:w-2/3 mb-4 md:mb-0"
           />
-          <Button type="primary" className="bg-yellow-500 text-white">
+          <Button type="primary" className="bg-warning text-white">
             Apply coupon
           </Button>
         </div> */}
@@ -100,13 +100,13 @@ const Cart = () => {
             <Text>Total:</Text>
             <Text className="font-bold">
               ฿1,590.00{" "}
-              <span className="text-gray-500">(includes ฿104.02 VAT)</span>
+              <span className="text-secondary">(includes ฿104.02 VAT)</span>
             </Text>
           </div>
           <Link to="/checkout">
             <Button
               type="primary"
-              className="bg-pink-400 text-white mt-4 md:mt-0"
+              className="bg-primary text-white mt-4 md:mt-0"
             >
               Proceed to checkout
             </Button>

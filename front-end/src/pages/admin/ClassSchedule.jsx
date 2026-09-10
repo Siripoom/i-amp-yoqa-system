@@ -1,3 +1,4 @@
+import { colors, eventStyle } from "../../theme/tokens.js";
 import {
   Layout,
   Modal,
@@ -273,7 +274,7 @@ const Schedule = () => {
     try {
       const values = await form.validateFields();
       const formattedColor =
-        typeof values.color === "string" ? values.color : "789DBC";
+        typeof values.color === "string" ? values.color : colors.accent.slice(1);
 
       const classData = {
         title: values.title,
@@ -726,13 +727,13 @@ const Schedule = () => {
           <div className="course-header">
             <h2>Schedule</h2>
             {canViewOnly && (
-              <div style={{ 
-                marginTop: "8px", 
-                padding: "8px 16px", 
-                backgroundColor: "#fff3cd", 
-                border: "1px solid #ffeaa7", 
+              <div style={{
+                marginTop: "8px",
+                padding: "8px 16px",
+                backgroundColor: "var(--color-warning-soft)",
+                border: "1px solid var(--color-warning-soft)",
                 borderRadius: "4px",
-                color: "#856404"
+                color: colors["warning"]
               }}>
                 <Text>
                   <strong>Note:</strong> You have view-only access to this page. You can view class schedules and reservations but cannot make any modifications.
@@ -778,9 +779,7 @@ const Schedule = () => {
               }}
               onEventDrop={canViewOnly ? undefined : handleEventDrop}
               eventPropGetter={(event) => ({
-                style: {
-                  backgroundColor: event.color ? `#${event.color}` : "#789DBC",
-                },
+                style: eventStyle(event.color),
               })}
             />
           </div>
@@ -1143,7 +1142,7 @@ const Schedule = () => {
                   style={{
                     marginTop: 20,
                     padding: 10,
-                    background: "#f0f7ff",
+                    background: colors["surface"],
                     borderRadius: 4,
                     maxHeight: "150px",
                     overflowY: "auto",

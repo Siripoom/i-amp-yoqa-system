@@ -96,7 +96,7 @@ const Myplane = () => {
     const daysLeft = expiryDate.diff(now, "days");
     if (daysLeft <= 7) {
       return (
-        <span className="text-red-500 font-semibold">
+        <span className="text-error font-semibold">
           {expiryDate.format("MMMM Do YYYY")} ({daysLeft} days left)
         </span>
       );
@@ -116,20 +116,20 @@ const Myplane = () => {
     const { remaining_session, sessions_expiry_date } = userInfo;
 
     if (remaining_session <= 0) {
-      return <Tag color="red">Inactive</Tag>;
+      return <Tag color="error">Inactive</Tag>;
     }
 
     if (!sessions_expiry_date) {
-      return <Tag color="green">Active</Tag>;
+      return <Tag color="success">Active</Tag>;
     }
 
     const expiryDate = moment(sessions_expiry_date);
     const now = moment();
 
     if (expiryDate.isBefore(now)) {
-      return <Tag color="red">Expired</Tag>;
+      return <Tag color="error">Expired</Tag>;
     } else {
-      return <Tag color="green">Active</Tag>;
+      return <Tag color="success">Active</Tag>;
     }
   };
 
@@ -167,32 +167,32 @@ const Myplane = () => {
       className="min-h-screen flex flex-col bg-gradient-to-b"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />
       <div className="flex-grow flex items-center justify-center mt-4 mb-4">
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
           <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
-            <Title level={4} className="text-black font-semibold">
+            <Title level={4} className="text-text font-semibold">
               Manage My Account
             </Title>
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
-                className="text-gray-400 cursor-pointer block"
+                className="text-secondary cursor-pointer block"
               >
                 My Profile
               </Link>
               <Link
                 to="/my-plane"
-                className="text-purple-600 font-semibold cursor-pointer block"
+                className="text-primary font-semibold cursor-pointer block"
               >
                 My Plane
               </Link>
               <Link
                 to="/my-orders"
-                className="text-gray-400 cursor-pointer block"
+                className="text-secondary cursor-pointer block"
               >
                 My Orders
               </Link>
@@ -201,7 +201,7 @@ const Myplane = () => {
 
           <div className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md bg-white">
             {userInfo && (
-              <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+              <div className="mb-6 bg-background p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <Title level={4} className="mb-0">
                     Subscription Status
@@ -221,7 +221,7 @@ const Myplane = () => {
                   </div>
                   <div className="text-right">
                     <Link to="/course">
-                      <Button type="primary" className="bg-purple-600">
+                      <Button type="primary" className="bg-primary">
                         Buy More Sessions
                       </Button>
                     </Link>
@@ -256,36 +256,36 @@ const Myplane = () => {
             )}
 
             <div className="flex justify-between items-center mb-4">
-              <Title level={3} className="text-purple-700 mb-0">
+              <Title level={3} className="text-primary mb-0">
                 My Booked Classes
               </Title>
               <Link to="/booking">
-                <Button type="primary" className="bg-purple-600">
+                <Button type="primary" className="bg-primary">
                   Book More Classes
                 </Button>
               </Link>
             </div>
 
             {loading ? (
-              <p className="text-center text-gray-500">
+              <p className="text-center text-secondary">
                 กำลังโหลดข้อมูลคอร์ส...
               </p>
             ) : !userId ? (
               <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">
+                <p className="text-secondary mb-4">
                   กรุณาเข้าสู่ระบบเพื่อดูคลาสที่จองไว้
                 </p>
                 <Link to="/auth/signin">
-                  <Button type="primary" className="bg-purple-600">
+                  <Button type="primary" className="bg-primary">
                     เข้าสู่ระบบ
                   </Button>
                 </Link>
               </div>
             ) : bookedClasses.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">คุณยังไม่มีคลาสที่จองไว้</p>
+                <p className="text-secondary mb-4">คุณยังไม่มีคลาสที่จองไว้</p>
                 <Link to="/booking">
-                  <Button type="primary" className="bg-purple-600">
+                  <Button type="primary" className="bg-primary">
                     จองคลาสเลย
                   </Button>
                 </Link>
@@ -300,7 +300,7 @@ const Myplane = () => {
                         title={classItem.title}
                         extra={
                           <div className="flex items-center gap-2">
-                            <span className="text-green-500 font-semibold">
+                            <span className="text-success font-semibold">
                               จองแล้ว ✅
                             </span>
                           </div>
@@ -320,11 +320,11 @@ const Myplane = () => {
                         {classItem.zoomLink && (
                           <p>
                             <strong>Zoom Link:</strong>{" "}
-                            <a 
-                              href={classItem.zoomLink} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-blue-600 hover:text-blue-800"
+                            <a
+                              href={classItem.zoomLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-primary"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Join Class

@@ -44,10 +44,10 @@ const SignUp = () => {
         localStorage.setItem("token", response.token);
         localStorage.setItem("user_id", response.user.user_id || response.user._id);
         localStorage.setItem("role", response.user.role_id || "Member");
-        
+
         // เก็บข้อมูลผู้ใช้เพิ่มเติมสำหรับใช้ในหน้า Terms
         localStorage.setItem("username", `${response.user.first_name} ${response.user.last_name}`);
-        
+
         console.log("Token saved after registration:", response.token);
       }
 
@@ -65,7 +65,7 @@ const SignUp = () => {
       className="min-h-screen flex items-center justify-center"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <motion.div
@@ -74,7 +74,7 @@ const SignUp = () => {
         transition={{ duration: 0.8 }}
         className="bg-white p-8 rounded-2xl shadow-lg w-96"
       >
-        <Title level={2} className="text-center text-blue-900 font-bold">
+        <Title level={2} className="text-center text-primary font-bold">
           Sign-Up
         </Title>
         <Form layout="vertical" onFinish={onFinish}>
@@ -188,13 +188,13 @@ const SignUp = () => {
             type="primary"
             htmlType="submit"
             loading={loading}
-            className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white text-lg flex justify-center items-center py-2 rounded-3xl"
+            className="w-full bg-primary text-white text-lg flex justify-center items-center py-2 rounded-3xl"
           >
             Sign Up →
           </Button>
 
           <div className="text-center mt-4">
-            <Link to="/auth/signin" className="text-blue-600">
+            <Link to="/auth/signin" className="text-primary">
               Cancel
             </Link>
           </div>

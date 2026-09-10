@@ -1,6 +1,9 @@
 # Deploy Backend to Render
 
 ## Prerequisites
+
+For B2 configuration, upload lifecycle, and verification commands, see [STORAGE.md](STORAGE.md).
+
 - Render account
 - GitHub repository connected to Render
 
@@ -27,11 +30,15 @@ In Render Dashboard:
 
 3. **Environment Variables**
    Add all required environment variables:
-   - `MONGODB_URI`
+   - `MONGO_URI`
    - `JWT_SECRET`
    - `FIREBASE_CONFIG`
-   - `SUPABASE_URL`
-   - `SUPABASE_KEY`
+   - `B2_ENDPOINT` (HTTPS S3 endpoint from your Backblaze bucket)
+   - `B2_REGION` (must match the endpoint)
+   - `B2_BUCKET_NAME` (existing public bucket)
+   - `B2_KEY_ID`
+   - `B2_APPLICATION_KEY` (Application Key, not the master key)
+   - `B2_PUBLIC_BASE_URL` (optional, defaults to endpoint/bucket)
    - `LINE_CHANNEL_SECRET`
    - `LINE_CHANNEL_ACCESS_TOKEN`
    - etc.

@@ -131,7 +131,7 @@ const UserPage = () => {
           publicity: values.publicityConsent,
         },
       };
-      
+
       await updateUserTerms(editingUserTerm._id, updateData);
       message.success("User terms updated successfully");
       setIsModalVisible(false);
@@ -161,7 +161,7 @@ const UserPage = () => {
     try {
       // Create HTML content for PDF
       const htmlContent = `
-        <div style="font-family: 'Sarabun', 'Arial', sans-serif; padding: 40px; max-width: 800px;">
+        <div style="font-family: 'Sarabun', 'Arial', sans-serif !important; padding: 40px; max-width: 800px;">
           <h1 style="text-align: center; color: #1890ff; margin-bottom: 10px;">
             ข้อตกลงและความยินยอม / User Terms and Consent Agreement
           </h1>
@@ -287,7 +287,7 @@ const UserPage = () => {
       key: "fullName",
       render: (text) => (
         <div className="flex items-center gap-2">
-          <UserOutlined className="text-gray-500" />
+          <UserOutlined className="text-secondary" />
           <span className="font-medium">{text}</span>
         </div>
       ),
@@ -329,7 +329,7 @@ const UserPage = () => {
       key: "acceptedAt",
       render: (date) => (
         <div className="flex items-center gap-2">
-          <CalendarOutlined className="text-gray-500" />
+          <CalendarOutlined className="text-secondary" />
           <span>
             {date ? moment(date).format("DD/MM/YYYY HH:mm") : "Not accepted"}
           </span>
@@ -405,9 +405,9 @@ const UserPage = () => {
               </Button>
             </div>
           </div>
-         
 
-          
+
+
 
           <div className="user-filters mb-4 flex flex-col sm:flex-row gap-2">
             <Select

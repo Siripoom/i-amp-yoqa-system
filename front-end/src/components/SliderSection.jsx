@@ -43,8 +43,8 @@ const SliderSection = () => {
         <Row justify="center" align="middle" className="w-full">
           <Col xs={24} className="flex justify-center">
             <div className="w-full max-w-4xl px-4">
-              <div className="bg-gray-200 rounded-lg shadow-lg flex items-center justify-center h-48 sm:h-64 md:h-80 lg:h-96">
-                <span className="text-gray-500">No images available</span>
+              <div className="bg-border rounded-lg shadow-lg flex items-center justify-center h-48 sm:h-64 md:h-80 lg:h-96">
+                <span className="text-secondary">No images available</span>
               </div>
             </div>
           </Col>
@@ -68,7 +68,7 @@ const SliderSection = () => {
                   loading="lazy"
                 />
                 {sliderImages[0].title && (
-                  <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
+                  <div className="absolute bottom-4 left-4 bg-primary-dark bg-opacity-50 text-white px-3 py-1 rounded">
                     {sliderImages[0].title}
                   </div>
                 )}
@@ -91,12 +91,12 @@ const SliderSection = () => {
                       loading="lazy"
                     />
                     {slide.title && (
-                      <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
+                      <div className="absolute bottom-4 left-4 bg-primary-dark bg-opacity-50 text-white px-3 py-1 rounded">
                         {slide.title}
                       </div>
                     )}
                     {slide.description && (
-                      <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded max-w-xs">
+                      <div className="absolute bottom-4 right-4 bg-primary-dark bg-opacity-50 text-white px-3 py-1 rounded max-w-xs">
                         <p className="text-sm">{slide.description}</p>
                       </div>
                     )}

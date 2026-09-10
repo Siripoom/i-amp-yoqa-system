@@ -1,3 +1,4 @@
+import { colors } from "../theme/tokens.js";
 import {
   Button,
   Card,
@@ -95,20 +96,20 @@ const Profile = () => {
     const { remaining_session, sessions_expiry_date } = user;
 
     if (remaining_session <= 0) {
-      return <Tag color="red">Inactive</Tag>;
+      return <Tag color="error">Inactive</Tag>;
     }
 
     if (!sessions_expiry_date) {
-      return <Tag color="green">Active</Tag>;
+      return <Tag color="success">Active</Tag>;
     }
 
     const expiryDate = moment(sessions_expiry_date).endOf("day");
     const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
-      return <Tag color="red">Expired</Tag>;
+      return <Tag color="error">Expired</Tag>;
     } else {
-      return <Tag color="green">Active</Tag>;
+      return <Tag color="success">Active</Tag>;
     }
   };
 
@@ -117,7 +118,7 @@ const Profile = () => {
       className="min-h-screen flex flex-col bg-gradient-to-b"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />
@@ -125,20 +126,20 @@ const Profile = () => {
       <div className="flex-grow flex items-center justify-center mt-4 mb-4">
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
           <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
-            <Title level={4} className="text-black font-semibold">
+            <Title level={4} className="text-text font-semibold">
               Manage My Account
             </Title>
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
-                className="text-purple-600 font-semibold block"
+                className="text-primary font-semibold block"
               >
                 My Profile
               </Link>
-              <Link to="/my-plane" className="text-gray-400 block">
+              <Link to="/my-plane" className="text-secondary block">
                 My Plane
               </Link>
-              <Link to="/my-orders" className="text-gray-400 block">
+              <Link to="/my-orders" className="text-secondary block">
                 My Orders
               </Link>
             </div>
@@ -146,13 +147,13 @@ const Profile = () => {
 
           {/* Profile Form */}
           <Card className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md">
-            <Title level={3} className="text-purple-700">
+            <Title level={3} className="text-primary">
               My Profile
             </Title>
 
             {/* Subscription Information Section */}
             {user && (
-              <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+              <div className="mb-6 bg-background p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                   <Title level={4} className="mb-0">
                     Subscription Status
@@ -168,7 +169,7 @@ const Profile = () => {
                       prefix={<HourglassOutlined />}
                       valueStyle={{
                         color:
-                          user.remaining_session > 0 ? "#3f8600" : "#cf1322",
+                          user.remaining_session > 0 ? colors["success"] : colors["error"],
                       }}
                     />
                   </Col>
@@ -228,7 +229,7 @@ const Profile = () => {
 
                 {/* Explanation of expiry rules */}
                 <Divider />
-                <div className="bg-white p-3 rounded-lg text-sm text-gray-600">
+                <div className="bg-white p-3 rounded-lg text-sm text-secondary">
                   {/* <p>
                     <strong>How sessions expiration works:</strong>
                   </p>
@@ -247,7 +248,7 @@ const Profile = () => {
                   </ul> */}
                   <div className="mt-3 text-right">
                     <Link to="/course">
-                      <Button type="primary" className="bg-purple-600">
+                      <Button type="primary" className="bg-primary">
                         Buy More Sessions
                       </Button>
                     </Link>
@@ -333,7 +334,7 @@ const Profile = () => {
 
             <div className="flex justify-between mt-6">
               <Button type="text">Cancel</Button>
-              <Button type="primary" className="bg-pink-500 text-white">
+              <Button type="primary" className="bg-primary text-white">
                 Save Changes
               </Button>
             </div>

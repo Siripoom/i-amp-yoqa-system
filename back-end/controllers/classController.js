@@ -1,3 +1,4 @@
+const { StorageChanges, respondStorageError } = require("../services/storageChanges");
 const Class = require("../models/class");
 const Course = require("../models/course");
 const User = require("../models/user");
@@ -5,8 +6,6 @@ const Reservation = require("../models/reservation");
 const dayjs = require("dayjs");
 const ClassCatalog = require("../models/classCatalog");
 const multer = require("multer");
-const path = require("path");
-const supabase = require("../config/supabaseConfig"); // Import the Supabase client
 const dotenv = require("dotenv");
 dotenv.config(); // Load environment variables
 
@@ -199,6 +198,7 @@ exports.duplicateClass = async (req, res) => {
 
 //! =================== Class Catalog show in คลาสโยคะ ===================
 exports.createClassCatalog = async (req, res) => {
+  const files = new StorageChanges();
   // console.log(req.body.classname);
   try {
     // Check if required fields are present
@@ -210,26 +210,6 @@ exports.createClassCatalog = async (req, res) => {
     }
 
     let imageUrl = req.body.image;
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `${Date.now()}${ext}`;
-      const folderPath = "class";
-
-      // Upload the file to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      // Construct the public URL for the uploaded image
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     const newClassCatalog = new ClassCatalog({
       classname: req.body.classname,
@@ -237,12 +217,18 @@ exports.createClassCatalog = async (req, res) => {
       image: imageUrl || "", // Provide default empty string if missing
     });
 
+    await newClassCatalog.validate();
+    if (req.file) {
+      newClassCatalog.image = await files.upload(req.file, "class");
+    }
     const savedClassCatalog = await newClassCatalog.save();
+    files.commit();
     res.status(201).json({
       message: "Class catalog created successfully",
       data: savedClassCatalog,
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     // For debugging purposes, log the full error
     console.error("Error creating class catalog:", error);
     // Return a more user-friendly error message
@@ -250,6 +236,8 @@ exports.createClassCatalog = async (req, res) => {
       message: "Error creating class catalog",
       error: error.message || "Unknown error occurred",
     });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -270,6 +258,7 @@ exports.getAllClassCatalogs = async (req, res) => {
 };
 
 exports.updateClassCatalog = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const classId = req.params.id;
     const updatedClassCatalog = await ClassCatalog.findById(classId);
@@ -281,47 +270,8 @@ exports.updateClassCatalog = async (req, res) => {
     let imageUrl = updatedClassCatalog.image; // Fixed variable reference (was using 'master.image')
 
     // Handle image deletion if a new file is uploaded
-    if (req.file && imageUrl && typeof imageUrl === "string") {
-      try {
-        // Extract file name from the image URL
-        const fileName = imageUrl.split("/").pop().split("?")[0];
-
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`class/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting file from Supabase:", error.message);
-            // Continue with update even if deletion fails
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-        // Continue with update even if image URL processing fails
-      }
-    }
 
     // Handle new file upload
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `${Date.now()}${ext}`;
-      const folderPath = "class";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      // Update the image URL
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // Update class catalog fields
     updatedClassCatalog.image = imageUrl;
@@ -331,20 +281,29 @@ exports.updateClassCatalog = async (req, res) => {
       req.body.description || updatedClassCatalog.description;
 
     // Save updated class catalog
+    await updatedClassCatalog.validate();
+    if (req.file) {
+      updatedClassCatalog.image = await files.upload(req.file, "class", updatedClassCatalog.image);
+    }
     await updatedClassCatalog.save();
+    files.commit();
 
     res.status(200).json({
       message: "Class catalog updated successfully",
       data: updatedClassCatalog,
     });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     res
       .status(500)
       .json({ message: "Error updating class catalog", error: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
 exports.deleteClassCatalog = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const classId = req.params.id;
     const classCatalog = await ClassCatalog.findById(classId);
@@ -354,33 +313,19 @@ exports.deleteClassCatalog = async (req, res) => {
     }
 
     // Handle image deletion
-    if (classCatalog.image && typeof classCatalog.image === "string") {
-      try {
-        const fileName = classCatalog.image.split("/").pop().split("?")[0];
-
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`class/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting file from Supabase:", error.message);
-            // Continue with deletion even if file removal fails
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-        // Continue with deletion even if image processing fails
-      }
-    }
+    files.removeAfterCommit(classCatalog.image);
 
     // Delete the class catalog from the database
     await ClassCatalog.findByIdAndDelete(classId);
+    files.commit();
 
     res.status(200).json({ message: "Class catalog deleted successfully" });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     res
       .status(500)
       .json({ message: "Error deleting class catalog", error: error.message });
+  } finally {
+    await files.finish();
   }
 };

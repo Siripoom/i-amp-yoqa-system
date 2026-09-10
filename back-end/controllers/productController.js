@@ -1,7 +1,7 @@
+const { StorageChanges, respondStorageError } = require("../services/storageChanges");
 const Product = require("../models/product");
 const multer = require("multer");
-const path = require("path");
-const supabase = require("../config/supabaseConfig");
+
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -88,30 +88,10 @@ const parsePromotionData = (promotionString) => {
   }
 };
 
-// Product creation (with Supabase file upload)
 exports.createProduct = async (req, res) => {
+  const files = new StorageChanges();
   try {
     let imageUrl = req.body.image;
-
-    // If a file is uploaded, upload it to Supabase Storage
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `${Date.now()}${ext}`;
-      const folderPath = "products";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // Parse promotion data from FormData
     let promotionData = null;
@@ -144,17 +124,25 @@ exports.createProduct = async (req, res) => {
 
     // Save product to the database
     const product = new Product(productData);
+    await product.validate();
+    if (req.file) {
+      product.image = await files.upload(req.file, "products");
+    }
     await product.save();
+    files.commit();
 
     res.status(201).json({ status: "success", data: product });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error creating product:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
-// Product update (with Supabase file upload)
 exports.updateProduct = async (req, res) => {
+  const files = new StorageChanges();
   try {
     console.log("Update request body:", req.body); // Debug log
 
@@ -166,49 +154,6 @@ exports.updateProduct = async (req, res) => {
     let imageUrl = product.image;
 
     // Delete old image if exists and new image is uploaded
-    if (req.file && imageUrl && typeof imageUrl === "string") {
-      try {
-        const fileName = imageUrl.split("/").pop().split("?")[0];
-
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`products/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting file from Supabase:", error.message);
-            return res
-              .status(500)
-              .json({ message: "Error deleting file from storage" });
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-        return res
-          .status(500)
-          .json({ message: "Error processing the image URL" });
-      }
-    }
-
-    // If a new file is uploaded, upload it to Supabase Storage
-    if (req.file) {
-      const file = req.file;
-      const ext = path.extname(file.originalname);
-      const fileName = `${Date.now()}${ext}`;
-      const folderPath = "products";
-
-      const { data, error } = await supabase.storage
-        .from("store")
-        .upload(`${folderPath}/${fileName}`, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        return res.status(500).json({ message: error.message });
-      }
-
-      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-    }
 
     // Parse promotion data from FormData
     let promotionData = null;
@@ -266,12 +211,20 @@ exports.updateProduct = async (req, res) => {
     console.log("Final updated product data:", product.toObject()); // Debug log
 
     // Save updated product to the database
+    await product.validate();
+    if (req.file) {
+      product.image = await files.upload(req.file, "products", product.image);
+    }
     await product.save();
+    files.commit();
 
     res.status(200).json({ status: "success", data: product });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error updating product:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -547,41 +500,28 @@ exports.deleteProduct = async (req, res) => {
 
 // Permanently delete product (hard delete)
 exports.permanentDeleteProduct = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Delete image from Supabase if exists
-    if (product.image && typeof product.image === "string") {
-      try {
-        const fileName = product.image.split("/").pop().split("?")[0];
-
-        if (fileName) {
-          const { error } = await supabase.storage
-            .from("store")
-            .remove([`products/${fileName}`]);
-
-          if (error) {
-            console.error("Error deleting file from Supabase:", error.message);
-            // Continue with deletion even if image deletion fails
-          }
-        }
-      } catch (error) {
-        console.error("Error processing the image URL:", error.message);
-      }
-    }
+    files.removeAfterCommit(product.image);
 
     // Permanently delete the product from the database
     await Product.findByIdAndDelete(req.params.id);
+    files.commit();
 
     res
       .status(200)
       .json({ status: "success", message: "Product permanently deleted" });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error permanently deleting product:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 

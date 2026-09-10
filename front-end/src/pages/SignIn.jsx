@@ -41,8 +41,8 @@ const SignIn = () => {
       console.log("User role from backend:", response.data.role_id);
 
       // Redirect based on role
-      if (response.data.role_id === "Admin" || 
-          response.data.role_id === "SuperAdmin" || 
+      if (response.data.role_id === "Admin" ||
+          response.data.role_id === "SuperAdmin" ||
           response.data.role_id === "Accounting") {
         console.log("Redirecting to admin dashboard...");
         navigate("/admin/dashboard");
@@ -52,13 +52,13 @@ const SignIn = () => {
       }
     } catch (error) {
       console.error("Login failed:", error);
-      
+
       // Handle different error scenarios and show user-friendly messages
       if (error.response) {
         // Server responded with error status
         const statusCode = error.response.status;
         const errorMessage = error.response.data?.message || "Login failed";
-        
+
         switch (statusCode) {
           case 404:
             message.error("Email not found. Please check your email or sign up for an account.");
@@ -90,7 +90,7 @@ const SignIn = () => {
       className="min-h-screen flex items-center justify-center"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <motion.div
@@ -99,7 +99,7 @@ const SignIn = () => {
         transition={{ duration: 0.8 }}
         className="bg-white p-8 rounded-2xl shadow-lg w-96"
       >
-        <Title level={2} className="text-center text-blue-900 font-bold">
+        <Title level={2} className="text-center text-primary font-bold">
           Sign-In
         </Title>
         <Form layout="vertical" onFinish={onFinish}>
@@ -123,13 +123,13 @@ const SignIn = () => {
 
           {/* <div className="flex justify-between items-center mb-4">
             <Checkbox>Remember Me</Checkbox>
-            <Link className="text-blue-600">Forget Password</Link>
+            <Link className="text-primary">Forget Password</Link>
           </div> */}
 
           <Button
             type="primary"
             htmlType="submit"
-            className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white text-lg flex justify-center items-center py-2 rounded-3xl"
+            className="w-full bg-primary text-white text-lg flex justify-center items-center py-2 rounded-3xl"
           >
             Sign In →
           </Button>
@@ -162,14 +162,14 @@ const SignIn = () => {
         {/* Sign up link */}
         <div className="text-center mt-4">
           <Text>Don&apos;t have an account?</Text>{" "}
-          <Link to="/auth/signup" className="text-blue-600">
+          <Link to="/auth/signup" className="text-primary">
             Sign Up
           </Link>
         </div>
 
         {/* Forgot password link */}
         <div className="text-center mt-2">
-          <Link to="/auth/reset-password" className="text-gray-600 hover:text-blue-600">
+          <Link to="/auth/reset-password" className="text-secondary hover:text-primary">
             Forgot Password?
           </Link>
         </div>

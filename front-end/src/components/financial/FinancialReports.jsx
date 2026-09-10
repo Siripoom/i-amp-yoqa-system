@@ -1,3 +1,4 @@
+import { colors, chartColors } from "../../theme/tokens.js";
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
@@ -33,7 +34,7 @@ const FinancialReports = () => {
     month: (new Date().getMonth() + 1).toString()
   });
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  const COLORS = chartColors;
 
   useEffect(() => {
     if (activeTab) {
@@ -131,15 +132,15 @@ const FinancialReports = () => {
   };
 
   const getTrendIcon = (value) => {
-    if (value > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
-    if (value < 0) return <TrendingDown className="h-4 w-4 text-red-600" />;
+    if (value > 0) return <TrendingUp className="h-4 w-4 text-success" />;
+    if (value < 0) return <TrendingDown className="h-4 w-4 text-error" />;
     return null;
   };
 
   const getTrendColor = (value) => {
-    if (value > 0) return 'text-green-600';
-    if (value < 0) return 'text-red-600';
-    return 'text-gray-600';
+    if (value > 0) return 'text-success';
+    if (value < 0) return 'text-error';
+    return 'text-secondary';
   };
 
   const renderProfitLossReport = () => {
@@ -165,7 +166,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">รายรับรวม</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 {reportData.revenue.formatted_total_income}
               </div>
             </CardContent>
@@ -176,7 +177,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">รายจ่ายรวม</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-error">
                 {reportData.expenses.formatted_total_expense}
               </div>
             </CardContent>
@@ -187,10 +188,10 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">กำไร/ขาดทุนสุทธิ</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${reportData.profit_loss.is_profitable ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-bold ${reportData.profit_loss.is_profitable ? 'text-success' : 'text-error'}`}>
                 {reportData.profit_loss.formatted_net_profit}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-secondary">
                 อัตรากำไร: {reportData.profit_loss.profit_margin.toFixed(2)}%
               </div>
             </CardContent>
@@ -212,7 +213,7 @@ const FinancialReports = () => {
                     labelLine={false}
                     label={({ name, percentage }) => `${name}: ${percentage}%`}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill={colors["primary"]}
                     dataKey="value"
                   >
                     {incomeData.map((entry, index) => (
@@ -239,7 +240,7 @@ const FinancialReports = () => {
                     labelLine={false}
                     label={({ name, percentage }) => `${name}: ${percentage}%`}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill={colors["primary"]}
                     dataKey="value"
                   >
                     {expenseData.map((entry, index) => (
@@ -275,7 +276,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">เงินเข้ารวม</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 {reportData.summary.formatted_total_inflow}
               </div>
             </CardContent>
@@ -286,7 +287,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">เงินออกรวม</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-error">
                 {reportData.summary.formatted_total_outflow}
               </div>
             </CardContent>
@@ -297,7 +298,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">กระแสเงินสดสุทธิ</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${reportData.summary.net_cash_flow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-bold ${reportData.summary.net_cash_flow >= 0 ? 'text-success' : 'text-error'}`}>
                 {reportData.summary.formatted_net_cash_flow}
               </div>
             </CardContent>
@@ -308,7 +309,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">ยอดคงเหลือสุดท้าย</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${reportData.summary.final_balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-bold ${reportData.summary.final_balance >= 0 ? 'text-success' : 'text-error'}`}>
                 {reportData.summary.formatted_final_balance}
               </div>
             </CardContent>
@@ -327,9 +328,9 @@ const FinancialReports = () => {
                 <YAxis />
                 <Tooltip formatter={(value) => formatCurrency(value)} />
                 <Legend />
-                <Line type="monotone" dataKey="inflow" stroke="#00C49F" name="เงินเข้า" />
-                <Line type="monotone" dataKey="outflow" stroke="#FF8042" name="เงินออก" />
-                <Line type="monotone" dataKey="balance" stroke="#8884d8" name="ยอดคงเหลือ" strokeWidth={3} />
+                <Line type="monotone" dataKey="inflow" stroke={colors["success"]} name="เงินเข้า" />
+                <Line type="monotone" dataKey="outflow" stroke={colors.error} strokeDasharray="6 4" name="เงินออก" />
+                <Line type="monotone" dataKey="balance" stroke={colors["primary"]} name="ยอดคงเหลือ" strokeWidth={3} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -356,7 +357,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">รายรับรวมทั้งปี</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 {reportData.year_summary.formatted_total_income}
               </div>
             </CardContent>
@@ -367,7 +368,7 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">รายจ่ายรวมทั้งปี</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-error">
                 {reportData.year_summary.formatted_total_expense}
               </div>
             </CardContent>
@@ -378,10 +379,10 @@ const FinancialReports = () => {
               <CardTitle className="text-sm">กำไร/ขาดทุนทั้งปี</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${reportData.year_summary.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-bold ${reportData.year_summary.net_profit >= 0 ? 'text-success' : 'text-error'}`}>
                 {reportData.year_summary.formatted_net_profit}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-secondary">
                 อัตรากำไร: {reportData.year_summary.profit_margin}%
               </div>
             </CardContent>
@@ -395,7 +396,7 @@ const FinancialReports = () => {
               <div className="text-2xl font-bold">
                 {reportData.year_summary.total_income_transactions + reportData.year_summary.total_expense_transactions}
               </div>
-              <div className="text-xs text-gray-600">
+              <div className="text-xs text-secondary">
                 รายรับ: {reportData.year_summary.total_income_transactions} | รายจ่าย: {reportData.year_summary.total_expense_transactions}
               </div>
             </CardContent>
@@ -414,9 +415,9 @@ const FinancialReports = () => {
                 <YAxis />
                 <Tooltip formatter={(value) => formatCurrency(value)} />
                 <Legend />
-                <Bar dataKey="income" fill="#00C49F" name="รายรับ" />
-                <Bar dataKey="expense" fill="#FF8042" name="รายจ่าย" />
-                <Bar dataKey="profit" fill="#8884d8" name="กำไร/ขาดทุน" />
+                <Bar dataKey="income" fill={colors["success"]} name="รายรับ" />
+                <Bar dataKey="expense" fill={colors.error} name="รายจ่าย" />
+                <Bar dataKey="profit" fill={colors["primary"]} name="กำไร/ขาดทุน" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -440,11 +441,11 @@ const FinancialReports = () => {
                 </thead>
                 <tbody>
                   {reportData.monthly_data.map((month) => (
-                    <tr key={month.month} className="border-b hover:bg-gray-50">
+                    <tr key={month.month} className="border-b hover:bg-background">
                       <td className="p-2 font-medium">{month.month_name}</td>
-                      <td className="p-2 text-right text-green-600">{month.formatted_total_income}</td>
-                      <td className="p-2 text-right text-red-600">{month.formatted_total_expense}</td>
-                      <td className={`p-2 text-right font-semibold ${month.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <td className="p-2 text-right text-success">{month.formatted_total_income}</td>
+                      <td className="p-2 text-right text-error">{month.formatted_total_expense}</td>
+                      <td className={`p-2 text-right font-semibold ${month.net_profit >= 0 ? 'text-success' : 'text-error'}`}>
                         {month.formatted_net_profit}
                       </td>
                       <td className="p-2 text-right">{month.profit_margin}%</td>
@@ -474,15 +475,15 @@ const FinancialReports = () => {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span>รายรับ:</span>
-                <span className="font-semibold text-green-600">{reportData.current_period.data.formatted_total_income}</span>
+                <span className="font-semibold text-success">{reportData.current_period.data.formatted_total_income}</span>
               </div>
               <div className="flex justify-between">
                 <span>รายจ่าย:</span>
-                <span className="font-semibold text-red-600">{reportData.current_period.data.formatted_total_expense}</span>
+                <span className="font-semibold text-error">{reportData.current_period.data.formatted_total_expense}</span>
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span>กำไร/ขาดทุน:</span>
-                <span className={`font-bold ${reportData.current_period.data.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`font-bold ${reportData.current_period.data.net_profit >= 0 ? 'text-success' : 'text-error'}`}>
                   {reportData.current_period.data.formatted_net_profit}
                 </span>
               </div>
@@ -498,15 +499,15 @@ const FinancialReports = () => {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span>รายรับ:</span>
-                <span className="font-semibold text-green-600">{reportData.compare_period.data.formatted_total_income}</span>
+                <span className="font-semibold text-success">{reportData.compare_period.data.formatted_total_income}</span>
               </div>
               <div className="flex justify-between">
                 <span>รายจ่าย:</span>
-                <span className="font-semibold text-red-600">{reportData.compare_period.data.formatted_total_expense}</span>
+                <span className="font-semibold text-error">{reportData.compare_period.data.formatted_total_expense}</span>
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span>กำไร/ขาดทุน:</span>
-                <span className={`font-bold ${reportData.compare_period.data.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`font-bold ${reportData.compare_period.data.net_profit >= 0 ? 'text-success' : 'text-error'}`}>
                   {reportData.compare_period.data.formatted_net_profit}
                 </span>
               </div>
@@ -583,14 +584,14 @@ const FinancialReports = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+      <div className="flex space-x-1 bg-surface p-1 rounded-lg">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
-              ? 'bg-white text-blue-600 shadow'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white text-primary shadow'
+              : 'text-secondary hover:text-text'
               }`}
           >
             <tab.icon className="h-4 w-4" />

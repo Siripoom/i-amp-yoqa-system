@@ -1,6 +1,6 @@
 .user-container {
   padding: 20px;
-  background-color: #f4f5f7;
+  background-color: var(--color-background);
 }
 
 .user-header {
@@ -11,30 +11,30 @@
 }
 
 .create-user-button {
-  background-color: #fa7e1e;
-  border-color: #fa7e1e;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .user-search {
   margin-bottom: 20px;
 }
 
-.ant-table-thead > tr > th {
-  background-color: #f9f9f9;
+.user-container .ant-table-thead > tr > th {
+  background-color: var(--color-surface);
   font-weight: bold;
 }
 
-.ant-table-tbody > tr > td {
+.user-container .ant-table-tbody > tr > td {
   padding: 16px;
 }
 
-.ant-tag {
+.user-container .ant-tag {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.875em;
 }
 
-.ant-pagination {
+.user-container .ant-pagination {
   display: flex;
   justify-content: center;
   padding: 20px 0;

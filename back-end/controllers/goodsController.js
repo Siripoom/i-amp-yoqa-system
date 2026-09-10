@@ -1,7 +1,7 @@
+const { StorageChanges, respondStorageError } = require("../services/storageChanges");
 const Goods = require("../models/goods");
 const multer = require("multer");
-const path = require("path");
-const supabase = require("../config/supabaseConfig");
+
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -88,76 +88,11 @@ const parsePromotionData = (promotionString) => {
   }
 };
 
-// Helper function to delete file from Supabase
-const deleteFileFromSupabase = async (imageUrl) => {
-  try {
-    if (!imageUrl) return;
-
-    // Extract file path from URL
-    const urlParts = imageUrl.split("/storage/v1/object/public/store/");
-    if (urlParts.length < 2) return;
-
-    const filePath = urlParts[1];
-
-    const { error } = await supabase.storage.from("store").remove([filePath]);
-
-    if (error) {
-      console.error("Error deleting file:", error);
-    }
-  } catch (error) {
-    console.error("Error in deleteFileFromSupabase:", error);
-  }
-};
-
-// Helper function to upload multiple files
-const uploadMultipleFilesToSupabase = async (files) => {
-  const uploadPromises = files.map(async (file) => {
-    const ext = path.extname(file.originalname);
-    const fileName = `${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}${ext}`;
-    const folderPath = "goods";
-
-    const { data, error } = await supabase.storage
-      .from("store")
-      .upload(`${folderPath}/${fileName}`, file.buffer, {
-        contentType: file.mimetype,
-      });
-
-    if (error) {
-      throw new Error(`File upload failed: ${error.message}`);
-    }
-
-    return `${process.env.SUPABASE_URL}/storage/v1/object/public/store/${data.path}`;
-  });
-
-  return Promise.all(uploadPromises);
-};
-
-// Helper function to delete multiple files
-const deleteMultipleFilesFromSupabase = async (imageUrls) => {
-  if (!imageUrls || imageUrls.length === 0) return;
-
-  const deletePromises = imageUrls.map(async (imageUrl) => {
-    await deleteFileFromSupabase(imageUrl);
-  });
-
-  return Promise.all(deletePromises);
-};
-
-// Product creation (with Supabase file upload)
 exports.createGoods = async (req, res) => {
+  const files = new StorageChanges();
   try {
     let imageUrls = [];
     console.log("Creating goods:", req.body.goods);
-
-    // Handle multiple file uploads
-    if (req.files && req.files.length > 0) {
-      if (req.files.length > 3) {
-        return res.status(400).json({ message: "Maximum 3 images allowed" });
-      }
-      imageUrls = await uploadMultipleFilesToSupabase(req.files);
-    }
 
     // Validate required fields
     if (!req.body.goods || req.body.goods.trim() === "") {
@@ -221,13 +156,22 @@ exports.createGoods = async (req, res) => {
     }
 
     const goods = new Goods(goodsData);
+    await goods.validate();
+    if (req.files && req.files.length) {
+      if (req.files.length > 3) return res.status(400).json({ message: "Maximum 3 images allowed" });
+      goods.image = await files.uploadMany(req.files, "goods");
+    }
     await goods.save();
+    files.commit();
 
     console.log("Goods created successfully:", goods._id);
     res.status(201).json({ status: "success", data: goods });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error creating product:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -329,6 +273,7 @@ exports.getGoodsById = async (req, res) => {
 
 // Update goods
 exports.updateGoods = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const existingGoods = await Goods.findById(req.params.id);
 
@@ -337,20 +282,6 @@ exports.updateGoods = async (req, res) => {
     }
 
     let imageUrls = existingGoods.image || [];
-
-    // Handle multiple file uploads
-    if (req.files && req.files.length > 0) {
-      if (req.files.length > 3) {
-        return res.status(400).json({ message: "Maximum 3 images allowed" });
-      }
-
-      // Delete old images
-      if (existingGoods.image && existingGoods.image.length > 0) {
-        await deleteMultipleFilesFromSupabase(existingGoods.image);
-      }
-
-      imageUrls = await uploadMultipleFilesToSupabase(req.files);
-    }
 
     // Validate and convert numeric values
     const stock =
@@ -415,13 +346,19 @@ exports.updateGoods = async (req, res) => {
 
     // Handle update with special case for promotion removal
     let updatedGoods;
+    await new Goods({ ...existingGoods.toObject(), ...updateData }).validate();
+    if (req.files && req.files.length) {
+      if (req.files.length > 3) return res.status(400).json({ message: "Maximum 3 images allowed" });
+      updateData.image = await files.uploadMany(req.files, "goods", existingGoods.image);
+    }
     if (updateData.$unset) {
+      const { $unset, promotion, ...fields } = updateData;
       // Use $unset to completely remove promotion field
       updatedGoods = await Goods.findByIdAndUpdate(
         req.params.id,
         {
-          $set: { ...updateData, promotion: undefined },
-          $unset: updateData.$unset,
+          $set: fields,
+          $unset,
         },
         { new: true, runValidators: true }
       );
@@ -431,11 +368,16 @@ exports.updateGoods = async (req, res) => {
         runValidators: true,
       });
     }
+    if (!updatedGoods) return res.status(404).json({ message: "Product not found" });
+    files.commit();
 
     res.json({ status: "success", data: updatedGoods });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error updating product:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 
@@ -468,6 +410,7 @@ exports.deleteGoods = async (req, res) => {
 
 // Permanently delete goods (hard delete)
 exports.permanentDeleteGoods = async (req, res) => {
+  const files = new StorageChanges();
   try {
     const goods = await Goods.findById(req.params.id);
 
@@ -475,17 +418,18 @@ exports.permanentDeleteGoods = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Delete multiple images from Supabase
-    if (goods.image && goods.image.length > 0) {
-      await deleteMultipleFilesFromSupabase(goods.image);
-    }
+    files.removeAfterCommit(goods.image);
 
     await Goods.findByIdAndDelete(req.params.id);
+    files.commit();
 
     res.json({ status: "success", message: "Product permanently deleted" });
   } catch (error) {
+    if (respondStorageError(res, error)) return;
     console.error("Error permanently deleting product:", error);
     res.status(500).json({ message: error.message });
+  } finally {
+    await files.finish();
   }
 };
 

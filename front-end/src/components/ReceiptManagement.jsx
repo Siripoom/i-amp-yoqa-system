@@ -1,3 +1,4 @@
+import { colors } from "../theme/tokens.js";
 import { useState, useEffect } from 'react';
 import {
   Card,
@@ -28,6 +29,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import receiptService from '../services/receiptService';
+import { brand } from '../config/brand.js';
 
 const { RangePicker } = DatePicker;
 const { Search } = Input;
@@ -212,7 +214,7 @@ const ReceiptManagement = () => {
       dataIndex: 'receiptNumber',
       key: 'receiptNumber',
       render: (text) => (
-        <Text strong style={{ color: '#1890ff' }}>
+        <Text strong style={{ color: colors["primary"] }}>
           {text}
         </Text>
       ),
@@ -238,7 +240,7 @@ const ReceiptManagement = () => {
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       render: (amount) => (
-        <Text strong style={{ color: '#52c41a' }}>
+        <Text strong style={{ color: colors["success"] }}>
           ฿{amount?.toLocaleString()}
         </Text>
       ),
@@ -442,13 +444,11 @@ const ReceiptManagement = () => {
               </Col>
             </Row>
 
-            {selectedReceipt.companyInfo && (
-              <Card size="small" title="ข้อมูลบริษัท" style={{ marginTop: 16 }}>
-                <p><strong>ชื่อบริษัท:</strong> I AMP YOQA</p>
-                <p><strong>ที่อยู่:</strong> 88/139 The Tara Village Soi.8, Phrayasuren 35 Road, Bang Chan, Khet Khlong Sam Wa, Bangkok 10510</p>
-                <p><strong>เบอร์โทร:</strong> 0991636169</p>
-              </Card>
-            )}
+            <Card size="small" title="ข้อมูลบริษัท" style={{ marginTop: 16 }}>
+              <p><strong>ชื่อบริษัท:</strong> {brand.name}</p>
+              <p><strong>ที่อยู่:</strong> {brand.address}</p>
+              <p><strong>เบอร์โทร:</strong> {brand.phoneDisplay}</p>
+            </Card>
 
             <Card size="small" title="รายการสินค้า" style={{ marginTop: 16 }}>
               <Table
@@ -469,7 +469,7 @@ const ReceiptManagement = () => {
               />
               <Divider />
               <div style={{ textAlign: 'right' }}>
-                <Title level={4} style={{ color: '#52c41a' }}>
+                <Title level={4} style={{ color: colors["success"] }}>
                   ยอดรวม: ฿{selectedReceipt.totalAmount?.toLocaleString()}
                 </Title>
               </div>

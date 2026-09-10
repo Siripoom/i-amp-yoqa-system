@@ -1,3 +1,4 @@
+import { colors } from "../theme/tokens.js";
 import { useState, useEffect } from "react";
 import {
   Button,
@@ -24,6 +25,7 @@ import { QrcodePayment } from "../services/imageService";
 import { getUserById } from "../services/userService";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import { brand } from "../config/brand.js";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -324,7 +326,7 @@ const Checkout = () => {
       });
     } catch (error) {
       console.error("💥 Order submission error:", error);
-      message.error(error.message || "Order failed. Please try again.");
+      message.error(error?.response?.data?.message || error?.message || (typeof error === "string" ? error : "Order failed. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -338,16 +340,16 @@ const Checkout = () => {
       return (
         <div>
           <Text className="block font-semibold">Session: {item.sessions}</Text>
-          <Text className="block text-sm text-gray-600 mb-2">
+          <Text className="block text-sm text-secondary mb-2">
             Duration: {item.duration} Days
           </Text>
-          <div className="text-red-600 font-semibold">
+          <div className="text-error font-semibold">
             {item.isPromotionActive && item.promotion?.price ? (
               <div>
-                <span className="text-red-600">
+                <span className="text-error">
                   ฿{item.promotion.price.toLocaleString()}
                 </span>
-                <span className="text-gray-500 text-sm line-through ml-2">
+                <span className="text-secondary text-sm line-through ml-2">
                   ฿{item.price.toLocaleString()}
                 </span>
               </div>
@@ -364,7 +366,7 @@ const Checkout = () => {
         <div>
           <Text className="block font-semibold mb-1">{item.goods}</Text>
           {item.code && (
-            <Text className="block text-xs text-gray-500 font-mono mb-2">
+            <Text className="block text-xs text-secondary font-mali mb-2">
               Code: {item.code}
             </Text>
           )}
@@ -373,30 +375,30 @@ const Checkout = () => {
           <div className="mb-2 flex flex-wrap gap-1">
             {/* Show original item tags if no multiple options and no selection made */}
             {item.size && !item.size.includes(",") && !selectedSize && (
-              <Tag color="geekblue" size="small">
+              <Tag color="processing" size="small">
                 {item.size}
               </Tag>
             )}
             {item.color && !item.color.includes(",") && !selectedColor && (
-              <Tag color="orange" size="small">
+              <Tag color="warning" size="small">
                 {item.color}
               </Tag>
             )}
 
             {/* Show selected values if multiple options exist */}
             {selectedSize && (
-              <Tag color="geekblue" size="small">
+              <Tag color="processing" size="small">
                 ขนาด: {selectedSize}
               </Tag>
             )}
             {selectedColor && (
-              <Tag color="orange" size="small">
+              <Tag color="warning" size="small">
                 สี: {selectedColor}
               </Tag>
             )}
 
             {item.hotSale && (
-              <Tag color="red" icon={<FireOutlined />} size="small">
+              <Tag color="error" icon={<FireOutlined />} size="small">
                 Hot Sale
               </Tag>
             )}
@@ -413,13 +415,13 @@ const Checkout = () => {
             </Tag>
           </div>
 
-          <div className="text-red-600 font-semibold">
+          <div className="text-error font-semibold">
             {hasActivePromotion ? (
               <div>
-                <span className="text-red-600">
+                <span className="text-error">
                   ฿{item.promotion.price.toLocaleString()}
                 </span>
-                <span className="text-gray-500 text-sm line-through ml-2">
+                <span className="text-secondary text-sm line-through ml-2">
                   ฿{item.price.toLocaleString()}
                 </span>
               </div>
@@ -437,7 +439,7 @@ const Checkout = () => {
     if (!item) return null;
 
     return (
-      <div className="bg-gray-50 p-4 rounded-md">
+      <div className="bg-background p-4 rounded-md">
         <div className="flex justify-between mb-2">
           <Text>ราคาต่อชิ้น:</Text>
           <Text>฿{unitPrice.toLocaleString()}</Text>
@@ -506,16 +508,16 @@ const Checkout = () => {
           </>
         )}
 
-        <div className="flex justify-between mt-4 bg-pink-50 p-2 rounded-md">
-          <Text strong className="text-red-600">
+        <div className="flex justify-between mt-4 bg-surface p-2 rounded-md">
+          <Text strong className="text-error">
             ราคาสุทธิ:
           </Text>
-          <Text strong className="text-red-600 text-xl">
+          <Text strong className="text-error text-xl">
             ฿{totalPrice.toLocaleString()}
           </Text>
         </div>
 
-        <div className="mt-4 text-xs text-gray-500">
+        <div className="mt-4 text-xs text-secondary">
           {orderType === "product"
             ? "* ระยะเวลาการใช้งานจะเริ่มนับหลังจากการใช้งานครั้งแรก"
             : "* สินค้าจะถูกจัดส่งหลังจากได้รับการยืนยันการชำระเงิน"}
@@ -529,7 +531,7 @@ const Checkout = () => {
       className="min-h-screen"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />
@@ -544,13 +546,13 @@ const Checkout = () => {
           <div className="flex-1 bg-white p-6 rounded-md shadow-md">
             <Form form={form} layout="vertical">
               {/* Payment Section */}
-              <div className="bg-gray-100 p-4 rounded-md mb-6">
+              <div className="bg-surface p-4 rounded-md mb-6">
                 <Title level={4}>Payment Details</Title>
-                <Text>ชำระค่าบริการช่องทางอื่นๆติดต่อได้ที่ไลน์ @iampyoqa</Text>
+                <Text>ชำระค่าบริการช่องทางอื่น ๆ ติดต่อได้ที่ไลน์ {brand.lineId}</Text>
               </div>
 
               {/* QR Code */}
-              <div className="bg-gray-100 p-4 rounded-md mb-6 ">
+              <div className="bg-surface p-4 rounded-md mb-6 ">
                 {qr && (
                   <img
                     src={qr}
@@ -641,7 +643,7 @@ const Checkout = () => {
               <Form.Item>
                 <Button
                   type="primary"
-                  className="bg-pink-400 text-white w-full"
+                  className="bg-primary text-white w-full"
                   onClick={handleFormSubmit}
                   loading={loading}
                   disabled={
@@ -665,8 +667,8 @@ const Checkout = () => {
               <div className="flex items-center gap-4 mb-4">
                 <img
                   src={
-                    Array.isArray(item.image) 
-                      ? item.image[0] || image 
+                    Array.isArray(item.image)
+                      ? item.image[0] || image
                       : item.image || image
                   }
                   alt={orderType === "product" ? "Course" : "Goods"}
@@ -741,7 +743,7 @@ const Checkout = () => {
                                   className="w-4 h-4 rounded-full border"
                                   style={{
                                     backgroundColor: getColorCode(color.trim()),
-                                    borderColor: "#d9d9d9",
+                                    borderColor: colors["border"],
                                   }}
                                 />
                                 {color.trim()}

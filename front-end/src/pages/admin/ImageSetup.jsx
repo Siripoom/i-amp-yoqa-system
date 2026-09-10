@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useEffect, useState } from "react";
 import {
   Layout,
@@ -43,6 +44,8 @@ const { TextArea } = Input;
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
 
+import { apiErrorMessage } from "../../utils/apiError";
+
 const ImageSetup = () => {
   const [heroImages, setHeroImages] = useState([]);
   const [masterImages, setMasterImages] = useState([]);
@@ -54,7 +57,7 @@ const ImageSetup = () => {
 
   // Get user role from localStorage for permission control
   const userRole = localStorage.getItem("role");
-  
+
   // Define permissions based on role
   const canCreate = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
   const canEdit = userRole === "SuperAdmin" || userRole === "Admin" || userRole === "Accounting";
@@ -219,7 +222,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to delete slider images.");
       return;
     }
-    
+
     try {
       await SliderImage.deleteSliderImage(id);
       message.success("Slider image deleted successfully");
@@ -234,7 +237,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to create slider images.");
       return;
     }
-    
+
     setIsSliderCreateMode(true);
     setSelectedSliderImage(null);
     sliderForm.resetFields();
@@ -254,7 +257,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to edit slider images.");
       return;
     }
-    
+
     setIsSliderCreateMode(false);
     setSelectedSliderImage(record);
 
@@ -453,7 +456,7 @@ const ImageSetup = () => {
     } catch (err) {
       console.error("Error with master operation:", err);
       message.error(
-        "Operation failed. Please check if all required fields are filled."
+        apiErrorMessage(err, "Operation failed. Please check if all required fields are filled.")
       );
     } finally {
       setUploadingMaster(false);
@@ -466,7 +469,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to create master profiles.");
       return;
     }
-    
+
     setIsEditingMaster(false);
     setSelectedMasterImage(null);
     setMasterFormData({
@@ -486,7 +489,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to edit master profiles.");
       return;
     }
-    
+
     setIsEditingMaster(true);
     setSelectedMasterImage(record);
     setMasterFormData({
@@ -531,10 +534,10 @@ const ImageSetup = () => {
       form.resetFields();
       fetchClassCatalogs();
       setIsClassModalVisible(false);
-    } catch {
-      console.error("Error with class catalog operation:", "Operation failed");
+    } catch (error) {
+      console.error("Error with class catalog operation:", error);
       message.error(
-        "Operation failed. Please check if all required fields are filled."
+        apiErrorMessage(error, "Operation failed. Please check if all required fields are filled.")
       );
     } finally {
       setUploadingClass(false);
@@ -547,7 +550,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to delete class catalogs.");
       return;
     }
-    
+
     try {
       await ImageCatalog.deleteImageCatalog(id);
       message.success("Class catalog deleted successfully");
@@ -563,7 +566,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to create class catalogs.");
       return;
     }
-    
+
     setIsClassCreateMode(true);
     setSelectedClassCatalog(null);
     form.resetFields();
@@ -576,7 +579,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to edit class catalogs.");
       return;
     }
-    
+
     setIsClassCreateMode(false);
     setSelectedClassCatalog(record);
     form.setFieldsValue({
@@ -604,8 +607,11 @@ const ImageSetup = () => {
       }
       fetchQrcodeImages();
       setIsQrcodeModalVisible(false);
-    } catch {
-      message.error("QR Code upload failed");
+      setSelectedQrcodeImage(null);
+      info.onSuccess?.({ status: "success" });
+    } catch (error) {
+      message.error(apiErrorMessage(error, "QR Code upload failed"));
+      info.onError?.(error);
     } finally {
       setUploadingQrcode(false);
     }
@@ -616,7 +622,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to delete QR codes.");
       return;
     }
-    
+
     try {
       await QrcodePayment.deleteQrcodePayment(id);
       message.success("QR Code deleted");
@@ -631,7 +637,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to edit QR codes.");
       return;
     }
-    
+
     setSelectedQrcodeImage(record);
     setIsQrcodeModalVisible(true);
   };
@@ -652,8 +658,11 @@ const ImageSetup = () => {
       }
       fetchHeroImages();
       setIsHeroUpdateModalVisible(false);
-    } catch {
-      message.error("Hero image upload failed");
+      setSelectedHeroImage(null);
+      info.onSuccess?.({ status: "success" });
+    } catch (error) {
+      message.error(apiErrorMessage(error, "Hero image upload failed"));
+      info.onError?.(error);
     } finally {
       setUploadingHero(false);
     }
@@ -665,7 +674,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to delete hero images.");
       return;
     }
-    
+
     try {
       await HeroImage.deleteHeroImage(id);
       message.success("Hero image deleted");
@@ -681,7 +690,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to delete master profiles.");
       return;
     }
-    
+
     try {
       await MasterImage.deleteMasterImage(id);
       message.success("Master deleted successfully");
@@ -697,7 +706,7 @@ const ImageSetup = () => {
       message.warning("You don't have permission to edit hero images.");
       return;
     }
-    
+
     setSelectedHeroImage(record);
     setIsHeroUpdateModalVisible(true);
   };
@@ -883,7 +892,7 @@ const ImageSetup = () => {
       key: "description",
       ellipsis: true,
     },
-   
+
     {
       title: "Action",
       key: "action",
@@ -930,28 +939,28 @@ const ImageSetup = () => {
         <Content className="user-container">
           {/* แสดงข้อความแจ้งเตือนสำหรับ role ที่มีข้อจำกัด */}
           {userRole === "Admin" && (
-            <div style={{ 
-              background: "#fff3cd", 
-              border: "1px solid #ffeaa7", 
+            <div style={{
+              background: "var(--color-warning-soft)",
+              border: "1px solid var(--color-warning-soft)",
               borderRadius: "4px",
               padding: "12px 16px",
               marginBottom: "16px",
               fontSize: "14px",
-              color: "#856404"
+              color: colors["warning"]
             }}>
               <strong>⚠️ Admin Role:</strong> You can view, create, and edit image content but cannot delete images.
             </div>
           )}
-          
+
           {userRole === "Accounting" && (
-            <div style={{ 
-              background: "#d1ecf1", 
-              border: "1px solid #bee5eb", 
+            <div style={{
+              background: "var(--color-info-soft)",
+              border: "1px solid var(--color-info-soft)",
               borderRadius: "4px",
               padding: "12px 16px",
               marginBottom: "16px",
               fontSize: "14px",
-              color: "#0c5460"
+              color: colors["info"]
             }}>
               <strong>ℹ️ Accounting Role:</strong> You can view, create, and edit image content but cannot delete images.
             </div>
@@ -1272,7 +1281,7 @@ const ImageSetup = () => {
             </Form.Item>
             <Form.Item
               label="description"
-              
+
               tooltip="The description of the yoga master"
             >
               <Input

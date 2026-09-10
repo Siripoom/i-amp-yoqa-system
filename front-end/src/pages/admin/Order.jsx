@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useState, useEffect } from "react";
 import {
   Layout,
@@ -35,6 +36,7 @@ import receiptService from "../../services/receiptService";
 import { getUsers } from "../../services/userService";
 import { getProducts,getAllProducts } from "../../services/productService";
 import goodsService from "../../services/goods-service"; // Import goods service
+import { brand } from "../../config/brand.js";
 import "../../styles/Order.css";
 
 const { Sider, Content } = Layout;
@@ -137,7 +139,7 @@ const OrderPage = () => {
       if (response.status === "success") {
         setProducts(response.data);
         console.log(response.data);
-        
+
       }
     } catch {
       console.error("Error fetching products:", "Failed to fetch products");
@@ -279,9 +281,9 @@ const OrderPage = () => {
         customerPhone: customerPhone,
         customerAddress: customerAddress,
         companyInfo: {
-          name: "YOQA Studio",
-          address: "123 ถนนสุขุมวิท กรุงเทพฯ 10110",
-          phone: "02-xxx-xxxx"
+          name: brand.name,
+          address: brand.address,
+          phone: brand.phoneDisplay,
         },
         items: [{
           name: itemName,
@@ -407,13 +409,13 @@ const OrderPage = () => {
         );
         return (
           <div>
-            <div className="text-red-600 font-semibold">
+            <div className="text-error font-semibold">
               ฿{record.unit_price.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-500 line-through">
+            <div className="text-xs text-secondary line-through">
               ฿{originalPrice.toLocaleString()}
             </div>
-            <Tag color="red" size="small">
+            <Tag color="error" size="small">
               -{discountPercent}%
             </Tag>
           </div>
@@ -594,13 +596,13 @@ const OrderPage = () => {
             );
             return (
               <div>
-                <div className="text-red-600 font-semibold">
+                <div className="text-error font-semibold">
                   ฿{record.unit_price.toLocaleString()}
                 </div>
-                <div className="text-xs text-gray-500 line-through">
+                <div className="text-xs text-secondary line-through">
                   ฿{originalPrice.toLocaleString()}
                 </div>
-                <Tag color="red" size="small">
+                <Tag color="error" size="small">
                   -{discountPercent}%
                 </Tag>
               </div>
@@ -717,7 +719,7 @@ const OrderPage = () => {
         const phone = record.shipping_phone || record.phone_number;
 
         if (!address && !phone)
-          return <span className="text-gray-400">N/A</span>;
+          return <span className="text-secondary">N/A</span>;
 
         return (
           <div className="text-sm">
@@ -742,7 +744,7 @@ const OrderPage = () => {
       key: "code",
       render: (goods) =>
         goods?.code ? (
-          <Tag color="geekblue" size="small">
+          <Tag color="processing" size="small">
             {goods.code}
           </Tag>
         ) : (
@@ -756,12 +758,12 @@ const OrderPage = () => {
       render: (record) => (
         <Space size="small" wrap>
           {record.size && (
-            <Tag color="blue" size="small">
+            <Tag color="processing" size="small">
               {record.size}
             </Tag>
           )}
           {record.color && (
-            <Tag color="orange" size="small">
+            <Tag color="warning" size="small">
               {record.color}
             </Tag>
           )}
@@ -785,13 +787,13 @@ const OrderPage = () => {
             );
             return (
               <div>
-                <div className="text-red-600 font-semibold">
+                <div className="text-error font-semibold">
                   ฿{record.unit_price.toLocaleString()}
                 </div>
-                <div className="text-xs text-gray-500 line-through">
+                <div className="text-xs text-secondary line-through">
                   ฿{originalPrice.toLocaleString()}
                 </div>
-                <Tag color="red" size="small">
+                <Tag color="error" size="small">
                   -{discountPercent}%
                 </Tag>
               </div>
@@ -932,13 +934,13 @@ const OrderPage = () => {
           {/* แสดงข้อความแจ้งเตือนสำหรับ role ที่มีข้อจำกัด */}
           {userRole === "Admin" && (
             <div style={{
-              background: "#fff3cd",
-              border: "1px solid #ffeaa7",
+              background: "var(--color-warning-soft)",
+              border: "1px solid var(--color-warning-soft)",
               borderRadius: "4px",
               padding: "12px 16px",
               marginBottom: "16px",
               fontSize: "14px",
-              color: "#856404"
+              color: colors["warning"]
             }}>
               <strong>⚠️ Admin Role:</strong> You can view and create orders but cannot delete existing orders.
             </div>
@@ -946,13 +948,13 @@ const OrderPage = () => {
 
           {userRole === "Accounting" && (
             <div style={{
-              background: "#d1ecf1",
-              border: "1px solid #bee5eb",
+              background: "var(--color-info-soft)",
+              border: "1px solid var(--color-info-soft)",
               borderRadius: "4px",
               padding: "12px 16px",
               marginBottom: "16px",
               fontSize: "14px",
-              color: "#0c5460"
+              color: colors["info"]
             }}>
               <strong>ℹ️ Accounting Role:</strong> You can view order information and create new orders.
             </div>
@@ -977,7 +979,7 @@ const OrderPage = () => {
 
             {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700">Filter by Status:</span>
+              <span className="font-medium text-text">Filter by Status:</span>
               <Select
                 value={statusFilter}
                 onChange={setStatusFilter}
@@ -1009,7 +1011,7 @@ const OrderPage = () => {
                   </Space>
                 </Option>
               </Select>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-secondary">
                 ({currentData.length} {currentData.length === 1 ? 'order' : 'orders'})
               </span>
             </div>
@@ -1148,11 +1150,11 @@ const OrderPage = () => {
                             selectedOrder.unit_price <
                             selectedOrder.product_id.price && (
                               <div>
-                                <span className="text-gray-500 line-through">
+                                <span className="text-secondary line-through">
                                   Original: ฿
                                   {selectedOrder.product_id.price.toLocaleString()}
                                 </span>
-                                <Tag color="red" size="small" className="ml-2">
+                                <Tag color="error" size="small" className="ml-2">
                                   Promotion Applied
                                 </Tag>
                               </div>
@@ -1162,11 +1164,11 @@ const OrderPage = () => {
                             selectedOrder.unit_price <
                             selectedOrder.goods_id.price && (
                               <div>
-                                <span className="text-gray-500 line-through">
+                                <span className="text-secondary line-through">
                                   Original: ฿
                                   {selectedOrder.goods_id.price.toLocaleString()}
                                 </span>
-                                <Tag color="red" size="small" className="ml-2">
+                                <Tag color="error" size="small" className="ml-2">
                                   Promotion Applied
                                 </Tag>
                               </div>
@@ -1190,10 +1192,10 @@ const OrderPage = () => {
                       <div className="mt-1">
                         <Space size="small">
                           {selectedOrder.size && (
-                            <Tag color="blue">Size: {selectedOrder.size}</Tag>
+                            <Tag color="processing">Size: {selectedOrder.size}</Tag>
                           )}
                           {selectedOrder.color && (
-                            <Tag color="orange">
+                            <Tag color="warning">
                               Color: {selectedOrder.color}
                             </Tag>
                           )}

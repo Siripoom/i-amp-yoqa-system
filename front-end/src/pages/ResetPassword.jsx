@@ -68,7 +68,7 @@ export const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -77,10 +77,10 @@ export const ResetPassword = () => {
       >
         <Card className="shadow-xl rounded-2xl">
           <div className="text-center mb-6">
-            <Title level={2} className="text-gray-800 mb-2">
+            <Title level={2} className="text-text mb-2">
               Reset Password
             </Title>
-            <Text className="text-gray-600">
+            <Text className="text-secondary">
               Follow the steps below to reset your password
             </Text>
           </div>
@@ -108,7 +108,7 @@ export const ResetPassword = () => {
                 ]}
               >
                 <Input
-                  prefix={<MailOutlined className="text-gray-400" />}
+                  prefix={<MailOutlined className="text-secondary" />}
                   placeholder="Enter your email address"
                   size="large"
                   className="rounded-lg"
@@ -120,7 +120,7 @@ export const ResetPassword = () => {
                 htmlType="submit"
                 loading={loading}
                 size="large"
-                className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700"
+                className="w-full rounded-lg bg-primary hover:bg-primary-dark border-primary hover:border-primary"
               >
                 Request Password Reset
               </Button>
@@ -135,10 +135,10 @@ export const ResetPassword = () => {
                 description={
                   <div className="space-y-3">
                     <Text>Your password reset token has been generated. Please copy the token below:</Text>
-                    <div className="bg-gray-100 p-3 rounded-lg break-all font-mono text-sm">
+                    <div className="bg-surface p-3 rounded-lg break-all font-mali text-sm">
                       {resetToken}
                     </div>
-                    <Button 
+                    <Button
                       onClick={copyToClipboard}
                       size="small"
                       type="dashed"
@@ -169,7 +169,7 @@ export const ResetPassword = () => {
                   rules={[{ required: true, message: "Please input the reset token!" }]}
                 >
                   <Input
-                    prefix={<KeyOutlined className="text-gray-400" />}
+                    prefix={<KeyOutlined className="text-secondary" />}
                     placeholder="Paste your reset token here"
                     size="large"
                     className="rounded-lg"
@@ -185,7 +185,7 @@ export const ResetPassword = () => {
                   ]}
                 >
                   <Input.Password
-                    prefix={<LockOutlined className="text-gray-400" />}
+                    prefix={<LockOutlined className="text-secondary" />}
                     placeholder="Enter your new password"
                     size="large"
                     className="rounded-lg"
@@ -209,7 +209,7 @@ export const ResetPassword = () => {
                   ]}
                 >
                   <Input.Password
-                    prefix={<LockOutlined className="text-gray-400" />}
+                    prefix={<LockOutlined className="text-secondary" />}
                     placeholder="Confirm your new password"
                     size="large"
                     className="rounded-lg"
@@ -222,11 +222,11 @@ export const ResetPassword = () => {
                     htmlType="submit"
                     loading={loading}
                     size="large"
-                    className="w-full rounded-lg bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700"
+                    className="w-full rounded-lg bg-success hover:bg-success border-success hover:border-success"
                   >
                     Reset Password
                   </Button>
-                  
+
                   <Button
                     type="default"
                     onClick={() => setCurrentStep(0)}
@@ -243,18 +243,18 @@ export const ResetPassword = () => {
           {/* Step 3: Success Message */}
           {currentStep === 2 && (
             <div className="text-center space-y-4">
-              <div className="text-6xl text-green-500 mb-4">✅</div>
-              <Title level={3} className="text-green-600">
+              <div className="text-6xl text-success mb-4">✅</div>
+              <Title level={3} className="text-success">
                 Password Reset Successful!
               </Title>
-              <Text className="text-gray-600 block mb-4">
+              <Text className="text-secondary block mb-4">
                 Your password has been successfully reset. You will be redirected to the login page shortly.
               </Text>
               <Button
                 type="primary"
                 size="large"
                 onClick={() => navigate('/auth/signin')}
-                className="rounded-lg bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700"
+                className="rounded-lg bg-primary hover:bg-primary-dark border-primary hover:border-primary"
               >
                 Go to Login Page
               </Button>
@@ -262,9 +262,9 @@ export const ResetPassword = () => {
           )}
 
           <div className="text-center mt-6">
-            <Text className="text-gray-500">
+            <Text className="text-secondary">
               Remember your password?{" "}
-              <Link to="/auth/signin" className="text-blue-600 hover:text-blue-800 font-medium">
+              <Link to="/auth/signin" className="text-primary hover:text-primary font-medium">
                 Sign In
               </Link>
             </Text>

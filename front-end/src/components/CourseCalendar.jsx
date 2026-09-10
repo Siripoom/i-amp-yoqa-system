@@ -1,3 +1,4 @@
+import { colors } from "../theme/tokens.js";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -8,7 +9,7 @@ const CourseCalendar = ({ events, onSelectEvent }) => {
   // ฟังก์ชันกำหนดสีของอีเวนต์
   const eventPropGetter = (event) => {
     const style = {
-      backgroundColor: event.reserved ? "#52c41a" : "#1890ff", // สีเขียวเมื่อจองแล้ว
+      backgroundColor: event.reserved ? colors["success"] : colors["primary"], // สีเขียวเมื่อจองแล้ว
       color: "white",
       borderRadius: "4px",
       border: "none",

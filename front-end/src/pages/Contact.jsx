@@ -1,3 +1,4 @@
+import { colors } from "../theme/tokens.js";
 import { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Modal, Button, Space } from "antd";
 import {
@@ -81,22 +82,22 @@ const Contact = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b"
+      className="wellness-contact min-h-screen"
       style={{
         background:
-          "linear-gradient(to bottom, #FEADB4 10%, #FFFFFF 56%, #B3A1DD 100%)",
+          "var(--color-background)",
       }}
     >
       <Navbar />
 
       {/* Grid Layout สำหรับแสดงครูโยคะ */}
       <div className="container mx-auto px-4 py-10">
-        <Title level={2} className="text-center text-purple-700 mb-8">
+        <Title level={2} className="text-center text-primary mb-8">
           Meet Our Yoga Masters
         </Title>
 
         {loading ? (
-          <div className="text-center text-purple-500 font-semibold">
+          <div className="text-center text-primary font-semibold">
             Loading masters...
           </div>
         ) : (
@@ -107,7 +108,7 @@ const Contact = () => {
                   hoverable
                   className="rounded-lg shadow-lg h-full"
                   style={{
-                    backgroundColor: "#FFE2E5",
+                    backgroundColor: colors["surface"],
                     display: "flex",
                     flexDirection: "column",
                   }}
@@ -126,14 +127,14 @@ const Contact = () => {
                       {/* Video overlay button */}
                       {instructor.videoUrl && (
                         <div
-                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                          className="absolute inset-0 flex items-center justify-center bg-primary-dark bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                           onClick={() => showVideoModal(instructor)}
                         >
                           <PlayCircleOutlined
                             style={{
                               fontSize: "48px",
                               color: "white",
-                              backgroundColor: "rgba(0,0,0,0.7)",
+                              backgroundColor: "rgba(73,47,42,0.7)",
                               borderRadius: "50%",
                               padding: "10px",
                             }}
@@ -152,7 +153,7 @@ const Contact = () => {
                   <div style={{ flex: 1 }}>
                     <Title
                       level={4}
-                      className="text-center text-purple-700 mb-2"
+                      className="text-center text-primary mb-2"
                     >
                       <UserOutlined className="mr-2" />
                       {instructor.mastername}
@@ -160,12 +161,12 @@ const Contact = () => {
                     {/* Description */}
                     {instructor.description && (
                       <div className="text-start mb-3">
-                        <Text strong className="text-black text-base block mb-2">
+                        <Text strong className="text-text text-base block mb-2">
                           Certificate
                         </Text>
                         {instructor.description.split(',').map((item, index) => (
                           <div key={index} className="mb-1">
-                            <Text className="text-black font-normal">
+                            <Text className="text-text font-normal">
                               • {item.trim()}
                             </Text>
                           </div>
@@ -176,7 +177,7 @@ const Contact = () => {
                     {/* Specialization */}
                     {instructor.specialization && (
                       <div className="text-center mb-3">
-                        <Text strong className="text-pink-600">
+                        <Text strong className="text-primary">
                           <BookOutlined className="mr-1" />
                           {instructor.specialization}
                         </Text>
@@ -186,7 +187,7 @@ const Contact = () => {
                     {/* Biography */}
                     {instructor.bio && (
                       <Paragraph
-                        className="text-center text-gray-600 text-sm"
+                        className="text-center text-secondary text-sm"
                         ellipsis={{ rows: 3, expandable: false }}
                       >
                         {instructor.bio}
@@ -201,7 +202,7 @@ const Contact = () => {
                         type="primary"
                         icon={<PlayCircleOutlined />}
                         onClick={() => showVideoModal(instructor)}
-                        className="bg-gradient-to-r from-pink-500 to-red-400 border-none"
+                        className="bg-primary border-none"
                       >
                         Watch Video
                       </Button>
@@ -214,8 +215,8 @@ const Contact = () => {
         )}
 
         {!loading && masterImages.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            <Title level={4} className="text-gray-400">
+          <div className="text-center text-secondary py-8">
+            <Title level={4} className="text-secondary">
               No masters available at the moment
             </Title>
             <Text>Please check back later for our yoga masters.</Text>

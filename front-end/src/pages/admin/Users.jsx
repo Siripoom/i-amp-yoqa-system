@@ -1,3 +1,4 @@
+import { colors } from "../../theme/tokens.js";
 import { useEffect, useState } from "react";
 import {
   Layout,
@@ -371,7 +372,7 @@ const UserPage = () => {
               }
               title="View Reservation History"
             >
-              
+
             </Button>
           )}
           {canViewHistory && (
@@ -387,7 +388,7 @@ const UserPage = () => {
               }
               title="View Order History"
             >
-            
+
             </Button>
           )}
         </Space>
@@ -437,7 +438,7 @@ const UserPage = () => {
                     icon={<CalendarOutlined />}
                     style={{
                       backgroundColor:
-                        item.status === "Reserved" ? "#52c41a" : "#f5222d",
+                        item.status === "Reserved" ? colors["success"] : "#f5222d",
                     }}
                   />
                 }
@@ -547,7 +548,7 @@ const UserPage = () => {
                   <Avatar
                     icon={<ShoppingOutlined />}
                     style={{
-                      backgroundColor: isProduct ? "#1890ff" : "#722ed1",
+                      backgroundColor: isProduct ? colors["primary"] : colors["primary"],
                     }}
                   />
                 }
@@ -637,12 +638,12 @@ const UserPage = () => {
         <Content className="user-container">
           {userRole === "Accounting" && (
             <div style={{
-              background: "#fff3cd",
-              border: "1px solid #ffeaa7",
+              background: "var(--color-warning-soft)",
+              border: "1px solid var(--color-warning-soft)",
               borderRadius: "4px",
               padding: "8px 12px",
               marginBottom: "16px",
-              color: "#856404"
+              color: colors["warning"]
             }}>
               📖 You are in view-only mode. You can view user information and history but cannot make changes.
             </div>
