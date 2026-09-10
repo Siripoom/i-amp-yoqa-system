@@ -14,7 +14,6 @@ import {
   Tag,
   Table,
   Popconfirm,
-  Collapse,
   Tabs,
   Card,
 } from "antd";
@@ -113,6 +112,7 @@ const Schedule = () => {
         start: new Date(cls.start_time),
         end: new Date(cls.end_time),
         participants: cls.participants || [],
+        allowed_gender: cls.allowed_gender || "all",
       }));
 
       setEvents(formattedEvents);
@@ -227,6 +227,7 @@ const Schedule = () => {
         color: event.color,
         passcode: event.passcode,
         zoom_link: event.zoom_link,
+        allowed_gender: event.allowed_gender || "all",
         start_time: event.start
           ? dayjs(event.start).format("YYYY-MM-DDTHH:mm")
           : null,
@@ -244,6 +245,7 @@ const Schedule = () => {
         description: "",
         passcode: "",
         zoom_link: "",
+        allowed_gender: "all",
         start_time: start ? dayjs(start).format("YYYY-MM-DDTHH:mm") : null,
         end_time: end ? dayjs(end).format("YYYY-MM-DDTHH:mm") : null,
       });
@@ -284,6 +286,7 @@ const Schedule = () => {
         color: formattedColor,
         passcode: values.passcode,
         zoom_link: values.zoom_link,
+        allowed_gender: values.allowed_gender,
         start_time: values.start_time
           ? new Date(values.start_time).toISOString()
           : null,
@@ -310,7 +313,11 @@ const Schedule = () => {
 
       await handleCloseModal();
     } catch (error) {
-      message.error("Error saving class!");
+      message.error(
+        error.code === "CLASS_GENDER_CONFLICT"
+          ? `เปลี่ยนเพศของคลาสไม่ได้ เนื่องจากมีผู้จองไม่ตรงเงื่อนไข ${error.incompatible_count} คน`
+          : error.message || "Error saving class!"
+      );
       console.error(error);
     }
   };
@@ -357,6 +364,37 @@ const Schedule = () => {
   // เก็บข้อมูลวันที่ที่ต้องการทำซ้ำ
   const [duplicateDates, setDuplicateDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
+
+  const getMemberBookingIssue = (member) => {
+    const selectedEvent = events.find((event) => event.id === selectedClass);
+    if (!member.gender || !member.address?.trim()) return "profile incomplete";
+    if (typeof member.has_medical_condition !== "boolean") {
+      return "profile incomplete";
+    }
+    if (
+      member.has_medical_condition &&
+      !member.medical_condition_details?.trim()
+    ) {
+      return "profile incomplete";
+    }
+    if (!member.remaining_session || member.remaining_session <= 0) {
+      return "no sessions";
+    }
+    if (
+      member.sessions_expiry_date &&
+      moment(member.sessions_expiry_date).isBefore(moment())
+    ) {
+      return "package expired";
+    }
+    if (
+      selectedEvent &&
+      selectedEvent.allowed_gender !== "all" &&
+      selectedEvent.allowed_gender !== member.gender
+    ) {
+      return "gender not allowed";
+    }
+    return null;
+  };
 
   // 📌 เพิ่มวันที่ที่ต้องการทำซ้ำ
   const addDuplicateDate = () => {
@@ -984,7 +1022,10 @@ const Schedule = () => {
             style={{ width: "100%" }}
             placeholder="Select a class"
             value={selectedClass}
-            onChange={setSelectedClass}
+            onChange={(value) => {
+              setSelectedClass(value);
+              setSelectedMember(null);
+            }}
             showSearch
             optionFilterProp="children"
             filterOption={(input, option) =>
@@ -999,7 +1040,13 @@ const Schedule = () => {
               .map((event) => ({
                 label: `${event.title} - ${moment(event.start).format(
                   "DD/MM/YYYY HH:mm"
-                )} (${event.instructor})`,
+                )} (${event.instructor}) [${
+                  event.allowed_gender === "male"
+                    ? "ชาย"
+                    : event.allowed_gender === "female"
+                      ? "หญิง"
+                      : "ทุกเพศ"
+                }]`,
                 value: event.id,
               }))}
           />
@@ -1017,16 +1064,20 @@ const Schedule = () => {
             filterOption={(input, option) =>
               (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
             }
-            options={members
-              .filter((member) => member.remaining_session > 0)
-              .map((member) => ({
+            options={members.map((member) => {
+              const issue = getMemberBookingIssue(member);
+              return {
                 label: `${
                   member.nickname
                     ? `${member.nickname} ${member.first_name}`
                     : member.first_name
-                } ${member.last_name} (${member.remaining_session} sessions)`,
+                } ${member.last_name} (${member.remaining_session || 0} sessions)${
+                  issue ? ` - ${issue}` : ""
+                }`,
                 value: member._id,
-              }))}
+                disabled: Boolean(issue),
+              };
+            })}
           />
           {selectedMember && (
             <div style={{ marginTop: "8px" }}>
@@ -1257,6 +1308,18 @@ const Schedule = () => {
 
             <Form.Item label="Description" name="description">
               <Input.TextArea rows={2} placeholder="Class description" />
+            </Form.Item>
+
+            <Form.Item
+              label="เพศที่อนุญาตให้จอง"
+              name="allowed_gender"
+              rules={[{ required: true, message: "กรุณาเลือกเพศที่อนุญาต" }]}
+            >
+              <Select>
+                <Select.Option value="all">ทุกเพศ</Select.Option>
+                <Select.Option value="female">เฉพาะหญิง</Select.Option>
+                <Select.Option value="male">เฉพาะชาย</Select.Option>
+              </Select>
             </Form.Item>
 
             <Form.Item label="📌 Room Number" name="room_number">

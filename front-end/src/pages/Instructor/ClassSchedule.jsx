@@ -13,7 +13,6 @@ import {
 import moment from "moment";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
-import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import "../../styles/Course.css";
 import "../../styles/Calendar.css";
@@ -21,9 +20,7 @@ import { getCourses } from "../../services/courseService";
 import classService from "../../services/classService";
 import { getUsers } from "../../services/userService";
 
-import reservationService from "../../services/reservationService";
-
-const { Sider, Content } = Layout;
+const { Content } = Layout;
 
 const Schedule = () => {
   const [courses, setCourses] = useState([]);
@@ -63,6 +60,7 @@ const Schedule = () => {
         zoom_link: cls.zoom_link,
         start: new Date(cls.start_time),
         end: new Date(cls.end_time),
+        allowed_gender: cls.allowed_gender || "all",
       }));
 
 
@@ -70,10 +68,6 @@ const Schedule = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-  };
-
-  const formatDateTimeLocal = (date) => {
-    return date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : null;
   };
 
   // ฟังก์ชันสำหรับเปิด Modal (ยังคงใช้สำหรับเพิ่ม/แก้ไขคลาส)
@@ -87,6 +81,7 @@ const Schedule = () => {
         description: event.description,
         passcode: event.passcode,
         zoom_link: event.zoom_link,
+        allowed_gender: event.allowed_gender || "all",
         start_time: event.start
           ? dayjs(event.start).format("YYYY-MM-DDTHH:mm")
           : null,
@@ -104,6 +99,7 @@ const Schedule = () => {
         description: "",
         passcode: "",
         zoom_link: "",
+        allowed_gender: "all",
         start_time: start ? dayjs(start).format("YYYY-MM-DDTHH:mm") : null,
         end_time: end ? dayjs(end).format("YYYY-MM-DDTHH:mm") : null,
       });
@@ -129,6 +125,7 @@ const Schedule = () => {
         description: values.description,
         passcode: values.passcode,
         zoom_link: values.zoom_link,
+        allowed_gender: values.allowed_gender,
         start_time: values.start_time
           ? new Date(values.start_time).toISOString()
           : null,
@@ -233,6 +230,14 @@ const Schedule = () => {
                     <p>
                       <strong>Room:</strong> {event.room_number}
                     </p>
+                    <p>
+                      <strong>Participants:</strong>{" "}
+                      {event.allowed_gender === "male"
+                        ? "เฉพาะชาย"
+                        : event.allowed_gender === "female"
+                          ? "เฉพาะหญิง"
+                          : "ทุกเพศ"}
+                    </p>
                     <p>{event.description}</p>
                     <p>
                       <strong>Start:</strong>{" "}
@@ -309,6 +314,17 @@ const Schedule = () => {
           </Form.Item>
           <Form.Item label="Description" name="description">
             <Input.TextArea rows={2} placeholder="รายละเอียดของคลาส" />
+          </Form.Item>
+          <Form.Item
+            label="เพศที่อนุญาตให้จอง"
+            name="allowed_gender"
+            rules={[{ required: true, message: "กรุณาเลือกเพศที่อนุญาต" }]}
+          >
+            <Select>
+              <Select.Option value="all">ทุกเพศ</Select.Option>
+              <Select.Option value="female">เฉพาะหญิง</Select.Option>
+              <Select.Option value="male">เฉพาะชาย</Select.Option>
+            </Select>
           </Form.Item>
           <Form.Item label="📌 Room Number" name="room_number">
             <Input placeholder="Enter Room Number" />

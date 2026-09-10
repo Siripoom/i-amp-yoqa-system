@@ -3,11 +3,41 @@ const Class = require("../models/class");
 const User = require("../models/user");
 const jwtDecode = require("jwt-decode");
 const Order = require("../models/order");
+const {
+  getMissingMemberProfileFields,
+  isGenderAllowed,
+} = require("../utils/memberProfile");
+const { activatePackageOnFirstUse } = require("../utils/packageExpiry");
+
+const validateBookingProfile = (user, yogaClass, res) => {
+  const missingFields = getMissingMemberProfileFields(user);
+  if (missingFields.length > 0) {
+    res.status(422).json({
+      code: "PROFILE_INCOMPLETE",
+      message: "Please complete your member profile before booking",
+      missing_fields: missingFields,
+    });
+    return false;
+  }
+
+  if (!isGenderAllowed(user.gender, yogaClass.allowed_gender || "all")) {
+    res.status(403).json({
+      code: "GENDER_NOT_ALLOWED",
+      message: "This class is not available for the member's gender",
+    });
+    return false;
+  }
+  return true;
+};
+
 // จองคลาส
 // back-end/controllers/reservationController.js
 exports.createReservation = async (req, res) => {
   try {
     const { class_id, user_id } = req.body;
+    if (String(req.user.userId) !== String(user_id)) {
+      return res.status(403).json({ message: "Cannot book for another member" });
+    }
 
     // Check if class exists
     const yogaClass = await Class.findById(class_id);
@@ -16,9 +46,10 @@ exports.createReservation = async (req, res) => {
     // Get user
     const user = await User.findById(user_id);
     if (!user) return res.status(404).json({ message: "User not found" });
+    if (!validateBookingProfile(user, yogaClass, res)) return;
 
     // Check if user has sessions
-    if (user.remaining_session === 0) {
+    if (!user.remaining_session || user.remaining_session <= 0) {
       return res.status(400).json({
         message: "Cannot reserve class, please buy a promotion",
       });
@@ -32,34 +63,7 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่าต้องเปลี่ยนวันหมดอายุจาก 90 วัน เป็นตามคอร์สหรือไม่
-    if (user.product_duration && user.product_duration > 0 && user.sessions_expiry_date) {
-      // คำนวณจำนวนวันที่เหลือจนถึงวันหมดอายุ
-      const daysUntilExpiry = Math.ceil(
-        (user.sessions_expiry_date - today) / (1000 * 60 * 60 * 24)
-      );
-
-      console.log(`🔍 User ${user._id} session check:`);
-      console.log(`   Days until expiry: ${daysUntilExpiry}`);
-      console.log(`   Product duration: ${user.product_duration}`);
-
-      // ถ้าวันหมดอายุอยู่ในช่วง 85-95 วัน แสดงว่าเป็น 90 วันที่ตั้งเมื่ออนุมัติ
-      // ให้เปลี่ยนเป็นตามคอร์ส
-      if (daysUntilExpiry >= 85 && daysUntilExpiry <= 95) {
-        const newExpiryDate = new Date();
-        newExpiryDate.setDate(newExpiryDate.getDate() + user.product_duration);
-        user.sessions_expiry_date = newExpiryDate;
-        console.log(
-          `✅ Expiry changed from 90 days to ${user.product_duration} days. New expiry: ${newExpiryDate}`
-        );
-      }
-    }
-
-    // If this is the first time using sessions, set first_used_date
-    if (!user.first_used_date) {
-      user.first_used_date = today;
-      console.log(`📅 First used date set for user ${user._id}`);
-    }
+    activatePackageOnFirstUse(user, today);
 
     // Decrement user's session count & save user
     user.remaining_session -= 1;
@@ -91,6 +95,12 @@ exports.createReservation = async (req, res) => {
 exports.getUserReservations = async (req, res) => {
   try {
     const { user_id } = req.params;
+    const canReadAny = ["Admin", "SuperAdmin", "Accounting"].includes(
+      req.user.role
+    );
+    if (!canReadAny && String(req.user.userId) !== String(user_id)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const reservations = await Reservation.find({
       user_id,
       status: "Reserved",
@@ -116,6 +126,9 @@ exports.cancelReservation = async (req, res) => {
     );
     if (!reservation)
       return res.status(404).json({ message: "Reservation not found" });
+    if (String(reservation.user_id._id) !== String(token.userId)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
     // 🔍 ดึงข้อมูลคลาส
     const yogaClass = await Class.findById(reservation.class_id);
@@ -155,6 +168,9 @@ exports.cancelReservation = async (req, res) => {
 //get all
 exports.getAllReservations = async (req, res) => {
   try {
+    if (!["Admin", "SuperAdmin", "Accounting"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const reservations = await Reservation.find()
       .populate("class_id", "title start_time end_time instructor")
       .populate("user_id", "first_name nickname")
@@ -168,6 +184,9 @@ exports.getAllReservations = async (req, res) => {
 // จองคลาสในนาม Member (สำหรับ Admin)
 exports.adminCreateReservation = async (req, res) => {
   try {
+    if (!["Admin", "SuperAdmin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const { class_id, user_id } = req.body;
 
     // Check if class exists
@@ -177,9 +196,10 @@ exports.adminCreateReservation = async (req, res) => {
     // Get user
     const user = await User.findById(user_id);
     if (!user) return res.status(404).json({ message: "User not found" });
+    if (!validateBookingProfile(user, yogaClass, res)) return;
 
     // Check if user has sessions
-    if (user.remaining_session === 0) {
+    if (!user.remaining_session || user.remaining_session <= 0) {
       return res.status(400).json({
         message: "Cannot reserve class, user has no remaining sessions",
       });
@@ -206,34 +226,7 @@ exports.adminCreateReservation = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่าต้องเปลี่ยนวันหมดอายุจาก 90 วัน เป็นตามคอร์สหรือไม่
-    if (user.product_duration && user.product_duration > 0 && user.sessions_expiry_date) {
-      // คำนวณจำนวนวันที่เหลือจนถึงวันหมดอายุ
-      const daysUntilExpiry = Math.ceil(
-        (user.sessions_expiry_date - today) / (1000 * 60 * 60 * 24)
-      );
-
-      console.log(`🔍 User ${user._id} session check:`);
-      console.log(`   Days until expiry: ${daysUntilExpiry}`);
-      console.log(`   Product duration: ${user.product_duration}`);
-
-      // ถ้าวันหมดอายุอยู่ในช่วง 85-95 วัน แสดงว่าเป็น 90 วันที่ตั้งเมื่ออนุมัติ
-      // ให้เปลี่ยนเป็นตามคอร์ส
-      if (daysUntilExpiry >= 85 && daysUntilExpiry <= 95) {
-        const newExpiryDate = new Date();
-        newExpiryDate.setDate(newExpiryDate.getDate() + user.product_duration);
-        user.sessions_expiry_date = newExpiryDate;
-        console.log(
-          `✅ Expiry changed from 90 days to ${user.product_duration} days. New expiry: ${newExpiryDate}`
-        );
-      }
-    }
-
-    // If this is the first time using sessions, set first_used_date
-    if (!user.first_used_date) {
-      user.first_used_date = today;
-      console.log(`📅 First used date set for user ${user._id}`);
-    }
+    activatePackageOnFirstUse(user, today);
 
     // Decrement user's session count & save user
     user.remaining_session -= 1;
@@ -266,6 +259,9 @@ exports.adminCreateReservation = async (req, res) => {
 // ยกเลิกการจองโดยใช้ ID โดยตรง (สำหรับการดูแลระบบ)
 exports.cancelReservationById = async (req, res) => {
   try {
+    if (!["Admin", "SuperAdmin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const { reservation_id } = req.params;
 
     // 🔍 ดึงข้อมูลการจอง พร้อมข้อมูล user และ class

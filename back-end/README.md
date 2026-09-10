@@ -121,6 +121,25 @@ docker-compose logs backend
 
 Once the server is up and running, you can test the API using tools like **Postman** or **cURL**.
 
+## Member profile and package migration
+
+Before deploying the gender-based booking rules, preview the migration that
+marks existing classes as open to all genders and recalculates unactivated
+package deadlines to 30 days:
+
+```bash
+npm run migrate:member-profile
+```
+
+Review the summary, back up the database, and then apply it explicitly:
+
+```bash
+npm run migrate:member-profile -- --apply
+```
+
+The command is idempotent. It does not invent profile data for existing
+members; those members must complete their profile before booking.
+
 **Example API Requests:**
 
 - Get all courses:  

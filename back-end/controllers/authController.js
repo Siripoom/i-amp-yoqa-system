@@ -5,6 +5,13 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const passport = require("passport");
 const crypto = require("crypto");
+const safeUser = (user) => {
+  const data = typeof user.toObject === "function" ? user.toObject() : { ...user };
+  delete data.password;
+  delete data.resetPasswordToken;
+  delete data.resetPasswordExpiry;
+  return data;
+};
 // ฟังก์ชันการเข้าสู่ระบบ (Login)
 exports.login = async (req, res) => {
   try {
@@ -39,7 +46,7 @@ exports.login = async (req, res) => {
         expiresIn: "1h",
       }
     );
-    res.status(200).json({ message: "Login successful", token, data: user });
+    res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -54,7 +61,9 @@ exports.getMe = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await User.findById(decoded.userId).select(
+      "-password -resetPasswordToken -resetPasswordExpiry"
+    );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -101,7 +110,7 @@ exports.loginLine = async (req, res) => {
         expiresIn: "1h",
       }
     );
-    res.status(200).json({ message: "Login successful", token, data: user });
+    res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

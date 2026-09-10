@@ -11,6 +11,11 @@ const classSchema = new mongoose.Schema({
   end_time: { type: Date, required: true }, // เวลาสิ้นสุดคลาส
   difficulty: { type: Number, required: false }, // ระดับความยาก
   amount: { type: Number, required: false }, // จำนวนผู้เรียน
+  allowed_gender: {
+    type: String,
+    enum: ["all", "male", "female"],
+    default: "all",
+  },
   // ผู้ที่เข้าร่วมคลาส
   participants: [{ type: String }],
   // สีของคลาส (optional)

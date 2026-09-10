@@ -2,10 +2,13 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL; // Replace with your actual back-end URL
+const authConfig = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+});
 
 export const getUsers = async () => {
   try {
-    const response = await axios.get(API_URL + "/api/users");
+    const response = await axios.get(API_URL + "/api/users", authConfig());
 
     return response.data;
   } catch (error) {
@@ -26,7 +29,11 @@ export const createUser = async (userData) => {
 
 export const updateUser = async (id, userData) => {
   try {
-    const response = await axios.put(`${API_URL}/api/users/${id}`, userData);
+    const response = await axios.put(
+      `${API_URL}/api/users/${id}`,
+      userData,
+      authConfig()
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
@@ -36,7 +43,10 @@ export const updateUser = async (id, userData) => {
 
 export const deleteUser = async (id) => {
   try {
-    const response = await axios.delete(`${API_URL}/api/users/${id}`);
+    const response = await axios.delete(
+      `${API_URL}/api/users/${id}`,
+      authConfig()
+    );
     return response.data;
   } catch (error) {
     console.error("Error deleting user:", error);
@@ -48,11 +58,28 @@ export const deleteUser = async (id) => {
 export const getUserById = async (id) => {
   try {
     console.log("Fetching user by ID:", id); // Log the ID for debugging
-    const response = await axios.get(`${API_URL}/api/users/${id}`);
+    const response = await axios.get(
+      `${API_URL}/api/users/${id}`,
+      authConfig()
+    );
     console.log("User data:", response.data); // Log the user data for debugging
     return response.data;
   } catch (error) {
     console.error("Error fetching user by ID:", error);
     throw error;
   }
+};
+
+export const getMyProfile = async () => {
+  const response = await axios.get(`${API_URL}/api/me`, authConfig());
+  return response.data;
+};
+
+export const updateMyProfile = async (profileData) => {
+  const response = await axios.put(
+    `${API_URL}/api/me`,
+    profileData,
+    authConfig()
+  );
+  return response.data;
 };

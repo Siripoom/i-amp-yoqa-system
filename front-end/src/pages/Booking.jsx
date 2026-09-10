@@ -17,13 +17,13 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import reservationService from "../services/reservationService";
 import classService from "../services/classService";
-import { getUserById } from "../services/userService";
+import { getMyProfile } from "../services/userService";
+import { Link } from "react-router-dom";
 import {
   validateAndGetUserFromToken,
   getUserFullName,
   isUserInParticipants,
 } from "../utils/tokenUtils";
-import { InfoCircleOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -57,7 +57,7 @@ const Booking = () => {
       // ดึงข้อมูลคลาสและข้อมูลผู้ใช้พร้อมกัน
       const [classResponse, userResponse] = await Promise.all([
         classService.getAllClasses(),
-        userId ? getUserById(userId) : Promise.resolve(null),
+        userId ? getMyProfile() : Promise.resolve(null),
       ]);
 
       if (userResponse && userResponse.user) {
@@ -104,6 +104,7 @@ const Booking = () => {
             amount: event.amount || 0,
             color: event.color,
             participants: participants,
+            allowedGender: event.allowed_gender || "all",
           };
         })
       );
@@ -116,11 +117,29 @@ const Booking = () => {
   };
 
   // ตรวจสอบว่าผู้ใช้สามารถจองคลาสได้หรือไม่
+  const missingProfileFields = () => {
+    if (!userInfo) return [];
+    const missing = [];
+    if (!userInfo.gender) missing.push("gender");
+    if (!userInfo.address?.trim()) missing.push("address");
+    if (typeof userInfo.has_medical_condition !== "boolean") {
+      missing.push("has_medical_condition");
+    }
+    if (
+      userInfo.has_medical_condition === true &&
+      !userInfo.medical_condition_details?.trim()
+    ) {
+      missing.push("medical_condition_details");
+    }
+    return missing;
+  };
+
   const canBookClasses = () => {
     // ถ้าไม่ได้ล็อกอิน
     if (!userInfo || !currentUser) return false;
 
     const { remaining_session, sessions_expiry_date } = userInfo;
+    if (missingProfileFields().length > 0) return false;
 
     if (remaining_session <= 0) return false;
 
@@ -218,7 +237,9 @@ const Booking = () => {
     }
 
     if (!canBookClasses()) {
-      if (
+      if (missingProfileFields().length > 0) {
+        message.error("❌ กรุณากรอกข้อมูลโปรไฟล์ให้ครบก่อนจองคลาส");
+      } else if (
         userInfo?.sessions_expiry_date &&
         moment(userInfo.sessions_expiry_date).isBefore(moment())
       ) {
@@ -228,6 +249,15 @@ const Booking = () => {
       } else {
         message.error("❌ ไม่สามารถจองคลาสได้ กรุณาตรวจสอบสถานะการเป็นสมาชิก");
       }
+      return;
+    }
+
+    const selectedClass = events.find((event) => event.id === classId);
+    if (
+      selectedClass?.allowedGender !== "all" &&
+      selectedClass?.allowedGender !== userInfo?.gender
+    ) {
+      message.error("❌ คลาสนี้จำกัดเพศและไม่ตรงกับข้อมูลโปรไฟล์ของคุณ");
       return;
     }
 
@@ -276,7 +306,7 @@ const Booking = () => {
 
         // รีเฟรชข้อมูลผู้ใช้
         try {
-          const userResponse = await getUserById(userFromToken.userId);
+            const userResponse = await getMyProfile();
           if (userResponse && userResponse.user) {
             setUserInfo(userResponse.user);
           }
@@ -289,7 +319,11 @@ const Booking = () => {
     } catch (error) {
       console.error("Error reserving class:", error);
 
-      if (error.message && error.message.includes("expired")) {
+      if (error.code === "PROFILE_INCOMPLETE") {
+        message.error("❌ กรุณากรอกข้อมูลโปรไฟล์ให้ครบก่อนจองคลาส");
+      } else if (error.code === "GENDER_NOT_ALLOWED") {
+        message.error("❌ คลาสนี้ไม่เปิดรับเพศตามข้อมูลโปรไฟล์ของคุณ");
+      } else if (error.message && error.message.includes("expired")) {
         message.error("❌ คลาสของคุณหมดอายุแล้ว กรุณาซื้อโปรโมชั่นใหม่");
       } else if (error.message && error.message.includes("session")) {
         message.error("❌ คุณไม่มีจำนวนครั้งคงเหลือ กรุณาซื้อโปรโมชั่นใหม่");
@@ -430,7 +464,7 @@ const Booking = () => {
 
         // รีเฟรชข้อมูลผู้ใช้
         try {
-          const userResponse = await getUserById(userFromToken.userId);
+          const userResponse = await getMyProfile();
           if (userResponse && userResponse.user) {
             setUserInfo(userResponse.user);
           }
@@ -483,7 +517,7 @@ const Booking = () => {
   };
 
   // ฟังก์ชันสำหรับกำหนด tooltip และ disabled status ของปุ่มจอง
-  const getBookingButtonProps = () => {
+  const getBookingButtonProps = (event) => {
     if (!currentUser) {
       return {
         disabled: true,
@@ -492,6 +526,12 @@ const Booking = () => {
     }
 
     if (!canBookClasses()) {
+      if (missingProfileFields().length > 0) {
+        return {
+          disabled: true,
+          tooltip: "กรุณากรอกข้อมูลโปรไฟล์ให้ครบก่อนจองคลาส",
+        };
+      }
       if (userInfo?.remaining_session <= 0) {
         return {
           disabled: true,
@@ -510,6 +550,16 @@ const Booking = () => {
       return {
         disabled: true,
         tooltip: "ไม่สามารถจองคลาสได้",
+      };
+    }
+
+    if (
+      event.allowedGender !== "all" &&
+      event.allowedGender !== userInfo?.gender
+    ) {
+      return {
+        disabled: true,
+        tooltip: "คลาสนี้จำกัดเพศและไม่ตรงกับข้อมูลโปรไฟล์ของคุณ",
       };
     }
 
@@ -612,6 +662,18 @@ const Booking = () => {
             />
           )}
 
+          {currentUser && userInfo && missingProfileFields().length > 0 && (
+            <Alert
+              type="warning"
+              message="กรุณากรอกข้อมูลสมาชิกให้ครบก่อนจองคลาส"
+              description={
+                <Link to="/profile">ไปที่หน้าโปรไฟล์เพื่อกรอกข้อมูล</Link>
+              }
+              showIcon
+              className="mb-6"
+            />
+          )}
+
           <Text>
             จองคลาสได้ตลอด สามารถยกเลิกการจองได้ก่อนเริ่มคลาส 5 นาที
             &quot;โซนเวลาเริ่มคลาสคำนวณจากประเทศไทยปรับเปลี่ยนไปตามโซนเวลาท้องถิ่นในแต่ละประเทศให้อัตโนมัติแล้วนะคะ&quot;
@@ -626,7 +688,7 @@ const Booking = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               {events.map((event) => {
-                const bookingProps = getBookingButtonProps();
+                const bookingProps = getBookingButtonProps(event);
 
                 return (
                   <Card
@@ -637,6 +699,16 @@ const Booking = () => {
                   >
                     <p>
                       <strong>ครูผู้สอน:</strong> {event.instructor}
+                    </p>
+                    <p>
+                      <strong>ผู้เข้าร่วม:</strong>{" "}
+                      <Tag color={event.allowedGender === "all" ? "blue" : "purple"}>
+                        {event.allowedGender === "male"
+                          ? "เฉพาะชาย"
+                          : event.allowedGender === "female"
+                            ? "เฉพาะหญิง"
+                            : "ทุกเพศ"}
+                      </Tag>
                     </p>
                     <div className="mb-4 mt-4">
                       <div className="bg-white p-4 rounded-lg shadow-sm">

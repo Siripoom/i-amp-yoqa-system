@@ -11,13 +11,15 @@ import {
   Row,
   Col,
   Divider,
+  Select,
+  message,
 } from "antd";
 import "../styles/Home.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { getUserById } from "../services/userService";
+import { useCallback, useEffect, useState } from "react";
+import { getMyProfile, updateMyProfile } from "../services/userService";
 import moment from "moment";
 import { CalendarOutlined, HourglassOutlined } from "@ant-design/icons";
 
@@ -26,27 +28,43 @@ const { Title, Text } = Typography;
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [hasMedicalCondition, setHasMedicalCondition] = useState(null);
+  const [form] = Form.useForm();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-
-    // Get user_id from localStorage
-    const userId = localStorage.getItem("user_id");
-
-    if (userId) {
-      fetchUserProfile(userId);
-    }
-  }, []);
-
-  const fetchUserProfile = async (id) => {
+  const fetchUserProfile = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getUserById(id);
+      const response = await getMyProfile();
       setUser(response.user);
+      setHasMedicalCondition(response.user.has_medical_condition);
+      form.setFieldsValue(response.user);
     } catch (error) {
       console.error("Error fetching user profile:", error);
     } finally {
       setLoading(false);
+    }
+  }, [form]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    if (localStorage.getItem("token")) {
+      fetchUserProfile();
+    }
+  }, [fetchUserProfile]);
+
+  const saveProfile = async (values) => {
+    setSaving(true);
+    try {
+      const response = await updateMyProfile(values);
+      setUser(response.user);
+      form.setFieldsValue(response.user);
+      message.success("บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว");
+    } catch (error) {
+      message.error(error.response?.data?.message || "บันทึกโปรไฟล์ไม่สำเร็จ");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -266,22 +284,20 @@ const Profile = () => {
               </div>
             ) : user ? (
               <Form
+                form={form}
                 layout="vertical"
                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                onFinish={saveProfile}
               >
-                <Form.Item label="ชื่อจริง">
+                <Form.Item label="ชื่อจริง" name="first_name" rules={[{ required: true }]}>
                   <Input
                     placeholder="First Name"
-                    value={user.first_name}
-                    disabled
                   />
                 </Form.Item>
 
-                <Form.Item label="นามสกุล">
+                <Form.Item label="นามสกุล" name="last_name" rules={[{ required: true }]}>
                   <Input
                     placeholder="Last Name"
-                    value={user.last_name}
-                    disabled
                   />
                 </Form.Item>
 
@@ -289,9 +305,46 @@ const Profile = () => {
                   <Input placeholder="Email" value={user.email} disabled />
                 </Form.Item>
 
-                <Form.Item label="เบอร์โทร">
-                  <Input placeholder="Phone" value={user.phone} disabled />
+                <Form.Item label="เบอร์โทร" name="phone" rules={[{ required: true }]}>
+                  <Input placeholder="Phone" />
                 </Form.Item>
+
+                <Form.Item label="เพศ" name="gender" rules={[{ required: true, message: "กรุณาเลือกเพศ" }]}>
+                  <Select placeholder="เลือกเพศ">
+                    <Select.Option value="female">หญิง</Select.Option>
+                    <Select.Option value="male">ชาย</Select.Option>
+                  </Select>
+                </Form.Item>
+
+                <Form.Item
+                  label="ที่อยู่"
+                  name="address"
+                  rules={[{ required: true, whitespace: true, message: "กรุณากรอกที่อยู่" }]}
+                  className="md:col-span-2"
+                >
+                  <Input.TextArea rows={3} />
+                </Form.Item>
+
+                <Form.Item
+                  label="โรคประจำตัว"
+                  name="has_medical_condition"
+                  rules={[{ required: true, message: "กรุณาระบุโรคประจำตัว" }]}
+                >
+                  <Select onChange={setHasMedicalCondition} placeholder="เลือกข้อมูลโรคประจำตัว">
+                    <Select.Option value={false}>ไม่มีโรคประจำตัว</Select.Option>
+                    <Select.Option value={true}>มีโรคประจำตัว</Select.Option>
+                  </Select>
+                </Form.Item>
+
+                {hasMedicalCondition === true && (
+                  <Form.Item
+                    label="รายละเอียดโรคประจำตัว"
+                    name="medical_condition_details"
+                    rules={[{ required: true, whitespace: true, message: "กรุณากรอกรายละเอียด" }]}
+                  >
+                    <Input.TextArea rows={3} />
+                  </Form.Item>
+                )}
 
                 <Form.Item label="จำนวนครั้งทั้งหมด (Total Classes) ">
                   <Input
@@ -334,7 +387,12 @@ const Profile = () => {
 
             <div className="flex justify-between mt-6">
               <Button type="text">Cancel</Button>
-              <Button type="primary" className="bg-primary text-white">
+              <Button
+                type="primary"
+                className="bg-primary text-white"
+                loading={saving}
+                onClick={() => form.submit()}
+              >
                 Save Changes
               </Button>
             </div>

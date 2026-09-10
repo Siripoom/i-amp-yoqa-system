@@ -25,7 +25,12 @@ exports.createClass = async (req, res) => {
       start_time,
       end_time,
       color,
+      allowed_gender = "all",
     } = req.body;
+
+    if (!["all", "male", "female"].includes(allowed_gender)) {
+      return res.status(400).json({ message: "Invalid allowed_gender" });
+    }
 
     const course = await Course.findOne({ course_name: title });
 
@@ -44,6 +49,7 @@ exports.createClass = async (req, res) => {
       start_time,
       end_time,
       color,
+      allowed_gender,
       difficulty, // Make sure your Class model has this field
       amount: 0,
       participants: [], // Initialize with an empty array
@@ -67,6 +73,10 @@ exports.getAllClasses = async (req, res) => {
     let classes = await Class.find({
       end_time: { $gte: now.toDate() },
     }).lean();
+    classes = classes.map((cls) => ({
+      ...cls,
+      allowed_gender: cls.allowed_gender || "all",
+    }));
 
     // Filter out classes that have started and amount = 0
     classes = classes.filter((cls) => {
@@ -105,7 +115,43 @@ exports.getClassById = async (req, res) => {
 // แก้ไขข้อมูลคลาส
 exports.updateClass = async (req, res) => {
   try {
-    const course = await Course.findOne({ course_name: req.body.title });
+    const existingClass = await Class.findById(req.params.id);
+    if (!existingClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    const nextAllowedGender =
+      req.body.allowed_gender || existingClass.allowed_gender || "all";
+    if (!["all", "male", "female"].includes(nextAllowedGender)) {
+      return res.status(400).json({ message: "Invalid allowed_gender" });
+    }
+
+    const currentAllowedGender = existingClass.allowed_gender || "all";
+    if (
+      nextAllowedGender !== currentAllowedGender &&
+      nextAllowedGender !== "all"
+    ) {
+      const activeReservations = await Reservation.find({
+        class_id: req.params.id,
+        status: "Reserved",
+      }).populate("user_id", "gender");
+      const incompatibleCount = activeReservations.filter(
+        (reservation) =>
+          !reservation.user_id ||
+          reservation.user_id.gender !== nextAllowedGender
+      ).length;
+      if (incompatibleCount > 0) {
+        return res.status(409).json({
+          code: "CLASS_GENDER_CONFLICT",
+          message: "Existing reservations conflict with the selected gender",
+          incompatible_count: incompatibleCount,
+        });
+      }
+    }
+
+    const course = await Course.findOne({
+      course_name: req.body.title || existingClass.title,
+    });
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
@@ -115,8 +161,8 @@ exports.updateClass = async (req, res) => {
 
     const updatedClass = await Class.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, difficulty },
-      { new: true }
+      { ...req.body, allowed_gender: nextAllowedGender, difficulty },
+      { new: true, runValidators: true }
     );
     if (!updatedClass) {
       return res.status(404).json({ message: "Class not found" });
@@ -176,6 +222,7 @@ exports.duplicateClass = async (req, res) => {
 
       difficulty: originalClass.difficulty,
       color: originalClass.color,
+      allowed_gender: originalClass.allowed_gender || "all",
       amount: 0, // Reset participant count
       participants: [], // Reset participants
     });

@@ -42,7 +42,6 @@ import {
 import reservationService from "../../services/reservationService";
 import orderService from "../../services/orderService";
 import moment from "moment";
-import dayjs from "dayjs";
 const { Sider, Content } = Layout;
 const { Option } = Select;
 
@@ -52,7 +51,9 @@ const UserPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [form] = Form.useForm();
-  const [expiryDays, setExpiryDays] = useState(0);
+  const [, setExpiryDays] = useState(0);
+  const selectedRole = Form.useWatch("role_id", form);
+  const hasMedicalCondition = Form.useWatch("has_medical_condition", form);
 
   // ส่วนที่เพิ่มมาใหม่สำหรับแสดงประวัติการจองคลาส
   const [historyDrawerVisible, setHistoryDrawerVisible] = useState(false);
@@ -157,8 +158,8 @@ const UserPage = () => {
     }
     setEditingUser(null);
     form.resetFields();
-    setExpiryDays(90); // Default to 90 days for new users
-    form.setFieldsValue({ expiry_days: 90 });
+    setExpiryDays(30);
+    form.setFieldsValue({ expiry_days: 30, role_id: "Member" });
     setIsModalVisible(true);
   };
 
@@ -238,6 +239,9 @@ const UserPage = () => {
         phone: values.phone,
         birth_date: values.birth_date,
         address: values.address,
+        gender: values.gender,
+        has_medical_condition: values.has_medical_condition,
+        medical_condition_details: values.medical_condition_details,
         registration_date: values.registration_date || new Date().toISOString(),
         role_name: values.role_id,
         referrer_id: values.referrer_id || null,
@@ -309,6 +313,22 @@ const UserPage = () => {
     //   render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : null),
     // },
     {title: "Phone", dataIndex: "phone", key: "phone" },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+      key: "gender",
+      render: (gender) => gender === "male" ? "ชาย" : gender === "female" ? "หญิง" : "-",
+    },
+    { title: "Address", dataIndex: "address", key: "address" },
+    ...(canEdit
+      ? [{
+          title: "Medical Condition",
+          key: "medical_condition",
+          render: (_, record) => record.has_medical_condition
+            ? record.medical_condition_details || "มี"
+            : record.has_medical_condition === false ? "ไม่มี" : "-",
+        }]
+      : []),
     {
       title: "Remaining Session",
       dataIndex: "remaining_session",
@@ -765,6 +785,66 @@ const UserPage = () => {
                 <Input type="date" disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
+                name="gender"
+                label="Gender"
+                rules={[
+                  {
+                    required: selectedRole === "Member",
+                    message: "Please select gender",
+                  },
+                ]}
+              >
+                <Select disabled={userRole === "Accounting"} allowClear>
+                  <Option value="female">หญิง</Option>
+                  <Option value="male">ชาย</Option>
+                </Select>
+              </Form.Item>
+              <Form.Item
+                name="address"
+                label="Address"
+                rules={[
+                  {
+                    required: selectedRole === "Member",
+                    whitespace: true,
+                    message: "Please enter address",
+                  },
+                ]}
+              >
+                <Input.TextArea rows={3} disabled={userRole === "Accounting"} />
+              </Form.Item>
+              {canEdit && (
+                <Form.Item
+                  name="has_medical_condition"
+                  label="Medical Condition"
+                  rules={[
+                    {
+                      required: selectedRole === "Member",
+                      message: "Please specify medical condition",
+                    },
+                  ]}
+                >
+                  <Select allowClear>
+                    <Option value={false}>ไม่มีโรคประจำตัว</Option>
+                    <Option value={true}>มีโรคประจำตัว</Option>
+                  </Select>
+                </Form.Item>
+              )}
+              {canEdit && hasMedicalCondition === true && (
+                <Form.Item
+                  name="medical_condition_details"
+                  label="Medical Condition Details"
+                  rules={[
+                    {
+                      required: true,
+                      whitespace: true,
+                      message: "Please enter medical condition details",
+                    },
+                  ]}
+                >
+                  <Input.TextArea rows={3} />
+                </Form.Item>
+              )}
+              <Form.Item
                 name="role_id"
                 label="Role"
                 rules={[{ required: true, message: "Please select the role" }]}
@@ -825,7 +905,7 @@ const UserPage = () => {
                 <InputNumber
                   style={{ width: "100%" }}
                   min={0}
-                  placeholder="Enter days (e.g., 90)"
+                  placeholder="Enter days (e.g., 30)"
                   onChange={(value) => setExpiryDays(value)}
                   disabled={userRole === "Accounting"}
                 />

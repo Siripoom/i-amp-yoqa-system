@@ -9,6 +9,10 @@ const QRCode = require("qrcode"); // เพิ่มสำหรับ QR Code
 const { createIncomeFromOrder } = require("./incomeController");
 const { companyInfo } = require("../config/brand");
 const multer = require("multer");
+const {
+  PACKAGE_ACTIVATION_DAYS,
+  getActivationExpiry,
+} = require("../utils/packageExpiry");
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -521,23 +525,21 @@ exports.updateOrderStatus = async (req, res) => {
       }
 
       if (order.order_type === "product" && order.product_id) {
-        // สำหรับ product orders - บวกสะสม sessions และตั้งวันหมดอายุเป็น 90 วันเสมอ
+        // Product packages must be activated within 30 days of approval.
         const product = order.product_id;
         if (product.sessions) {
-          // ตั้งวันหมดอายุเป็น 90 วันเสมอเมื่ออนุมัติ order
-          let newExpiryDate = new Date();
-          newExpiryDate.setDate(newExpiryDate.getDate() + 90);
+          const newExpiryDate = getActivationExpiry(new Date());
 
-          // บวกสะสม remaining_session, อัพเดทวันหมดอายุเป็น 90 วัน และบันทึก duration ของคอร์ส
           await User.findByIdAndUpdate(user._id, {
             $inc: { remaining_session: order.total_sessions }, // บวกสะสมจำนวน sessions
             $set: {
-              sessions_expiry_date: newExpiryDate, // อัพเดทวันหมดอายุเป็น 90 วันเสมอ
+              sessions_expiry_date: newExpiryDate,
               product_duration: product.duration, // บันทึก duration ของคอร์สล่าสุด
+              first_used_date: null,
             },
           });
           console.log(
-            `Added ${order.total_sessions} sessions for user ${user._id} with 90-day expiry (${newExpiryDate}). Product duration saved: ${product.duration} days.`
+            `Added ${order.total_sessions} sessions for user ${user._id} with ${PACKAGE_ACTIVATION_DAYS}-day activation expiry (${newExpiryDate}). Product duration saved: ${product.duration} days.`
           );
         }
       } else if (order.order_type === "goods" && order.goods_id) {

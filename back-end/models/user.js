@@ -34,8 +34,19 @@ const userSchema = new mongoose.Schema({
   birth_date: {
     type: Date,
   },
+  gender: {
+    type: String,
+    enum: ["male", "female"],
+  },
   address: {
     type: String,
+  },
+  has_medical_condition: {
+    type: Boolean,
+  },
+  medical_condition_details: {
+    type: String,
+    default: null,
   },
   registration_date: {
     type: Date,

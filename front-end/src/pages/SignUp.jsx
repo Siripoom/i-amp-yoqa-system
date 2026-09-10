@@ -11,7 +11,6 @@ import {
 import { motion } from "framer-motion";
 import {
   LockOutlined,
-  UserOutlined,
   PhoneOutlined,
   HomeOutlined,
   MailOutlined,
@@ -26,6 +25,7 @@ const { Option } = Select;
 
 const SignUp = () => {
   const [loading, setLoading] = useState(false);
+  const [hasMedicalCondition, setHasMedicalCondition] = useState(null);
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
@@ -161,16 +161,62 @@ const SignUp = () => {
             />
           </Form.Item>
 
-          {/* <Form.Item
-            name="address"
-            rules={[{ required: true, message: "Address is required" }]}
+          <Form.Item
+            name="gender"
+            rules={[{ required: true, message: "กรุณาเลือกเพศ" }]}
           >
-            <Input
+            <Select placeholder="เพศ" size="large">
+              <Option value="female">หญิง</Option>
+              <Option value="male">ชาย</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="address"
+            rules={[
+              { required: true, whitespace: true, message: "กรุณากรอกที่อยู่" },
+            ]}
+          >
+            <Input.TextArea
               prefix={<HomeOutlined />}
-              placeholder="Address"
+              placeholder="ที่อยู่"
               size="large"
+              rows={3}
             />
-          </Form.Item> */}
+          </Form.Item>
+
+          <Form.Item
+            name="has_medical_condition"
+            rules={[{ required: true, message: "กรุณาระบุโรคประจำตัว" }]}
+          >
+            <Select
+              placeholder="โรคประจำตัว"
+              size="large"
+              onChange={setHasMedicalCondition}
+            >
+              <Option value={false}>ไม่มีโรคประจำตัว</Option>
+              <Option value={true}>มีโรคประจำตัว</Option>
+            </Select>
+          </Form.Item>
+
+          {hasMedicalCondition === true && (
+            <Form.Item
+              name="medical_condition_details"
+              rules={[
+                {
+                  required: true,
+                  whitespace: true,
+                  message: "กรุณาระบุรายละเอียดโรคประจำตัว",
+                },
+              ]}
+            >
+              <Input.TextArea
+                placeholder="รายละเอียดโรคประจำตัว"
+                size="large"
+                rows={3}
+              />
+            </Form.Item>
+          )}
 
           <Form.Item name="referrer_id">
             <Input placeholder="Referrer ID (ถ้ามี)" size="large" />

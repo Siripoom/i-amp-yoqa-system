@@ -1,6 +1,9 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const authConfig = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+});
 
 const reservationService = {
   // 📌 จองคลาส
@@ -8,7 +11,8 @@ const reservationService = {
     try {
       const response = await axios.post(
         `${API_URL}/api/reserve`,
-        reservationData
+        reservationData,
+        authConfig()
       );
       return response.data;
     } catch (error) {
@@ -19,7 +23,10 @@ const reservationService = {
   // 📌 ดึงรายการคลาสที่ผู้ใช้จองไว้
   getUserReservations: async (userId) => {
     try {
-      const response = await axios.get(`${API_URL}/api/user/${userId}`);
+      const response = await axios.get(
+        `${API_URL}/api/user/${userId}`,
+        authConfig()
+      );
       console.log(response.data);
       return response.data;
     } catch (error) {
@@ -47,7 +54,10 @@ const reservationService = {
   },
   getAllReservations: async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/reserve`);
+      const response = await axios.get(
+        `${API_URL}/api/reserve`,
+        authConfig()
+      );
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : error;
@@ -57,7 +67,8 @@ const reservationService = {
   adminCancelReservation: async (reservationId) => {
     try {
       const response = await axios.delete(
-        `${API_URL}/api/admin/cancel/${reservationId}`
+        `${API_URL}/api/admin/cancel/${reservationId}`,
+        authConfig()
       );
       return response.data;
     } catch (error) {
@@ -68,10 +79,11 @@ const reservationService = {
   // 📌 จองคลาสในนาม Member (สำหรับผู้ดูแลระบบ)
   adminCreateReservation: async (classId, userId) => {
     try {
-      const response = await axios.post(`${API_URL}/api/admin/reserve`, {
-        class_id: classId,
-        user_id: userId,
-      });
+      const response = await axios.post(
+        `${API_URL}/api/admin/reserve`,
+        { class_id: classId, user_id: userId },
+        authConfig()
+      );
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : error;
