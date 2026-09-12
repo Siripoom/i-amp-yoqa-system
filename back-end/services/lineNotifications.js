@@ -42,10 +42,21 @@ const reservationCancellationMessage = ({ className, startTime, remaining }) => 
   ] } },
 });
 
+const classChangeMessage = ({ className, startTime, instructor, location }) => ({
+  type: "flex", altText: `มีการเปลี่ยนแปลงคลาส ${className}`,
+  contents: { type: "bubble", body: { type: "box", layout: "vertical", contents: [
+    { type: "text", text: "คลาสมีการเปลี่ยนแปลง", weight: "bold", size: "xl", color: "#EF6C00" },
+    { type: "text", text: className, weight: "bold", margin: "md", wrap: true },
+    ...(startTime ? [{ type: "text", text: `วันเวลาใหม่: ${startTime}`, margin: "sm", wrap: true }] : []),
+    ...(instructor ? [{ type: "text", text: `ผู้สอน: ${instructor}`, margin: "sm", wrap: true }] : []),
+    ...(location ? [{ type: "text", text: `สถานที่: ${location}`, margin: "sm", wrap: true }] : []),
+  ] } },
+});
+
 const sendPushMessage = async ({ lineUserId, messages, client = createLineClient() }) => {
   if (!lineUserId) return { skipped: true, reason: "not_linked" };
   await client.pushMessage({ to: lineUserId, messages: messages.slice(0, 5) });
   return { accepted: true };
 };
 
-module.exports = { createLineClient, reservationConfirmationMessage, classReminderMessage, reservationCancellationMessage, sendPushMessage };
+module.exports = { createLineClient, reservationConfirmationMessage, classReminderMessage, reservationCancellationMessage, classChangeMessage, sendPushMessage };

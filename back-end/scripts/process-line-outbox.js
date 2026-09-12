@@ -1,7 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const Outbox = require("../models/lineNotificationOutbox");
-const { sendPushMessage, reservationConfirmationMessage, classReminderMessage, reservationCancellationMessage } = require("../services/lineNotifications");
+const { sendPushMessage, reservationConfirmationMessage, classReminderMessage, reservationCancellationMessage, classChangeMessage } = require("../services/lineNotifications");
 
 const format = (value) => value ? new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Bangkok" }).format(new Date(value)) : "ไม่ระบุเวลา";
 
@@ -19,7 +19,9 @@ async function processOnce() {
       : item.type === "class_reminder"
         ? [classReminderMessage({ className: p.class_name, startTime: format(p.start_time) })]
         : item.type === "reservation_cancelled"
-          ? [reservationCancellationMessage({ className: p.class_name, startTime: p.start_time ? format(p.start_time) : null, remaining: p.remaining })]
+          ? [reservationCancellationMessage({ className: p.class_name, startTime: p.start_time ? format(p.start_time) : null, remaining: p.remaining ?? 0 })]
+          : item.type === "class_changed"
+            ? [classChangeMessage({ className: p.class_name, startTime: p.start_time ? format(p.start_time) : null, instructor: p.instructor, location: p.location })]
           : [];
     if (!messages.length) throw new Error(`Unsupported notification type: ${item.type}`);
     await sendPushMessage({ lineUserId: item.line_user_id, messages });
