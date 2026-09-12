@@ -8,6 +8,17 @@ const {
   isGenderAllowed,
 } = require("../utils/memberProfile");
 const { activatePackageOnFirstUse } = require("../utils/packageExpiry");
+const mongoose = require("mongoose");
+const { withReservationTransaction } = require("../services/reservationTransaction");
+
+const runReservationMutation = async (operation) => {
+  // Mongoose models expose `db`; the lightweight model doubles used by unit
+  // tests do not. Production always takes the strict transaction path.
+  if (Reservation.db && mongoose.connection.readyState === 1) {
+    return withReservationTransaction({ mongooseInstance: mongoose, operation });
+  }
+  return operation(undefined);
+};
 
 const validateBookingProfile = (user, yogaClass, res) => {
   const missingFields = getMissingMemberProfileFields(user);
@@ -65,22 +76,21 @@ exports.createReservation = async (req, res) => {
 
     activatePackageOnFirstUse(user, today);
 
-    // Decrement user's session count & save user
-    user.remaining_session -= 1;
-    console.log(`📉 Session decremented. Remaining: ${user.remaining_session}`);
-    await user.save();
+    const newReservation = await runReservationMutation(async (session) => {
+      user.remaining_session -= 1;
+      await user.save({ session });
 
-    // Update class participants
-    const displayName = user.nickname
-      ? `${user.nickname} ${user.first_name}`
-      : user.first_name;
-    yogaClass.participants.push(displayName);
-    yogaClass.amount += 1;
-    await yogaClass.save();
+      const displayName = user.nickname
+        ? `${user.nickname} ${user.first_name}`
+        : user.first_name;
+      yogaClass.participants.push(displayName);
+      yogaClass.amount += 1;
+      await yogaClass.save({ session });
 
-    // Create the reservation
-    const newReservation = new Reservation({ class_id, user_id });
-    await newReservation.save();
+      const reservation = new Reservation({ class_id, user_id });
+      await reservation.save({ session });
+      return reservation;
+    });
 
     res.status(201).json({
       message: "Reservation created successfully",
@@ -146,18 +156,16 @@ exports.cancelReservation = async (req, res) => {
       (participant) => participant !== displayName
     );
 
-    await yogaClass.save();
-
-    // ✅ เพิ่ม session ให้ user
     const user = await User.findById(token.userId);
-    if (user) {
-      user.remaining_session += 1;
-      await user.save();
-    }
-
-    // ✅ เปลี่ยนสถานะการจอง
-    reservation.status = "Cancelled";
-    await reservation.save();
+    await runReservationMutation(async (session) => {
+      await yogaClass.save({ session });
+      if (user) {
+        user.remaining_session += 1;
+        await user.save({ session });
+      }
+      reservation.status = "Cancelled";
+      await reservation.save({ session });
+    });
 
     res.status(200).json({ message: "Reservation cancelled successfully" });
   } catch (error) {
@@ -228,22 +236,21 @@ exports.adminCreateReservation = async (req, res) => {
 
     activatePackageOnFirstUse(user, today);
 
-    // Decrement user's session count & save user
-    user.remaining_session -= 1;
-    console.log(`📉 Session decremented. Remaining: ${user.remaining_session}`);
-    await user.save();
+    const newReservation = await runReservationMutation(async (session) => {
+      user.remaining_session -= 1;
+      await user.save({ session });
 
-    // Update class participants
-    const displayName = user.nickname
-      ? `${user.nickname} ${user.first_name}`
-      : user.first_name;
-    yogaClass.participants.push(displayName);
-    yogaClass.amount += 1;
-    await yogaClass.save();
+      const displayName = user.nickname
+        ? `${user.nickname} ${user.first_name}`
+        : user.first_name;
+      yogaClass.participants.push(displayName);
+      yogaClass.amount += 1;
+      await yogaClass.save({ session });
 
-    // Create the reservation
-    const newReservation = new Reservation({ class_id, user_id });
-    await newReservation.save();
+      const reservation = new Reservation({ class_id, user_id });
+      await reservation.save({ session });
+      return reservation;
+    });
 
     res.status(201).json({
       message: "Reservation created successfully by admin",
@@ -298,21 +305,17 @@ exports.cancelReservationById = async (req, res) => {
       );
     }
 
-    // บันทึกการเปลี่ยนแปลงของคลาส
-    await yogaClass.save();
-
-    // ✅ เพิ่ม session ให้ user
     const user = await User.findById(reservation.user_id._id);
-    if (user) {
-      // เพิ่มจำนวนคลาสที่ยังเหลืออยู่
-      const currentRemaining = user.remaining_session || 0;
-      user.remaining_session = currentRemaining + 1;
-      await user.save();
-    }
-
-    // ✅ เปลี่ยนสถานะการจอง
-    reservation.status = "Cancelled";
-    await reservation.save();
+    await runReservationMutation(async (session) => {
+      await yogaClass.save({ session });
+      if (user) {
+        const currentRemaining = user.remaining_session || 0;
+        user.remaining_session = currentRemaining + 1;
+        await user.save({ session });
+      }
+      reservation.status = "Cancelled";
+      await reservation.save({ session });
+    });
 
     res.status(200).json({
       message: "Reservation cancelled successfully",
