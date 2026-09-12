@@ -1,11 +1,4 @@
-class LineMemberIdentityError extends Error {
-  constructor(code, message, status) {
-    super(message);
-    this.name = "LineMemberIdentityError";
-    this.code = code;
-    this.status = status;
-  }
-}
+const { LineIdentityError } = require("./lineIdentity");
 
 const findOrCreateVerifiedLineMember = async ({ MemberModel, identity }) => {
   const linkedMember = await MemberModel.findOne({
@@ -18,7 +11,7 @@ const findOrCreateVerifiedLineMember = async ({ MemberModel, identity }) => {
     line_user_id: { $exists: false },
   });
   if (legacyCandidate) {
-    throw new LineMemberIdentityError(
+    throw new LineIdentityError(
       "LINE_LEGACY_ACCOUNT_REVIEW_REQUIRED",
       "This LINE account must be reviewed before it can be migrated",
       409
@@ -40,7 +33,7 @@ const legacyLineUserIdPattern = /^U[0-9a-f]{32}$/i;
 const approveLegacyLineMember = async ({ MemberModel, memberId }) => {
   const member = await MemberModel.findById(memberId);
   if (!member) {
-    throw new LineMemberIdentityError(
+    throw new LineIdentityError(
       "LINE_LEGACY_ACCOUNT_NOT_FOUND",
       "Legacy LINE member was not found",
       404
@@ -54,7 +47,7 @@ const approveLegacyLineMember = async ({ MemberModel, memberId }) => {
     !member.email &&
     !member.password;
   if (!isEligible) {
-    throw new LineMemberIdentityError(
+    throw new LineIdentityError(
       "LINE_LEGACY_ACCOUNT_NOT_ELIGIBLE",
       "Member does not match the legacy LINE-first account shape",
       422
@@ -68,7 +61,7 @@ const approveLegacyLineMember = async ({ MemberModel, memberId }) => {
     conflictingMember &&
     String(conflictingMember._id) !== String(member._id)
   ) {
-    throw new LineMemberIdentityError(
+    throw new LineIdentityError(
       "LINE_IDENTITY_CONFLICT",
       "LINE identity is already connected to another member",
       409
@@ -82,6 +75,5 @@ const approveLegacyLineMember = async ({ MemberModel, memberId }) => {
 
 module.exports = {
   approveLegacyLineMember,
-  LineMemberIdentityError,
   findOrCreateVerifiedLineMember,
 };

@@ -20,7 +20,7 @@ const safeUser = (user) => {
 const applicationTokenPayload = (user) => ({
   userId: user._id,
   role: user.role_id,
-  user: `${user.first_name || ""}${user.last_name || ""}`,
+  user: user.first_name + user.last_name,
   first_name: user.first_name,
   nickname: user.nickname,
 });
@@ -83,7 +83,6 @@ const createLineLoginHandler = ({
   MemberModel = User,
   verifyLineIdToken: verifyIdentity = verifyLineIdToken,
   signApplicationToken = signApplicationTokenWithJwt,
-  resolveLineMember = findOrCreateVerifiedLineMember,
 } = {}) => async (req, res) => {
   try {
     const { idToken } = req.body || {};
@@ -95,7 +94,7 @@ const createLineLoginHandler = ({
     }
 
     const identity = await verifyIdentity(idToken);
-    const user = await resolveLineMember({
+    const user = await findOrCreateVerifiedLineMember({
       MemberModel,
       identity,
     });
