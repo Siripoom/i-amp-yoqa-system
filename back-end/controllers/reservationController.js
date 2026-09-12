@@ -3,6 +3,7 @@ const Class = require("../models/class");
 const User = require("../models/user");
 const jwtDecode = require("jwt-decode");
 const Order = require("../models/order");
+const LineNotificationOutbox = require("../models/lineNotificationOutbox");
 const {
   getMissingMemberProfileFields,
   isGenderAllowed,
@@ -89,6 +90,20 @@ exports.createReservation = async (req, res) => {
 
       const reservation = new Reservation({ class_id, user_id });
       await reservation.save({ session });
+      if (user.line_user_id) {
+        await LineNotificationOutbox.create([{
+          event_key: `reservation-confirmed:${reservation._id}`,
+          line_user_id: user.line_user_id,
+          type: "reservation_confirmed",
+          payload: {
+            reservation_id: String(reservation._id),
+            class_name: yogaClass.title,
+            start_time: yogaClass.start_time,
+            end_time: yogaClass.end_time,
+            remaining: user.remaining_session,
+          },
+        }], { session });
+      }
       return reservation;
     });
 
@@ -249,6 +264,20 @@ exports.adminCreateReservation = async (req, res) => {
 
       const reservation = new Reservation({ class_id, user_id });
       await reservation.save({ session });
+      if (user.line_user_id) {
+        await LineNotificationOutbox.create([{
+          event_key: `reservation-confirmed:${reservation._id}`,
+          line_user_id: user.line_user_id,
+          type: "reservation_confirmed",
+          payload: {
+            reservation_id: String(reservation._id),
+            class_name: yogaClass.title,
+            start_time: yogaClass.start_time,
+            end_time: yogaClass.end_time,
+            remaining: user.remaining_session,
+          },
+        }], { session });
+      }
       return reservation;
     });
 
