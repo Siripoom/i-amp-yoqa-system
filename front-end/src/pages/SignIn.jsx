@@ -1,15 +1,15 @@
-import { Button, Checkbox, Form, Input, Typography, message } from "antd";
+import { Button, Form, Input, Typography, message } from "antd";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { LockOutlined, UserOutlined, LineOutlined } from "@ant-design/icons";
-import { login, lineLogin } from "../services/authService";
+import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import { login } from "../services/authService";
 import { useEffect } from "react";
 import liff from "@line/liff";
 const { Title, Text } = Typography;
 
 const SignIn = () => {
   useEffect(() => {
-    liff.init({ liffId: "2007091295-9VRjXwVY" });
+    liff.init({ liffId: import.meta.env.VITE_LINE_LIFF });
   }, []);
 
   const handleLiffLogin = async () => {

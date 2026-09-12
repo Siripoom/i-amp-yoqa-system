@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import liff from "@line/liff";
 import { lineLogin } from "../services/authService";
 import { useNavigate } from "react-router-dom";
@@ -9,34 +9,14 @@ const Line = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const initLiff = async () => {
-      try {
-        // Initialize LIFF
-        await liff.init({ liffId: import.meta.env.VITE_LINE_LIFF });
-
-        if (liff.isLoggedIn()) {
-          await handleLiffLogin();
-        } else {
-          setError("Not logged in via LINE");
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("LIFF initialization failed:", error);
-        setError("LIFF initialization failed");
-        setLoading(false);
-      }
-    };
-
-    initLiff();
-  }, []);
-
-  const handleLiffLogin = async () => {
+  const handleLiffLogin = useCallback(async () => {
     try {
-      const profile = await liff.getProfile();
-      console.log("LIFF Profile:", profile);
+      const idToken = liff.getIDToken();
+      if (!idToken) {
+        throw new Error("LINE ID token is unavailable");
+      }
 
-      const response = await lineLogin(profile);
+      const response = await lineLogin(idToken);
 
       // Store Token and User Data
       localStorage.setItem("token", response.token);
@@ -73,7 +53,28 @@ const Line = () => {
         navigate("/auth/signin");
       }, 3000);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    const initLiff = async () => {
+      try {
+        await liff.init({ liffId: import.meta.env.VITE_LINE_LIFF });
+
+        if (liff.isLoggedIn()) {
+          await handleLiffLogin();
+        } else {
+          setError("Not logged in via LINE");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("LIFF initialization failed:", error);
+        setError("LIFF initialization failed");
+        setLoading(false);
+      }
+    };
+
+    initLiff();
+  }, [handleLiffLogin]);
 
   if (loading) {
     return (

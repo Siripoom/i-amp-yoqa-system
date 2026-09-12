@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const passport = require("passport");
 const crypto = require("crypto");
+const { verifyLineIdToken } = require("../services/lineIdentity");
 const safeUser = (user) => {
   const data = typeof user.toObject === "function" ? user.toObject() : { ...user };
   delete data.password;
@@ -74,47 +75,75 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Login with Line
-exports.loginLine = async (req, res) => {
+const signApplicationTokenWithJwt = (payload) =>
+  jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+const createLineLoginHandler = ({
+  MemberModel = User,
+  verifyLineIdToken: verifyIdentity = verifyLineIdToken,
+  signApplicationToken = signApplicationTokenWithJwt,
+} = {}) => async (req, res) => {
   try {
-    console.log("req.body", req.body);
-    const { userId, displayName } = req.body;
-    var data = {
-      username: userId,
-      first_name: displayName,
-      role_id: "Member",
-      userTerms: false, // Default to false for new users
-    };
-    var user = await User.findOne({ username: userId });
+    const { idToken } = req.body || {};
+    if (typeof idToken !== "string" || !idToken.trim()) {
+      return res.status(400).json({
+        code: "LINE_ID_TOKEN_REQUIRED",
+        message: "LINE ID token is required",
+      });
+    }
+
+    const identity = await verifyIdentity(idToken);
+    let user = await MemberModel.findOne({ line_user_id: identity.subject });
+
+    if (!user) {
+      user = await MemberModel.findOne({
+        username: identity.subject,
+        line_user_id: { $exists: false },
+      });
+    }
+
     if (user) {
-      console.log("User found:", user);
+      if (!user.line_user_id) {
+        user.line_user_id = identity.subject;
+        await user.save();
+      }
     } else {
-      user = new User(data);
+      user = new MemberModel({
+        line_user_id: identity.subject,
+        first_name: identity.displayName || "LINE Member",
+        role_id: "Member",
+        userTerms: false,
+      });
       await user.save();
     }
 
-    var playload = {
-      user,
-    };
-
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role_id,
-        user: user.first_name + user.last_name,
-        first_name: user.first_name,
-        nickname: user.nickname,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
-    );
+    const token = signApplicationToken({
+      userId: user._id,
+      role: user.role_id,
+      user: `${user.first_name || ""}${user.last_name || ""}`,
+      first_name: user.first_name,
+      nickname: user.nickname,
+    });
     res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error && Number.isInteger(error.status) && error.code) {
+      return res.status(error.status).json({
+        code: error.code,
+        message: error.message,
+      });
+    }
+    if (error && error.code === 11000) {
+      return res.status(409).json({
+        code: "LINE_IDENTITY_CONFLICT",
+        message: "LINE identity is already connected to another member",
+      });
+    }
+    res.status(500).json({ message: "Unable to complete LINE login" });
   }
 };
+
+exports.createLineLoginHandler = createLineLoginHandler;
+exports.loginLine = createLineLoginHandler();
 
 // ฟังก์ชันขอรีเซ็ตรหัสผ่าน (Request Password Reset)
 exports.requestPasswordReset = async (req, res) => {

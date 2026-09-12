@@ -16,8 +16,8 @@ export const register = async (userData) => {
   return response.data;
 };
 
-export const lineLogin = async (data) => {
-  const response = await axios.post(`${API_URL}/api/auth/line`, data);
+export const lineLogin = async (idToken) => {
+  const response = await axios.post(`${API_URL}/api/auth/line`, { idToken });
   return response.data;
 };
 

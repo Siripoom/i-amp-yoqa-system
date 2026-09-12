@@ -41,6 +41,7 @@ In Render Dashboard:
    - `B2_PUBLIC_BASE_URL` (optional, defaults to endpoint/bucket)
    - `LINE_CHANNEL_SECRET`
    - `LINE_CHANNEL_ACCESS_TOKEN`
+   - `LINE_LOGIN_CHANNEL_ID` (the expected LINE Login channel for LIFF ID-token verification)
    - etc.
 
 ### 2. Install LibreOffice (for PDF conversion)
