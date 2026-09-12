@@ -43,8 +43,8 @@ const Line = () => {
       }
 
       setLoading(false);
-    } catch (error) {
-      console.error("Error during Line login:", error);
+    } catch {
+      console.error("LINE login request failed");
       setError("Login failed. Please try again.");
       setLoading(false);
 

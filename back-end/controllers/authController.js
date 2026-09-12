@@ -6,6 +6,9 @@ const { validationResult } = require("express-validator");
 const passport = require("passport");
 const crypto = require("crypto");
 const { verifyLineIdToken } = require("../services/lineIdentity");
+const {
+  findOrCreateVerifiedLineMember,
+} = require("../services/lineMemberIdentity");
 const safeUser = (user) => {
   const data = typeof user.toObject === "function" ? user.toObject() : { ...user };
   delete data.password;
@@ -13,6 +16,19 @@ const safeUser = (user) => {
   delete data.resetPasswordExpiry;
   return data;
 };
+
+const applicationTokenPayload = (user) => ({
+  userId: user._id,
+  role: user.role_id,
+  user: `${user.first_name || ""}${user.last_name || ""}`,
+  first_name: user.first_name,
+  nickname: user.nickname,
+});
+
+const signApplicationTokenWithJwt = (user) =>
+  jwt.sign(applicationTokenPayload(user), process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
 // ฟังก์ชันการเข้าสู่ระบบ (Login)
 exports.login = async (req, res) => {
   try {
@@ -34,19 +50,7 @@ exports.login = async (req, res) => {
     }
 
     // สร้าง JWT Token
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role_id,
-        user: user.first_name + user.last_name,
-        first_name: user.first_name,
-        nickname: user.nickname,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
-    );
+    const token = signApplicationTokenWithJwt(user);
     res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -75,13 +79,11 @@ exports.getMe = async (req, res) => {
   }
 };
 
-const signApplicationTokenWithJwt = (payload) =>
-  jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
-
 const createLineLoginHandler = ({
   MemberModel = User,
   verifyLineIdToken: verifyIdentity = verifyLineIdToken,
   signApplicationToken = signApplicationTokenWithJwt,
+  resolveLineMember = findOrCreateVerifiedLineMember,
 } = {}) => async (req, res) => {
   try {
     const { idToken } = req.body || {};
@@ -93,37 +95,11 @@ const createLineLoginHandler = ({
     }
 
     const identity = await verifyIdentity(idToken);
-    let user = await MemberModel.findOne({ line_user_id: identity.subject });
-
-    if (!user) {
-      user = await MemberModel.findOne({
-        username: identity.subject,
-        line_user_id: { $exists: false },
-      });
-    }
-
-    if (user) {
-      if (!user.line_user_id) {
-        user.line_user_id = identity.subject;
-        await user.save();
-      }
-    } else {
-      user = new MemberModel({
-        line_user_id: identity.subject,
-        first_name: identity.displayName || "LINE Member",
-        role_id: "Member",
-        userTerms: false,
-      });
-      await user.save();
-    }
-
-    const token = signApplicationToken({
-      userId: user._id,
-      role: user.role_id,
-      user: `${user.first_name || ""}${user.last_name || ""}`,
-      first_name: user.first_name,
-      nickname: user.nickname,
+    const user = await resolveLineMember({
+      MemberModel,
+      identity,
     });
+    const token = signApplicationToken(user);
     res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
     if (error && Number.isInteger(error.status) && error.code) {

@@ -4,13 +4,15 @@ const express = require("express");
 const { Readable } = require("node:stream");
 
 const { createAuthRouter } = require("../routes/authRoutes");
-const authController = require("../controllers/authController");
 const {
   createLineLoginHandler,
 } = require("../controllers/authController");
 const {
   createLineIdentityVerifier,
 } = require("../services/lineIdentity");
+const {
+  approveLegacyLineMember,
+} = require("../services/lineMemberIdentity");
 
 const memberId = "507f1f77bcf86cd799439011";
 
@@ -32,6 +34,16 @@ function createMemberModel(seed = []) {
           }
           return candidate[key] === value;
         })
+      );
+      if (!record) return null;
+      const member = new Member(record);
+      member.isNew = false;
+      return member;
+    }
+
+    static async findById(id) {
+      const record = records.find(
+        (candidate) => String(candidate._id) === String(id)
       );
       if (!record) return null;
       const member = new Member(record);
@@ -85,7 +97,7 @@ async function startAuthApp({ MemberModel, verifyLineIdToken }) {
   app.use(express.json());
   app.use(
     "/api/auth",
-    createAuthRouter({ controller: { ...authController, loginLine } })
+    createAuthRouter({ lineLogin: loginLine })
   );
 
   return {
@@ -145,7 +157,7 @@ test("verified LINE identity creates a Member without using username as identity
   assert.equal(MemberModel.records().length, 1);
 });
 
-test("legacy LINE-first Member is migrated by verified subject without merging others", async (t) => {
+test("legacy LINE-first candidate requires review instead of being silently merged", async (t) => {
   const MemberModel = createMemberModel([
     {
       _id: memberId,
@@ -165,9 +177,10 @@ test("legacy LINE-first Member is migrated by verified subject without merging o
 
   const response = await app.postLine({ idToken: "valid-id-token" });
 
-  assert.equal(response.status, 200);
+  assert.equal(response.status, 409);
+  assert.equal(response.body.code, "LINE_LEGACY_ACCOUNT_REVIEW_REQUIRED");
   assert.equal(MemberModel.records().length, 1);
-  assert.equal(MemberModel.records()[0].line_user_id, "U-legacy");
+  assert.equal(MemberModel.records()[0].line_user_id, undefined);
   assert.equal(MemberModel.records()[0].first_name, "ชื่อเดิม");
 });
 
@@ -221,4 +234,74 @@ test("LINE verifier rejects a response for another channel", async () => {
     (error) =>
       error.code === "LINE_ID_TOKEN_INVALID" && error.status === 401
   );
+});
+
+test("LINE verifier rejects expired and rejected credentials", async () => {
+  const expiredVerifier = createLineIdentityVerifier({
+    channelId: "expected-channel",
+    now: () => 2_000_000,
+    fetchImpl: async () => ({
+      ok: true,
+      async json() {
+        return {
+          sub: "U-provider-scoped",
+          aud: "expected-channel",
+          exp: 1_999,
+        };
+      },
+    }),
+  });
+  const rejectedVerifier = createLineIdentityVerifier({
+    channelId: "expected-channel",
+    fetchImpl: async () => ({
+      ok: false,
+      async json() {
+        return { error: "invalid_request" };
+      },
+    }),
+  });
+
+  await assert.rejects(
+    () => expiredVerifier("expired-token"),
+    (error) => error.code === "LINE_ID_TOKEN_INVALID"
+  );
+  await assert.rejects(
+    () => rejectedVerifier("tampered-token"),
+    (error) => error.code === "LINE_ID_TOKEN_INVALID"
+  );
+});
+
+test("reviewed legacy LINE-first Member can be migrated by exact member ID", async () => {
+  const lineUserId = `U${"a".repeat(32)}`;
+  const MemberModel = createMemberModel([
+    {
+      _id: memberId,
+      username: lineUserId,
+      first_name: "Legacy LINE Member",
+      role_id: "Member",
+    },
+  ]);
+
+  const member = await approveLegacyLineMember({ MemberModel, memberId });
+
+  assert.equal(member.line_user_id, lineUserId);
+  assert.equal(MemberModel.records().length, 1);
+});
+
+test("ordinary membership cannot use the legacy LINE migration path", async () => {
+  const MemberModel = createMemberModel([
+    {
+      _id: memberId,
+      username: `U${"b".repeat(32)}`,
+      email: "member@example.com",
+      first_name: "Email Member",
+      role_id: "Member",
+    },
+  ]);
+
+  await assert.rejects(
+    () => approveLegacyLineMember({ MemberModel, memberId }),
+    (error) => error.code === "LINE_LEGACY_ACCOUNT_NOT_ELIGIBLE"
+  );
+  assert.equal(MemberModel.records()[0].line_user_id, undefined);
 });

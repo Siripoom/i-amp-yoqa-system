@@ -16,6 +16,13 @@ const invalidToken = () =>
     401
   );
 
+const identityUnavailable = () =>
+  new LineIdentityError(
+    "LINE_IDENTITY_UNAVAILABLE",
+    "LINE identity verification is unavailable",
+    503
+  );
+
 const createLineIdentityVerifier = ({
   channelId = process.env.LINE_LOGIN_CHANNEL_ID,
   fetchImpl = globalThis.fetch,
@@ -30,11 +37,7 @@ const createLineIdentityVerifier = ({
       );
     }
     if (typeof fetchImpl !== "function") {
-      throw new LineIdentityError(
-        "LINE_IDENTITY_UNAVAILABLE",
-        "LINE identity verification is unavailable",
-        503
-      );
+      throw identityUnavailable();
     }
 
     let response;
@@ -45,11 +48,7 @@ const createLineIdentityVerifier = ({
         body: new URLSearchParams({ id_token: idToken, client_id: channelId }),
       });
     } catch (_error) {
-      throw new LineIdentityError(
-        "LINE_IDENTITY_UNAVAILABLE",
-        "LINE identity verification is unavailable",
-        503
-      );
+      throw identityUnavailable();
     }
 
     let payload;
@@ -57,11 +56,7 @@ const createLineIdentityVerifier = ({
       payload = await response.json();
     } catch (_error) {
       if (!response.ok) throw invalidToken();
-      throw new LineIdentityError(
-        "LINE_IDENTITY_UNAVAILABLE",
-        "LINE identity verification is unavailable",
-        503
-      );
+      throw identityUnavailable();
     }
 
     const expiresAt = Number(payload.exp) * 1000;
