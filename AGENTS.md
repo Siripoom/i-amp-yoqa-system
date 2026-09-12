@@ -57,3 +57,17 @@ The **front-end** provides the user interface and interacts with the back-end AP
     *   **Utilities**: Helper functions for client-side operations, such as [tokenUtils.js](front-end/src/utils/tokenUtils.js).
 *   **External Relationships**:
     *   **Back-End API**: Makes HTTP requests to the back-end API endpoints via the service modules (e.g., [authService.js](front-end/src/services/authService.js)) to perform operations like user authentication, data retrieval, and data submission.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs are tracked in this repository's GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the standard five-role triage label vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repository uses a single-context domain documentation layout. See `docs/agents/domain.md`.
