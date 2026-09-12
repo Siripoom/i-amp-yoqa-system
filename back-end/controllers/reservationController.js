@@ -191,6 +191,14 @@ exports.cancelReservation = async (req, res) => {
       reservation.status = "Cancelled";
       await reservation.save({ session });
       if (user?.line_user_id) {
+        await LineNotificationOutbox.create([{
+          event_key: `reservation-cancelled:${reservation._id}`,
+          line_user_id: user.line_user_id,
+          type: "reservation_cancelled",
+          payload: { reservation_id: String(reservation._id), class_name: yogaClass.title, start_time: yogaClass.start_time, remaining: user.remaining_session },
+        }], { session });
+      }
+      if (user?.line_user_id) {
         await LineNotificationOutbox.updateOne(
           { event_key: `class-reminder:${reservation._id}`, status: "pending" },
           { $set: { status: "failed", last_error: "reservation_cancelled" } },
@@ -371,6 +379,14 @@ exports.cancelReservationById = async (req, res) => {
       }
       reservation.status = "Cancelled";
       await reservation.save({ session });
+      if (user?.line_user_id) {
+        await LineNotificationOutbox.create([{
+          event_key: `reservation-cancelled:${reservation._id}`,
+          line_user_id: user.line_user_id,
+          type: "reservation_cancelled",
+          payload: { reservation_id: String(reservation._id), class_name: yogaClass.title, start_time: yogaClass.start_time, remaining: user.remaining_session },
+        }], { session });
+      }
       if (user?.line_user_id) {
         await LineNotificationOutbox.updateOne(
           { event_key: `class-reminder:${reservation._id}`, status: "pending" },

@@ -30,10 +30,22 @@ const classReminderMessage = ({ className, startTime }) => ({
   ] } },
 });
 
+const reservationCancellationMessage = ({ className, startTime, remaining }) => ({
+  type: "flex", altText: `ยกเลิกการจองคลาส ${className}`,
+  contents: { type: "bubble", body: { type: "box", layout: "vertical", contents: [
+    { type: "text", text: "ยกเลิกการจองแล้ว", weight: "bold", size: "xl", color: "#C62828" },
+    { type: "text", text: className || "คลาสโยคะ", weight: "bold", margin: "md", wrap: true },
+    ...(startTime ? [{ type: "text", text: `เวลาเดิม: ${startTime}`, margin: "sm", wrap: true }] : []),
+    { type: "separator", margin: "md" },
+    { type: "text", text: "คืนสิทธิ์แล้ว 1 คลาส", margin: "md" },
+    { type: "text", text: `สิทธิ์คงเหลือ: ${remaining} คลาส`, weight: "bold", margin: "sm" },
+  ] } },
+});
+
 const sendPushMessage = async ({ lineUserId, messages, client = createLineClient() }) => {
   if (!lineUserId) return { skipped: true, reason: "not_linked" };
   await client.pushMessage({ to: lineUserId, messages: messages.slice(0, 5) });
   return { accepted: true };
 };
 
-module.exports = { createLineClient, reservationConfirmationMessage, classReminderMessage, sendPushMessage };
+module.exports = { createLineClient, reservationConfirmationMessage, classReminderMessage, reservationCancellationMessage, sendPushMessage };
