@@ -1,7 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const Outbox = require("../models/lineNotificationOutbox");
-const { sendPushMessage, reservationConfirmationMessage } = require("../services/lineNotifications");
+const { sendPushMessage, reservationConfirmationMessage, classReminderMessage } = require("../services/lineNotifications");
 
 const format = (value) => value ? new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Bangkok" }).format(new Date(value)) : "ไม่ระบุเวลา";
 
@@ -16,7 +16,9 @@ async function processOnce() {
     const p = item.payload || {};
     const messages = item.type === "reservation_confirmed"
       ? [reservationConfirmationMessage({ className: p.class_name, startTime: format(p.start_time), endTime: p.end_time ? format(p.end_time) : null, remaining: p.remaining })]
-      : [];
+      : item.type === "class_reminder"
+        ? [classReminderMessage({ className: p.class_name, startTime: format(p.start_time) })]
+        : [];
     if (!messages.length) throw new Error(`Unsupported notification type: ${item.type}`);
     await sendPushMessage({ lineUserId: item.line_user_id, messages });
     await Outbox.updateOne({ _id: item._id }, { $set: { status: "accepted", accepted_at: new Date(), last_error: null } });

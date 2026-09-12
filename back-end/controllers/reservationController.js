@@ -103,6 +103,16 @@ exports.createReservation = async (req, res) => {
             remaining: user.remaining_session,
           },
         }], { session });
+        const reminderAt = yogaClass.start_time ? new Date(new Date(yogaClass.start_time).getTime() - 24 * 60 * 60 * 1000) : null;
+        if (reminderAt && reminderAt > new Date()) {
+          await LineNotificationOutbox.create([{
+            event_key: `class-reminder:${reservation._id}`,
+            line_user_id: user.line_user_id,
+            type: "class_reminder",
+            next_attempt_at: reminderAt,
+            payload: { reservation_id: String(reservation._id), class_name: yogaClass.title, start_time: yogaClass.start_time, end_time: yogaClass.end_time },
+          }], { session });
+        }
       }
       return reservation;
     });
@@ -180,6 +190,13 @@ exports.cancelReservation = async (req, res) => {
       }
       reservation.status = "Cancelled";
       await reservation.save({ session });
+      if (user?.line_user_id) {
+        await LineNotificationOutbox.updateOne(
+          { event_key: `class-reminder:${reservation._id}`, status: "pending" },
+          { $set: { status: "failed", last_error: "reservation_cancelled" } },
+          { session }
+        );
+      }
     });
 
     res.status(200).json({ message: "Reservation cancelled successfully" });
@@ -277,6 +294,16 @@ exports.adminCreateReservation = async (req, res) => {
             remaining: user.remaining_session,
           },
         }], { session });
+        const reminderAt = yogaClass.start_time ? new Date(new Date(yogaClass.start_time).getTime() - 24 * 60 * 60 * 1000) : null;
+        if (reminderAt && reminderAt > new Date()) {
+          await LineNotificationOutbox.create([{
+            event_key: `class-reminder:${reservation._id}`,
+            line_user_id: user.line_user_id,
+            type: "class_reminder",
+            next_attempt_at: reminderAt,
+            payload: { reservation_id: String(reservation._id), class_name: yogaClass.title, start_time: yogaClass.start_time, end_time: yogaClass.end_time },
+          }], { session });
+        }
       }
       return reservation;
     });
@@ -344,6 +371,13 @@ exports.cancelReservationById = async (req, res) => {
       }
       reservation.status = "Cancelled";
       await reservation.save({ session });
+      if (user?.line_user_id) {
+        await LineNotificationOutbox.updateOne(
+          { event_key: `class-reminder:${reservation._id}`, status: "pending" },
+          { $set: { status: "failed", last_error: "reservation_cancelled" } },
+          { session }
+        );
+      }
     });
 
     res.status(200).json({
