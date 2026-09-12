@@ -9,6 +9,19 @@ For B2 configuration, upload lifecycle, and verification commands, see [STORAGE.
 
 ## Deployment Steps
 
+### LINE notification worker (required for delivery)
+
+Create a separate Render **Background Worker** in the Singapore region:
+
+```
+Root Directory: back-end
+Build Command: npm install
+Start Command: npm run worker:line-outbox
+Plan: paid worker (the free web service may sleep and must not run the queue)
+```
+
+Use the same `MONGO_URI`, `LINE_CHANNEL_ACCESS_TOKEN`, and `LINE_CHANNEL_SECRET` as the web service. MongoDB must be replica-set capable because reservation and outbox writes use transactions. Set `LINE_OUTBOX_POLL_MS` to tune polling (default 30000ms).
+
 ### 1. Configure Render Service
 
 In Render Dashboard:
@@ -41,6 +54,7 @@ In Render Dashboard:
    - `B2_PUBLIC_BASE_URL` (optional, defaults to endpoint/bucket)
    - `LINE_CHANNEL_SECRET`
    - `LINE_CHANNEL_ACCESS_TOKEN`
+   - `LINE_LOGIN_CHANNEL_ID` (the expected LINE Login channel for LIFF ID-token verification)
    - etc.
 
 ### 2. Install LibreOffice (for PDF conversion)

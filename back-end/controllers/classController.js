@@ -6,6 +6,7 @@ const Reservation = require("../models/reservation");
 const dayjs = require("dayjs");
 const ClassCatalog = require("../models/classCatalog");
 const multer = require("multer");
+const LineNotificationOutbox = require("../models/lineNotificationOutbox");
 const dotenv = require("dotenv");
 dotenv.config(); // Load environment variables
 
@@ -166,6 +167,19 @@ exports.updateClass = async (req, res) => {
     );
     if (!updatedClass) {
       return res.status(404).json({ message: "Class not found" });
+    }
+
+    const materialFields = ["start_time", "end_time", "instructor", "room_number", "zoom_link"];
+    const changed = materialFields.some((field) => req.body[field] !== undefined && String(req.body[field]) !== String(existingClass[field] ?? ""));
+    if (changed) {
+      const reservations = await Reservation.find({ class_id: req.params.id, status: "Reserved" }).populate("user_id", "line_user_id");
+      const entries = reservations.filter((r) => r.user_id?.line_user_id).map((r) => ({
+        event_key: `class-change:${updatedClass._id}:${updatedClass.updatedAt?.getTime()}:${r._id}`,
+        line_user_id: r.user_id.line_user_id,
+        type: "class_changed",
+        payload: { reservation_id: String(r._id), class_name: updatedClass.title, start_time: updatedClass.start_time, instructor: updatedClass.instructor, location: updatedClass.room_number || updatedClass.zoom_link },
+      }));
+      if (entries.length) await LineNotificationOutbox.insertMany(entries, { ordered: false });
     }
 
     res

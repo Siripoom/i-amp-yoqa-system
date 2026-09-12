@@ -1,27 +1,26 @@
 const express = require("express");
-const router = express.Router();
-const {
-  register,
-  login,
-  getMe,
-  loginLine,
-  requestPasswordReset,
-  resetPassword,
-} = require("../controllers/authController");
-const { check } = require("express-validator");
 const authController = require("../controllers/authController");
+const { authenticate } = require("../middlewares/auth");
 
-router.post("/line", loginLine);
-// Route สำหรับเข้าสู่ระบบ
-router.post("/login", login);
+const createAuthRouter = ({ lineLogin = authController.loginLine } = {}) => {
+  const router = express.Router();
 
-// Route ทดสอบการตรวจสอบ Token
-router.get("/me", getMe);
+  router.post("/line", lineLogin);
+  router.post("/line/migrate/:member_id", authenticate, authController.migrateLegacyLineMember);
+  // Route สำหรับเข้าสู่ระบบ
+  router.post("/login", authController.login);
 
-// Route สำหรับขอรีเซ็ตรหัสผ่าน
-router.post("/request-password-reset", requestPasswordReset);
+  // Route ทดสอบการตรวจสอบ Token
+  router.get("/me", authController.getMe);
 
-// Route สำหรับรีเซ็ตรหัสผ่าน
-router.post("/reset-password", resetPassword);
+  // Route สำหรับขอรีเซ็ตรหัสผ่าน
+  router.post("/request-password-reset", authController.requestPasswordReset);
 
-module.exports = router;
+  // Route สำหรับรีเซ็ตรหัสผ่าน
+  router.post("/reset-password", authController.resetPassword);
+
+  return router;
+};
+
+module.exports = createAuthRouter();
+module.exports.createAuthRouter = createAuthRouter;

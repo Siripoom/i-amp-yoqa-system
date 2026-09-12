@@ -26,6 +26,7 @@ const expenseRoutes = require("./routes/expenseRoutes");
 const financialReportRoutes = require("./routes/financialReportRoutes");
 
 const receiptRoutes = require("./routes/receiptRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 require("dotenv").config();
 const path = require("path");
@@ -84,6 +85,7 @@ app.use("/api/expenses", expenseRoutes);
 app.use("/api/financial-reports", financialReportRoutes);
 
 app.use("/api/receipts", receiptRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/health", (_req, res) => {
   const databaseReady = mongoose.connection.readyState === 1;

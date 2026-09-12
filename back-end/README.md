@@ -187,3 +187,17 @@ Example `.env` file:
 MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/mydatabase?retryWrites=true&w=majority
 JWT_SECRET=mysecretkey
 ```
+
+### Reviewed legacy LINE members
+
+The secure LINE login never claims a legacy account from `username`
+automatically. After an administrator verifies the exact legacy LINE-first
+member record, migrate that one record by its database ID:
+
+```bash
+npm run migrate:line-identity -- <reviewed-member-id>
+```
+
+The command rejects records with email/password credentials or a username
+that is not shaped like a LINE user ID. It never prints the LINE user ID or a
+token.

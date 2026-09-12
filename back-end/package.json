@@ -11,6 +11,8 @@
     "storage:check": "node scripts/check-storage.js",
     "storage:smoke": "node scripts/check-storage.js --write",
     "migrate:member-profile": "node scripts/migrate-gender-and-package-window.js",
+    "migrate:line-identity": "node scripts/migrate-legacy-line-member.js",
+    "worker:line-outbox": "node scripts/process-line-outbox.js",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "use-node": "nvm use || echo 'Please install NVM and run nvm use'",

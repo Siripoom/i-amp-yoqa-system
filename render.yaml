@@ -12,3 +12,14 @@ services:
     nativeEnvironment:
       - key: APT_PACKAGES
         value: libreoffice libreoffice-writer fonts-thai-tlwg
+  - type: worker
+    name: i-amp-yoqa-line-outbox-worker
+    env: node
+    region: singapore
+    buildCommand: cd back-end && npm install
+    startCommand: cd back-end && npm run worker:line-outbox
+    envVars:
+      - key: NODE_VERSION
+        value: 20.0.0
+      - key: LINE_OUTBOX_POLL_MS
+        value: "30000"

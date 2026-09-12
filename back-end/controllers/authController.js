@@ -5,6 +5,11 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const passport = require("passport");
 const crypto = require("crypto");
+const { verifyLineIdToken } = require("../services/lineIdentity");
+const {
+  findOrCreateVerifiedLineMember,
+  approveLegacyLineMember,
+} = require("../services/lineMemberIdentity");
 const safeUser = (user) => {
   const data = typeof user.toObject === "function" ? user.toObject() : { ...user };
   delete data.password;
@@ -12,6 +17,19 @@ const safeUser = (user) => {
   delete data.resetPasswordExpiry;
   return data;
 };
+
+const applicationTokenPayload = (user) => ({
+  userId: user._id,
+  role: user.role_id,
+  user: user.first_name + user.last_name,
+  first_name: user.first_name,
+  nickname: user.nickname,
+});
+
+const signApplicationTokenWithJwt = (user) =>
+  jwt.sign(applicationTokenPayload(user), process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
 // ฟังก์ชันการเข้าสู่ระบบ (Login)
 exports.login = async (req, res) => {
   try {
@@ -33,22 +51,29 @@ exports.login = async (req, res) => {
     }
 
     // สร้าง JWT Token
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role_id,
-        user: user.first_name + user.last_name,
-        first_name: user.first_name,
-        nickname: user.nickname,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
-    );
+    const token = signApplicationTokenWithJwt(user);
     res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Explicit operator action for migrating a reviewed LINE-first legacy account.
+exports.migrateLegacyLineMember = async (req, res) => {
+  if (!["Admin", "SuperAdmin"].includes(req.user?.role)) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  try {
+    const member = await approveLegacyLineMember({
+      MemberModel: User,
+      memberId: req.params.member_id,
+    });
+    return res.status(200).json({ member: safeUser(member) });
+  } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({ code: error.code, message: error.message });
+    }
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -74,47 +99,46 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Login with Line
-exports.loginLine = async (req, res) => {
+const createLineLoginHandler = ({
+  MemberModel = User,
+  verifyLineIdToken: verifyIdentity = verifyLineIdToken,
+  signApplicationToken = signApplicationTokenWithJwt,
+} = {}) => async (req, res) => {
   try {
-    console.log("req.body", req.body);
-    const { userId, displayName } = req.body;
-    var data = {
-      username: userId,
-      first_name: displayName,
-      role_id: "Member",
-      userTerms: false, // Default to false for new users
-    };
-    var user = await User.findOne({ username: userId });
-    if (user) {
-      console.log("User found:", user);
-    } else {
-      user = new User(data);
-      await user.save();
+    const { idToken } = req.body || {};
+    if (typeof idToken !== "string" || !idToken.trim()) {
+      return res.status(400).json({
+        code: "LINE_ID_TOKEN_REQUIRED",
+        message: "LINE ID token is required",
+      });
     }
 
-    var playload = {
-      user,
-    };
-
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role_id,
-        user: user.first_name + user.last_name,
-        first_name: user.first_name,
-        nickname: user.nickname,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
-    );
+    const identity = await verifyIdentity(idToken);
+    const user = await findOrCreateVerifiedLineMember({
+      MemberModel,
+      identity,
+    });
+    const token = signApplicationToken(user);
     res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error && Number.isInteger(error.status) && error.code) {
+      return res.status(error.status).json({
+        code: error.code,
+        message: error.message,
+      });
+    }
+    if (error && error.code === 11000) {
+      return res.status(409).json({
+        code: "LINE_IDENTITY_CONFLICT",
+        message: "LINE identity is already connected to another member",
+      });
+    }
+    res.status(500).json({ message: "Unable to complete LINE login" });
   }
 };
+
+exports.createLineLoginHandler = createLineLoginHandler;
+exports.loginLine = createLineLoginHandler();
 
 // ฟังก์ชันขอรีเซ็ตรหัสผ่าน (Request Password Reset)
 exports.requestPasswordReset = async (req, res) => {

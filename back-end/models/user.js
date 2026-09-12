@@ -10,6 +10,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  line_user_id: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   email: {
     type: String,
   },
