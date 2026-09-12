@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const { verifyLineIdToken } = require("../services/lineIdentity");
 const {
   findOrCreateVerifiedLineMember,
+  approveLegacyLineMember,
 } = require("../services/lineMemberIdentity");
 const safeUser = (user) => {
   const data = typeof user.toObject === "function" ? user.toObject() : { ...user };
@@ -54,6 +55,25 @@ exports.login = async (req, res) => {
     res.status(200).json({ message: "Login successful", token, data: safeUser(user) });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Explicit operator action for migrating a reviewed LINE-first legacy account.
+exports.migrateLegacyLineMember = async (req, res) => {
+  if (!["Admin", "SuperAdmin"].includes(req.user?.role)) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  try {
+    const member = await approveLegacyLineMember({
+      MemberModel: User,
+      memberId: req.params.member_id,
+    });
+    return res.status(200).json({ member: safeUser(member) });
+  } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({ code: error.code, message: error.message });
+    }
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
