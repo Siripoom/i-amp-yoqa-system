@@ -34,7 +34,15 @@ async function processOnce() {
 }
 
 if (require.main === module) {
-  mongoose.connect(process.env.MONGO_URI).then(async () => { await processOnce(); await mongoose.disconnect(); }).catch((error) => { console.error(error.message); process.exitCode = 1; });
+  mongoose.connect(process.env.MONGO_URI).then(async () => {
+    let stopping = false;
+    const stop = async () => { stopping = true; await mongoose.disconnect(); process.exit(0); };
+    process.on("SIGTERM", stop); process.on("SIGINT", stop);
+    while (!stopping) {
+      await processOnce();
+      await new Promise((resolve) => setTimeout(resolve, Number(process.env.LINE_OUTBOX_POLL_MS) || 30_000));
+    }
+  }).catch((error) => { console.error(error.message); process.exitCode = 1; });
 }
 
 module.exports = { processOnce };
