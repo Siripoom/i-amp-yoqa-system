@@ -1,5 +1,6 @@
 import { colors } from "../theme/tokens.js";
-import React, { useState } from "react";
+import { useState } from "react";
+import PropTypes from "prop-types";
 import {
   Button,
   Checkbox,
@@ -18,7 +19,7 @@ import { brand } from "../config/brand.js";
 
 const { Title, Text, Paragraph } = Typography;
 
-const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
+const UserTermsForm = ({ onSuccess, onCancel }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -61,9 +62,7 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
 
     setLoading(true);
     try {
-      // Debug: ตรวจสอบ token ก่อนส่ง request
       const token = localStorage.getItem("token");
-      console.log("🔑 Token before creating user terms:", token);
 
       if (!token) {
         message.error("ไม่พบ token การยืนยันตัวตน กรุณาล็อกอินใหม่");
@@ -76,7 +75,6 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
         termsAccepted: termsAccepted,
       };
 
-      console.log("📝 Sending user terms data:", termData);
       await createUserTerms(termData);
       message.success("ยืนยันข้อกำหนดและเงื่อนไขเรียบร้อยแล้ว");
 
@@ -601,6 +599,11 @@ const UserTermsForm = ({ userInfo, onSuccess, onCancel }) => {
       </Form>
     </div>
   );
+};
+
+UserTermsForm.propTypes = {
+  onSuccess: PropTypes.func,
+  onCancel: PropTypes.func,
 };
 
 export default UserTermsForm;

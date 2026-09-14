@@ -42,6 +42,7 @@ exports.createUserTerms = async (req, res) => {
     }
 
     const userTermsData = new UserTerms({
+      userId,
       fullName,
       otherName: req.body.otherName,
       otherPhone: req.body.otherPhone,

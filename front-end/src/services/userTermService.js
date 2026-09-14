@@ -15,8 +15,6 @@ export const getUserTerms = async () => {
 export const createUserTerms = async (userTermsData) => {
   try {
     const token = localStorage.getItem("token");
-    console.log("🚀 userTermService - Token:", token);
-    console.log("📦 userTermService - Data:", userTermsData);
 
     if (!token) {
       throw new Error("No authentication token found");
@@ -33,7 +31,6 @@ export const createUserTerms = async (userTermsData) => {
       }
     );
 
-    console.log("✅ userTermService - Response:", response.data);
     return response.data;
   } catch (error) {
     console.error(

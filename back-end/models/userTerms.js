@@ -2,17 +2,22 @@ const mongoose = require("mongoose");
 
 const userTermsSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
     fullName: {
       type: String,
       required: true,
     },
-    OtherName: {
+    otherName: {
       type: String,
-      required: true,
+      default: "",
     },
-    OtherPhone: {
+    otherPhone: {
       type: String,
-      required: true,
+      default: "",
     },
 
     // เก็บข้อมูลการยินยอมแต่ละข้อแยกกัน
