@@ -43,7 +43,7 @@ const configuredOrigins = (
 const allowedOrigins = new Set([
   "https://i-ked-yoqa-system.vercel.app",
   "http://localhost:5173",
-  "https://ikedyoga.com",
+  "https://www.ikedyoga.com",
   ...configuredOrigins,
 ]);
 const corsOptions = {
