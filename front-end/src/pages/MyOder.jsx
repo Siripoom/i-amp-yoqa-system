@@ -45,13 +45,13 @@ const MyOrders = () => {
 
       if (!userId) {
         console.log('❌ No user ID found');
-        message.error("Please log in to view your orders.");
+        message.error("กรุณาเข้าสู่ระบบเพื่อดูคำสั่งซื้อ");
         return;
       }
 
       if (!token) {
         console.log('❌ No token found');
-        message.error("Authentication token not found. Please log in again.");
+        message.error("ไม่พบข้อมูลเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่");
         return;
       }
 
@@ -83,7 +83,7 @@ const MyOrders = () => {
       } else if (error.message && error.message.includes("Access denied")) {
         message.error("ไม่มีสิทธิ์เข้าถึงข้อมูล");
       } else {
-        message.error("Failed to load orders. Please try again.");
+        message.error("โหลดคำสั่งซื้อไม่สำเร็จ กรุณาลองอีกครั้ง");
       }
     } finally {
       setLoading(false);
@@ -235,7 +235,7 @@ const MyOrders = () => {
 
   // แก้ไขการคำนวณวันที่เหลือใช้งาน
   const calculateRemainingDays = (date) => {
-    if (!date) return { text: "Not set", daysLeft: null };
+    if (!date) return { text: "ยังไม่ได้ระบุ", daysLeft: null };
 
     const expiryDate = moment(date).endOf("day");
     const now = moment().startOf("day");
@@ -267,26 +267,26 @@ const MyOrders = () => {
           {/* Sidebar */}
           <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
             <Title level={4} className="text-text font-semibold">
-              Manage My Account
+              จัดการบัญชีของฉัน
             </Title>
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
                 className="text-secondary cursor-pointer block"
               >
-                My Profile
+                โปรไฟล์ของฉัน
               </Link>
               <Link
                 to="/my-plane"
                 className="text-secondary cursor-pointer block"
               >
-                My Plane
+                แพ็กเกจของฉัน
               </Link>
               <Link
                 to="/my-orders"
                 className="text-primary font-semibold cursor-pointer block"
               >
-                My Orders
+                คำสั่งซื้อของฉัน
               </Link>
             </div>
           </Card>
@@ -300,7 +300,7 @@ const MyOrders = () => {
             {/* แสดง Loading */}
             {loading ? (
               <div className="text-center text-primary font-semibold">
-                Loading orders...
+                กำลังโหลดคำสั่งซื้อ...
               </div>
             ) : orders.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
@@ -411,7 +411,7 @@ const MyOrders = () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <p>
-                <strong>Order ID:</strong> {selectedOrder._id}
+                <strong>รหัสคำสั่งซื้อ:</strong> {selectedOrder._id}
               </p>
               {getStatusTag(selectedOrder.status)}
             </div>
@@ -619,7 +619,7 @@ const MyOrders = () => {
                 </p>
                 <img
                   src={selectedOrder.image}
-                  alt="Payment Slip"
+                  alt="สลิปชำระเงิน"
                   style={{
                     maxWidth: "100%",
                     height: "auto",
@@ -631,7 +631,7 @@ const MyOrders = () => {
               </div>
             ) : (
               <p style={{ color: "gray", textAlign: "center" }}>
-                No payment slip uploaded
+                ยังไม่ได้อัปโหลดสลิปชำระเงิน
               </p>
             )}
 

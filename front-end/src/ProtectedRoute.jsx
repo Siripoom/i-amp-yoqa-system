@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
           localStorage.removeItem("user_id");
           localStorage.removeItem("role");
           setIsAuthenticated(false);
-          message.error("Your session has expired. Please log in again.");
+          message.error("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
         } else {
           setIsAuthenticated(true);
           // Store the role in localStorage if not already there
@@ -52,7 +52,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (loading) {
     // You could return a loading spinner here
-    return <div>Loading...</div>;
+    return <div>กำลังโหลด...</div>;
   }
 
   if (!isAuthenticated) {

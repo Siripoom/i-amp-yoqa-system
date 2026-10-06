@@ -1,0 +1,38 @@
+.line-contact-button {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #06c755;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.line-contact-button:hover {
+  background: #05ad49;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.line-contact-button:focus-visible {
+  outline: 3px solid #064d25;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .line-contact-button {
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    padding: 11px 15px;
+    font-size: 14px;
+  }
+}

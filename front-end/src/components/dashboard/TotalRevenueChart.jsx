@@ -4,7 +4,7 @@ import { Bar } from "react-chartjs-2";
 const TotalRevenueChart = ({ revenueData }) => {
   return (
     <Card className="total-revenue-card">
-      <h3 className="card-header">Total Revenue</h3>
+      <h3 className="card-header">รายได้รวม</h3>
       <Bar
         className="total-revenue-chart"
         data={revenueData}

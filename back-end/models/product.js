@@ -14,6 +14,11 @@ const productSchema = new mongoose.Schema(
       type: Number, // หน่วยเป็นวัน หรือชั่วโมง ขึ้นอยู่กับธุรกิจของคุณ
       required: true,
     },
+    category: {
+      type: String,
+      enum: ["private_yoga", "extend_your_days"],
+      default: null,
+    },
     promotion: {
       price: {
         type: Number, // ราคาที่ลดแล้ว

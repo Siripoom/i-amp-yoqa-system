@@ -18,13 +18,13 @@ const Cart = () => {
 
   const columns = [
     {
-      title: "Product",
+      title: "สินค้า",
       key: "product",
       render: (_, record) => (
         <div className="flex items-center">
           <img
             src={record.productImage}
-            alt="Product"
+            alt="สินค้า"
             className="w-20 h-20 rounded-md"
           />
           <Text className="ml-4">{record.productName}</Text>
@@ -32,13 +32,13 @@ const Cart = () => {
       ),
     },
     {
-      title: "Price",
+      title: "ราคา",
       dataIndex: "price",
       key: "price",
       align: "center",
     },
     {
-      title: "Session",
+      title: "ครั้ง",
       key: "session",
       align: "center",
       render: (_, record) => (
@@ -50,7 +50,7 @@ const Cart = () => {
       ),
     },
     {
-      title: "Subtotal",
+      title: "ยอดรวมย่อย",
       dataIndex: "subtotal",
       key: "subtotal",
       align: "center",
@@ -68,7 +68,7 @@ const Cart = () => {
       <Navbar />
       <div className="container mx-auto py-12 px-6">
         <Title level={3} className="mb-6">
-          Your Cart
+          ตะกร้าของคุณ
         </Title>
 
         {/* Cart Table */}
@@ -82,25 +82,25 @@ const Cart = () => {
         {/* Coupon Section */}
         {/* <div className="flex flex-wrap justify-between items-center bg-white p-4 rounded-md shadow-md mb-6">
           <Input
-            placeholder="Coupon code"
+            placeholder="รหัสคูปอง"
             className="w-full md:w-2/3 mb-4 md:mb-0"
           />
           <Button type="primary" className="bg-warning text-white">
-            Apply coupon
+            ใช้คูปอง
           </Button>
         </div> */}
 
         {/* Cart Totals */}
         <div className="flex flex-col md:flex-row justify-between bg-white p-6 rounded-md shadow-md">
           <div className="space-y-2">
-            <Text>Subtotal:</Text>
+            <Text>ยอดรวมย่อย:</Text>
             <Text className="font-bold">฿1,590.00</Text>
           </div>
           <div className="space-y-2">
-            <Text>Total:</Text>
+            <Text>รวม:</Text>
             <Text className="font-bold">
               ฿1,590.00{" "}
-              <span className="text-secondary">(includes ฿104.02 VAT)</span>
+              <span className="text-secondary">(รวมภาษีมูลค่าเพิ่ม ฿104.02)</span>
             </Text>
           </div>
           <Link to="/checkout">
@@ -108,7 +108,7 @@ const Cart = () => {
               type="primary"
               className="bg-primary text-white mt-4 md:mt-0"
             >
-              Proceed to checkout
+              ดำเนินการชำระเงิน
             </Button>
           </Link>
         </div>

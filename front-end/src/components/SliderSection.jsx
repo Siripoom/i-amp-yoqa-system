@@ -16,11 +16,11 @@ const SliderSection = () => {
         if (response.status === "success" && response.data) {
           setSliderImages(response.data);
         } else {
-          setError("Failed to load slider images");
+          setError("โหลดรูปภาพสไลด์ไม่สำเร็จ");
         }
       } catch (error) {
         console.error("Error fetching slider images:", error);
-        setError("Failed to load slider images");
+        setError("โหลดรูปภาพสไลด์ไม่สำเร็จ");
       } finally {
         setLoading(false);
       }
@@ -44,7 +44,7 @@ const SliderSection = () => {
           <Col xs={24} className="flex justify-center">
             <div className="w-full max-w-4xl px-4">
               <div className="bg-border rounded-lg shadow-lg flex items-center justify-center h-48 sm:h-64 md:h-80 lg:h-96">
-                <span className="text-secondary">No images available</span>
+                <span className="text-secondary">ไม่มีรูปภาพ</span>
               </div>
             </div>
           </Col>
@@ -63,7 +63,7 @@ const SliderSection = () => {
               <div className="relative  overflow-hidden">
                 <img
                   src={sliderImages[0].image}
-                  alt={sliderImages[0].title || "Hero Image"}
+                  alt={sliderImages[0].title || "รูปภาพหลัก"}
                   className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-contain"
                   loading="lazy"
                 />

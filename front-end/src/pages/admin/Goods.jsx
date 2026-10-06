@@ -109,7 +109,7 @@ const GoodsPage = () => {
       setFilteredGoods(response.data || []);
       setTotal(response.pagination?.total || response.data?.length || 0);
     } catch (error) {
-      message.error("Failed to fetch goods");
+      message.error("โหลดสินค้าไม่สำเร็จ");
       console.error("Error fetching goods:", error);
     } finally {
       setLoading(false);
@@ -132,7 +132,7 @@ const GoodsPage = () => {
       const response = await goodsService.searchGoods(query);
       setFilteredGoods(response.data || []);
     } catch (error) {
-      message.error("Search failed");
+      message.error("ค้นหาไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -192,7 +192,7 @@ const GoodsPage = () => {
   // Modal handlers
   const showCreateModal = () => {
     if (!canCreate) {
-      message.warning("You don't have permission to create goods.");
+      message.warning("คุณไม่มีสิทธิ์สร้างสินค้า");
       return;
     }
     setEditingGoods(null);
@@ -207,7 +207,7 @@ const GoodsPage = () => {
 
   const showEditModal = (record) => {
     if (!canEdit && userRole !== "Accounting") {
-      message.warning("You don't have permission to edit goods.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขสินค้า");
       return;
     }
     setEditingGoods(record);
@@ -264,17 +264,17 @@ const GoodsPage = () => {
   const handleSave = async () => {
     // Check permissions
     if (userRole === "Accounting") {
-      message.warning("You don't have permission to modify goods data.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขข้อมูลสินค้า");
       return;
     }
 
     if (editingGoods && !canEdit) {
-      message.warning("You don't have permission to edit goods.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขสินค้า");
       return;
     }
 
     if (!editingGoods && !canCreate) {
-      message.warning("You don't have permission to create goods.");
+      message.warning("คุณไม่มีสิทธิ์สร้างสินค้า");
       return;
     }
 
@@ -333,16 +333,16 @@ const GoodsPage = () => {
 
       if (editingGoods) {
         await goodsService.updateGoods(editingGoods._id, formData);
-        message.success("Goods updated successfully");
+        message.success("แก้ไขสินค้าสำเร็จ");
       } else {
         await goodsService.createGoods(formData);
-        message.success("Goods created successfully");
+        message.success("สร้างสินค้าสำเร็จ");
       }
 
       fetchGoods(currentPage, pageSize);
       setIsModalVisible(false);
     } catch (error) {
-      message.error(error.response?.data?.message || error.message || "Failed to save goods");
+      message.error(error.response?.data?.message || error.message || "บันทึกสินค้าไม่สำเร็จ");
       console.error("Error saving goods:", error);
     } finally {
       setLoading(false);
@@ -351,17 +351,17 @@ const GoodsPage = () => {
 
   const handleDelete = async (id) => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete goods.");
+      message.warning("คุณไม่มีสิทธิ์ลบสินค้า");
       return;
     }
 
     try {
       setLoading(true);
       await goodsService.deleteGoods(id);
-      message.success("Goods deleted successfully");
+      message.success("ลบสินค้าสำเร็จ");
       fetchGoods(currentPage, pageSize);
     } catch (error) {
-      message.error("Failed to delete goods");
+      message.error("ลบสินค้าไม่สำเร็จ");
       console.error("Error deleting goods:", error);
     } finally {
       setLoading(false);
@@ -370,7 +370,7 @@ const GoodsPage = () => {
 
   const handleToggleActive = async (id, currentStatus) => {
     if (!canEdit) {
-      message.warning("You don't have permission to modify active status.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขสถานะการใช้งาน");
       return;
     }
 
@@ -382,7 +382,7 @@ const GoodsPage = () => {
       );
       fetchGoods(currentPage, pageSize);
     } catch (error) {
-      message.error("Failed to update active status");
+      message.error("อัปเดตสถานะการใช้งานไม่สำเร็จ");
       console.error("Error toggling active status:", error);
     } finally {
       setLoading(false);
@@ -391,17 +391,17 @@ const GoodsPage = () => {
 
   const handleRestore = async (id) => {
     if (!canDelete) {
-      message.warning("You don't have permission to restore goods.");
+      message.warning("คุณไม่มีสิทธิ์กู้คืนสินค้า");
       return;
     }
 
     try {
       setLoading(true);
       await goodsService.restoreGoods(id);
-      message.success("Goods restored successfully");
+      message.success("กู้คืนสินค้าสำเร็จ");
       fetchGoods(currentPage, pageSize);
     } catch (error) {
-      message.error("Failed to restore goods");
+      message.error("กู้คืนสินค้าไม่สำเร็จ");
       console.error("Error restoring goods:", error);
     } finally {
       setLoading(false);
@@ -410,7 +410,7 @@ const GoodsPage = () => {
 
   const handleStockUpdate = async () => {
     if (!canUpdateStock) {
-      message.warning("You don't have permission to update stock.");
+      message.warning("คุณไม่มีสิทธิ์อัปเดตสต็อก");
       return;
     }
 
@@ -418,11 +418,11 @@ const GoodsPage = () => {
       const values = await stockForm.validateFields();
       setLoading(true);
       await goodsService.updateStock(stockGoods._id, values.stock);
-      message.success("Stock updated successfully");
+      message.success("อัปเดตสต็อกสำเร็จ");
       fetchGoods(currentPage, pageSize);
       setIsStockModalVisible(false);
     } catch (error) {
-      message.error("Failed to update stock");
+      message.error("อัปเดตสต็อกไม่สำเร็จ");
       console.error("Error updating stock:", error);
     } finally {
       setLoading(false);
@@ -511,7 +511,7 @@ const GoodsPage = () => {
   // Table columns
   const columns = [
     {
-      title: "IMAGE",
+      title: "รูปภาพ",
       dataIndex: "image",
       key: "image",
       width: 100,
@@ -519,7 +519,7 @@ const GoodsPage = () => {
       responsive: ["sm"],
     },
     {
-      title: "CODE",
+      title: "รหัส",
       dataIndex: "code",
       key: "code",
       width: 140,
@@ -531,7 +531,7 @@ const GoodsPage = () => {
       responsive: ["md"],
     },
     {
-      title: "NAME",
+      title: "ชื่อ",
       dataIndex: "goods",
       key: "goods",
       width: 200,
@@ -543,7 +543,7 @@ const GoodsPage = () => {
       ),
     },
     {
-      title: "SIZE/COLOR",
+      title: "ขนาด/สี",
       key: "sizeColor",
       width: 140,
       render: (record) => (
@@ -563,7 +563,7 @@ const GoodsPage = () => {
       responsive: ["lg"],
     },
     {
-      title: "PRICE",
+      title: "ราคา",
       dataIndex: "price",
       key: "price",
       width: 130,
@@ -600,7 +600,7 @@ const GoodsPage = () => {
       },
     },
     {
-      title: "STOCK",
+      title: "สินค้าในคลัง",
       dataIndex: "stock",
       key: "stock",
       width: 120,
@@ -621,37 +621,37 @@ const GoodsPage = () => {
       responsive: ["sm"],
     },
     {
-      title: "STATUS",
+      title: "สถานะ",
       key: "status",
       width: 100,
       render: (record) => (
         <Space direction="vertical" size="small">
           {record.isDeleted && (
             <Tag color="error" icon={<StopOutlined />}>
-              Deleted
+              ลบแล้ว
             </Tag>
           )}
           {!record.isDeleted && record.isActive === false && (
             <Tag color="default" icon={<EyeInvisibleOutlined />}>
-              Inactive
+              ไม่ใช้งาน
             </Tag>
           )}
           {!record.isDeleted && record.isActive !== false && (
             <Tag color="success" icon={<EyeOutlined />}>
-              Active
+              ใช้งาน
             </Tag>
           )}
         </Space>
       ),
     },
     {
-      title: "ACTIONS",
+      title: "จัดการ",
       key: "actions",
       fixed: "right",
       width: 200,
       render: (record) => (
         <Space size="small" wrap>
-          <Tooltip title="View Details">
+          <Tooltip title="ดูรายละเอียด">
             <Button
               type="text"
               icon={<EyeOutlined />}
@@ -661,7 +661,7 @@ const GoodsPage = () => {
           </Tooltip>
           {/* Edit Button - disabled for deleted goods */}
           {canEdit && !record.isDeleted && (
-            <Tooltip title="Edit">
+            <Tooltip title="แก้ไข">
               <Button
                 type="text"
                 icon={<EditOutlined />}
@@ -680,12 +680,12 @@ const GoodsPage = () => {
                   : "show this item to customers"
               }?`}
               onConfirm={() => handleToggleActive(record._id, record.isActive !== false)}
-              okText="Yes"
-              cancelText="No"
+              okText="ใช่"
+              cancelText="ไม่ใช่"
             >
               <Tooltip
                 title={
-                  record.isActive !== false ? "Hide from customers" : "Show to customers"
+                  record.isActive !== false ? "ซ่อนจากลูกค้า" : "แสดงให้ลูกค้าเห็น"
                 }
               >
                 <Button
@@ -699,12 +699,12 @@ const GoodsPage = () => {
           )}
           {/* Delete Button - only for non-deleted goods */}
           {canDelete && !record.isDeleted && (
-            <Tooltip title="Delete">
+            <Tooltip title="ลบ">
               <Popconfirm
-                title="Are you sure you want to delete this item?"
+                title="ยืนยันการลบรายการนี้?"
                 onConfirm={() => handleDelete(record._id)}
-                okText="Yes"
-                cancelText="No"
+                okText="ใช่"
+                cancelText="ไม่ใช่"
               >
                 <Button type="text" danger icon={<DeleteOutlined />} size="small" />
               </Popconfirm>
@@ -713,13 +713,13 @@ const GoodsPage = () => {
           {/* Restore Button - only for deleted goods */}
           {canDelete && record.isDeleted && (
             <Popconfirm
-              title="Restore this item?"
-              description="Are you sure you want to restore this item?"
+              title="กู้คืนรายการนี้?"
+              description="ยืนยันการกู้คืนรายการนี้?"
               onConfirm={() => handleRestore(record._id)}
-              okText="Yes"
-              cancelText="No"
+              okText="ใช่"
+              cancelText="ไม่ใช่"
             >
-              <Tooltip title="Restore">
+              <Tooltip title="กู้คืน">
                 <Button
                   type="text"
                   icon={<UndoOutlined />}
@@ -740,18 +740,18 @@ const GoodsPage = () => {
       const isJpgOrPng =
         file.type === "image/jpeg" || file.type === "image/png";
       if (!isJpgOrPng) {
-        message.error("You can only upload JPG/PNG file!");
+        message.error("อัปโหลดได้เฉพาะไฟล์ JPG หรือ PNG");
       }
       const isLt2M = file.size / 1024 / 1024 < 2;
       if (!isLt2M) {
-        message.error("Image must smaller than 2MB!");
+        message.error("รูปภาพต้องมีขนาดไม่เกิน 2 MB");
       }
       return isJpgOrPng && isLt2M ? false : Upload.LIST_IGNORE;
     },
     onChange: ({ fileList }) => {
       // Limit to 3 images
       if (fileList.length > 3) {
-        message.warning("You can only upload maximum 3 images!");
+        message.warning("อัปโหลดได้สูงสุด 3 รูป");
         return;
       }
       form.setFieldsValue({ images: fileList });
@@ -779,7 +779,7 @@ const GoodsPage = () => {
       </Sider>
 
       <Layout>
-        <Header title="Goods Management" />
+        <Header title="จัดการสินค้า" />
 
         <Content className="goods-container p-2 sm:p-4 lg:p-6">
           {userRole === "Accounting" && (
@@ -799,10 +799,10 @@ const GoodsPage = () => {
             <Row justify="space-between" align="middle">
               <Col xs={24} sm={16}>
                 <Title level={2} className="text-xl sm:text-2xl" style={{ margin: 0 }}>
-                  Goods Management
+                  จัดการสินค้า
                 </Title>
                 <Text type="secondary" className="text-sm sm:text-base">
-                  Manage your product inventory and pricing
+                  จัดการสินค้าในคลังและราคา
                 </Text>
               </Col>
               <Col xs={24} sm={8} className="mt-4 sm:mt-0">
@@ -816,7 +816,7 @@ const GoodsPage = () => {
             <Row gutter={[16, 16]} align="middle">
               <Col xs={24} sm={12} lg={6}>
                 <Input
-                  placeholder="Search goods..."
+                  placeholder="ค้นหาสินค้า..."
                   prefix={<SearchOutlined />}
                   value={searchText}
                   onChange={(e) => handleSearch(e.target.value)}
@@ -829,11 +829,11 @@ const GoodsPage = () => {
                   <Switch
                     checked={showDeleted}
                     onChange={(checked) => setShowDeleted(checked)}
-                    checkedChildren="Deleted"
-                    unCheckedChildren="Active"
+                    checkedChildren="ลบแล้ว"
+                    unCheckedChildren="ใช้งาน"
                   />
                   <span style={{ fontSize: '12px', color: colors["secondary"] }}>
-                    {showDeleted ? 'Show Deleted' : 'Hide Deleted'}
+                    {showDeleted ? 'แสดงรายการที่ลบแล้ว' : 'ซ่อนรายการที่ลบแล้ว'}
                   </span>
                 </Space>
               </Col>
@@ -846,8 +846,8 @@ const GoodsPage = () => {
                     className="create-goods-button w-full sm:w-auto"
                     size="large"
                   >
-                    <span className="hidden sm:inline">Add New Goods</span>
-                    <span className="sm:hidden">Add Goods</span>
+                    <span className="hidden sm:inline">เพิ่มสินค้าใหม่</span>
+                    <span className="sm:hidden">เพิ่มสินค้า</span>
                   </Button>
                 )}
               </Col>
@@ -859,7 +859,7 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary" className="text-xs sm:text-sm">Total Goods</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">สินค้าทั้งหมด</Text>
                   <div
                     style={{
                       fontSize: "18px",
@@ -876,7 +876,7 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary" className="text-xs sm:text-sm">In Stock</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">มีสินค้า</Text>
                   <div
                     style={{
                       fontSize: "18px",
@@ -893,7 +893,7 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary" className="text-xs sm:text-sm">Promotional</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">อยู่ในโปรโมชัน</Text>
                   <div
                     style={{
                       fontSize: "18px",
@@ -915,7 +915,7 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary" className="text-xs sm:text-sm">Hot Sale</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">ลดราคาพิเศษ</Text>
                   <div
                     style={{
                       fontSize: "18px",
@@ -959,7 +959,7 @@ const GoodsPage = () => {
                 locale={{
                   emptyText: (
                     <Empty
-                      description="No goods found"
+                      description="ไม่พบสินค้า"
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
                     />
                   ),
@@ -970,12 +970,12 @@ const GoodsPage = () => {
 
           {/* Create/Edit Modal */}
           <Modal
-            title={editingGoods ? "Edit Goods" : "Create New Goods"}
+            title={editingGoods ? "แก้ไขสินค้า" : "สร้างสินค้าใหม่"}
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={[
               <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
-                Cancel
+                ยกเลิก
               </Button>,
               // Only show Save button if user has permission to create/edit
               (canCreate || canEdit) && (
@@ -997,24 +997,24 @@ const GoodsPage = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="goods"
-                    label="Goods Name"
+                    label="ชื่อสินค้า"
                     rules={[
-                      { required: true, message: "Please enter goods name" },
+                      { required: true, message: "กรุณาระบุชื่อสินค้า" },
                     ]}
                   >
-                    <Input placeholder="Enter goods name" disabled={userRole === "Accounting"} />
+                    <Input placeholder="ระบุชื่อสินค้า" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="code"
-                    label="Goods Code"
+                    label="รหัสสินค้า"
                     rules={[
-                      { required: true, message: "Please enter goods code" },
+                      { required: true, message: "กรุณาระบุรหัสสินค้า" },
                     ]}
                   >
                     <Input
-                      placeholder="Enter goods code"
+                      placeholder="ระบุรหัสสินค้า"
                       prefix={<BarcodeOutlined />}
                       disabled={userRole === "Accounting"}
                     />
@@ -1022,16 +1022,16 @@ const GoodsPage = () => {
                 </Col>
               </Row>
 
-              <Form.Item name="detail" label="Details">
-                <TextArea placeholder="Enter goods details" rows={3} disabled={userRole === "Accounting"} />
+              <Form.Item name="detail" label="รายละเอียด">
+                <TextArea placeholder="ระบุรายละเอียดสินค้า" rows={3} disabled={userRole === "Accounting"} />
               </Form.Item>
 
               <Row gutter={16}>
                 <Col xs={24} sm={8}>
                   <Form.Item
                     name="price"
-                    label="Price (THB)"
-                    rules={[{ required: true, message: "Please enter price" }]}
+                    label="ราคา (บาท)"
+                    rules={[{ required: true, message: "กรุณาระบุราคา" }]}
                   >
                     <InputNumber
                       placeholder="0.00"
@@ -1048,11 +1048,11 @@ const GoodsPage = () => {
                 <Col xs={24} sm={8}>
                   <Form.Item
                     name="stock"
-                    label="Stock Quantity"
+                    label="จำนวนสินค้าในคลัง"
                     rules={[
                       {
                         required: true,
-                        message: "Please enter stock quantity",
+                        message: "กรุณาระบุจำนวนสินค้าในคลัง",
                       },
                     ]}
                   >
@@ -1067,28 +1067,28 @@ const GoodsPage = () => {
                 <Col xs={24} sm={8}>
                   <Form.Item
                     name="unit"
-                    label="Unit"
-                    rules={[{ required: true, message: "Please select unit" }]}
+                    label="หน่วย"
+                    rules={[{ required: true, message: "กรุณาเลือกหน่วย" }]}
                   >
-                    <Input placeholder="Enter unit (e.g., ชิ้น)" disabled={userRole === "Accounting"} />
+                    <Input placeholder="ระบุหน่วย เช่น ชิ้น" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
-                  <Form.Item name="size" label="Size">
-                    <Input placeholder="Enter size (optional)" disabled={userRole === "Accounting"} />
+                  <Form.Item name="size" label="ขนาด">
+                    <Input placeholder="ระบุขนาด (ไม่บังคับ)" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
-                  <Form.Item name="color" label="Color">
-                    <Input placeholder="Enter color (optional)" disabled={userRole === "Accounting"} />
+                  <Form.Item name="color" label="สี">
+                    <Input placeholder="ระบุสี (ไม่บังคับ)" disabled={userRole === "Accounting"} />
                   </Form.Item>
                 </Col>
               </Row>
 
-              <Form.Item name="images" label="Product Images (Max 3)">
+              <Form.Item name="images" label="รูปสินค้า (สูงสุด 3 รูป)">
                 <Upload
                   {...uploadProps}
                   listType="picture-card"
@@ -1099,7 +1099,7 @@ const GoodsPage = () => {
                   {userRole !== "Accounting" && (
                     <div>
                       <UploadOutlined />
-                      <div style={{ marginTop: 8 }}>Upload</div>
+                      <div style={{ marginTop: 8 }}>อัปโหลด</div>
                     </div>
                   )}
                 </Upload>
@@ -1115,7 +1115,7 @@ const GoodsPage = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="hotSale"
-                    label="Hot Sale"
+                    label="ลดราคาพิเศษ"
                     valuePropName="checked"
                   >
                     <Switch disabled={userRole === "Accounting"} />
@@ -1124,7 +1124,7 @@ const GoodsPage = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="hasPromotion"
-                    label="Has Promotion"
+                    label="มีโปรโมชัน"
                     valuePropName="checked"
                   >
                     <Switch disabled={userRole === "Accounting"} />
@@ -1145,11 +1145,11 @@ const GoodsPage = () => {
                         <Col xs={24} sm={8}>
                           <Form.Item
                             name="promotionPrice"
-                            label="Promotion Price (THB)"
+                            label="ราคาโปรโมชัน (บาท)"
                             rules={[
                               {
                                 required: true,
-                                message: "Please enter promotion price",
+                                message: "กรุณาระบุราคาโปรโมชัน",
                               },
                             ]}
                           >
@@ -1173,11 +1173,11 @@ const GoodsPage = () => {
                         <Col xs={24} sm={8}>
                           <Form.Item
                             name="promotionStartDate"
-                            label="Start Date"
+                            label="วันที่เริ่มต้น"
                             rules={[
                               {
                                 required: true,
-                                message: "Please select start date",
+                                message: "กรุณาเลือกวันที่เริ่มต้น",
                               },
                             ]}
                           >
@@ -1187,11 +1187,11 @@ const GoodsPage = () => {
                         <Col xs={24} sm={8}>
                           <Form.Item
                             name="promotionEndDate"
-                            label="End Date"
+                            label="วันที่สิ้นสุด"
                             rules={[
                               {
                                 required: true,
-                                message: "Please select end date",
+                                message: "กรุณาเลือกวันที่สิ้นสุด",
                               },
                             ]}
                           >
@@ -1208,12 +1208,12 @@ const GoodsPage = () => {
 
           {/* View Modal */}
           <Modal
-            title="Goods Details"
+            title="รายละเอียดสินค้า"
             visible={isViewModalVisible}
             onCancel={handleCancel}
             footer={[
               <Button key="close" onClick={handleCancel}>
-                Close
+                ปิด
               </Button>,
             ]}
             width="95%"
@@ -1295,19 +1295,19 @@ const GoodsPage = () => {
                         )}
                         {viewingGoods.hotSale && (
                           <Tag color="error" icon={<FireOutlined />}>
-                            Hot Sale
+                            ลดราคาพิเศษ
                           </Tag>
                         )}
                         {viewingGoods.promotion &&
                           isPromotionActive(viewingGoods.promotion) && (
                             <Tag color="warning" icon={<PercentageOutlined />}>
-                              Promotion Active
+                              โปรโมชันกำลังใช้งาน
                             </Tag>
                           )}
                       </div>
 
                       <div>
-                        <Text>Regular Price: </Text>
+                        <Text>ราคาปกติ: </Text>
                         <Text
                           strong
                           style={{
@@ -1330,7 +1330,7 @@ const GoodsPage = () => {
 
                       {getDisplayPrice(viewingGoods) !== viewingGoods.price && (
                         <div>
-                          <Text>Promotion Price: </Text>
+                          <Text>ราคาโปรโมชัน: </Text>
                           <Text
                             strong
                             style={{ color: colors["error"], fontSize: "18px" }}
@@ -1342,7 +1342,7 @@ const GoodsPage = () => {
                       )}
 
                       <div>
-                        <Text>Stock: </Text>
+                        <Text>สินค้าในคลัง: </Text>
                         <Badge
                           count={viewingGoods.stock}
                           style={{
@@ -1363,7 +1363,7 @@ const GoodsPage = () => {
                   <>
                     <Divider />
                     <div>
-                      <Text strong>Details:</Text>
+                      <Text strong>รายละเอียด:</Text>
                       <div style={{ marginTop: 8 }}>
                         <Text>{viewingGoods.detail}</Text>
                       </div>
@@ -1375,11 +1375,11 @@ const GoodsPage = () => {
                   <>
                     <Divider />
                     <div>
-                      <Text strong>Promotion Information:</Text>
+                      <Text strong>ข้อมูลโปรโมชัน:</Text>
                       <div style={{ marginTop: 8 }}>
                         <Space direction="vertical" size="small">
                           <div>
-                            <Text>Promotion Price: </Text>
+                            <Text>ราคาโปรโมชัน: </Text>
                             <Text strong style={{ color: colors["error"] }}>
                               {viewingGoods.promotion.price?.toLocaleString()}{" "}
                               THB
@@ -1387,7 +1387,7 @@ const GoodsPage = () => {
                           </div>
                           {viewingGoods.promotion.startDate && (
                             <div>
-                              <Text>Start Date: </Text>
+                              <Text>วันที่เริ่มต้น: </Text>
                               <Text>
                                 {new Date(
                                   viewingGoods.promotion.startDate
@@ -1397,7 +1397,7 @@ const GoodsPage = () => {
                           )}
                           {viewingGoods.promotion.endDate && (
                             <div>
-                              <Text>End Date: </Text>
+                              <Text>วันที่สิ้นสุด: </Text>
                               <Text>
                                 {new Date(
                                   viewingGoods.promotion.endDate
@@ -1406,7 +1406,7 @@ const GoodsPage = () => {
                             </div>
                           )}
                           <div>
-                            <Text>Status: </Text>
+                            <Text>สถานะ: </Text>
                             <Tag
                               color={
                                 isPromotionActive(viewingGoods.promotion)
@@ -1415,8 +1415,8 @@ const GoodsPage = () => {
                               }
                             >
                               {isPromotionActive(viewingGoods.promotion)
-                                ? "Active"
-                                : "Inactive"}
+                                ? "ใช้งาน"
+                                : "ไม่ใช้งาน"}
                             </Tag>
                           </div>
                         </Space>
@@ -1430,12 +1430,12 @@ const GoodsPage = () => {
 
           {/* Stock Update Modal */}
           <Modal
-            title="Update Stock"
+            title="อัปเดตสต็อก"
             visible={isStockModalVisible}
             onCancel={handleCancel}
             footer={[
               <Button key="cancel" onClick={handleCancel} className="mb-2 sm:mb-0">
-                Cancel
+                ยกเลิก
               </Button>,
               canUpdateStock && (
                 <Button
@@ -1444,7 +1444,7 @@ const GoodsPage = () => {
                   onClick={handleStockUpdate}
                   loading={loading}
                 >
-                  Update Stock
+                  อัปเดตสต็อก
                 </Button>
               ),
             ].filter(Boolean)} // Remove null/undefined elements
@@ -1470,7 +1470,7 @@ const GoodsPage = () => {
                   name="stock"
                   label={`New Stock Quantity (${stockGoods.unit})`}
                   rules={[
-                    { required: true, message: "Please enter stock quantity" },
+                    { required: true, message: "กรุณาระบุจำนวนสินค้าในคลัง" },
                     {
                       type: "number",
                       min: 0,
@@ -1479,7 +1479,7 @@ const GoodsPage = () => {
                   ]}
                 >
                   <InputNumber
-                    placeholder="Enter new stock quantity"
+                    placeholder="ระบุจำนวนสินค้าในคลังใหม่"
                     style={{ width: "100%" }}
                     min={0}
                     addonAfter={stockGoods.unit}

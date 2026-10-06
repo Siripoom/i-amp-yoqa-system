@@ -8,6 +8,7 @@ dotenv.config();
 // Use Multer for file uploads (memory storage)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+const PRODUCT_CATEGORIES = ["private_yoga", "extend_your_days"];
 
 // Helper function to validate promotion data
 const validatePromotion = (promotion) => {
@@ -91,6 +92,9 @@ const parsePromotionData = (promotionString) => {
 exports.createProduct = async (req, res) => {
   const files = new StorageChanges();
   try {
+    if (req.body.category && !PRODUCT_CATEGORIES.includes(req.body.category)) {
+      return res.status(400).json({ message: "Invalid product category" });
+    }
     let imageUrl = req.body.image;
 
     // Parse promotion data from FormData
@@ -111,6 +115,7 @@ exports.createProduct = async (req, res) => {
       sessions: Number(req.body.sessions),
       price: Number(req.body.price),
       duration: Number(req.body.duration),
+      category: req.body.category || null,
       image: imageUrl,
       hotSale: req.body.hotSale === "true" || req.body.hotSale === true,
     };
@@ -144,6 +149,9 @@ exports.createProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   const files = new StorageChanges();
   try {
+    if (req.body.category !== undefined && req.body.category !== "" && !PRODUCT_CATEGORIES.includes(req.body.category)) {
+      return res.status(400).json({ message: "Invalid product category" });
+    }
     console.log("Update request body:", req.body); // Debug log
 
     const product = await Product.findById(req.params.id);
@@ -189,6 +197,9 @@ exports.updateProduct = async (req, res) => {
     }
     if (req.body.duration !== undefined) {
       product.duration = Number(req.body.duration);
+    }
+    if (req.body.category !== undefined) {
+      product.category = req.body.category || null;
     }
 
     product.image = imageUrl;

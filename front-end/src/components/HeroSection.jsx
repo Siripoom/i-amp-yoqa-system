@@ -24,7 +24,7 @@ const HeroSection = () => {
           <div className="w-3/4 md:w-1/2 h-auto">
             <img
               src={heroImage}
-              alt="Yoga Hero"
+              alt="ภาพหลักโยคะ"
               className="rounded-lg shadow-lg object-cover"
               loading="lazy"
             />

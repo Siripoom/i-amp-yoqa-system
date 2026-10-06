@@ -20,14 +20,14 @@ export const ResetPassword = () => {
     try {
       const response = await requestPasswordReset(values.email);
       setResetToken(response.resetToken);
-      message.success('Password reset token generated successfully!');
+      message.success('สร้างโทเคนตั้งรหัสผ่านใหม่สำเร็จ');
       setCurrentStep(1);
     } catch (error) {
       console.error("Request reset failed:", error);
       if (error.response?.data?.message) {
         message.error(error.response.data.message);
       } else {
-        message.error("Failed to request password reset. Please try again.");
+        message.error("ขอตั้งรหัสผ่านใหม่ไม่สำเร็จ กรุณาลองอีกครั้ง");
       }
     } finally {
       setLoading(false);
@@ -39,7 +39,7 @@ export const ResetPassword = () => {
     setLoading(true);
     try {
       await resetPassword(values.resetToken, values.newPassword);
-      message.success('Password reset successfully!');
+      message.success('ตั้งรหัสผ่านใหม่สำเร็จ');
       setCurrentStep(2);
       // Redirect to login page after 2 seconds
       setTimeout(() => {
@@ -50,7 +50,7 @@ export const ResetPassword = () => {
       if (error.response?.data?.message) {
         message.error(error.response.data.message);
       } else {
-        message.error("Failed to reset password. Please try again.");
+        message.error("ตั้งรหัสผ่านใหม่ไม่สำเร็จ กรุณาลองอีกครั้ง");
       }
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export const ResetPassword = () => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(resetToken);
-    message.success('Token copied to clipboard!');
+    message.success('คัดลอกโทเคนแล้ว');
   };
 
   const containerVariants = {
@@ -78,17 +78,17 @@ export const ResetPassword = () => {
         <Card className="shadow-xl rounded-2xl">
           <div className="text-center mb-6">
             <Title level={2} className="text-text mb-2">
-              Reset Password
+              ตั้งรหัสผ่านใหม่
             </Title>
             <Text className="text-secondary">
-              Follow the steps below to reset your password
+              ทำตามขั้นตอนต่อไปนี้เพื่อตั้งรหัสผ่านใหม่
             </Text>
           </div>
 
           <Steps current={currentStep} className="mb-8">
-            <Step title="Request Reset" icon={<MailOutlined />} />
-            <Step title="Enter Token" icon={<KeyOutlined />} />
-            <Step title="Success" icon={<LockOutlined />} />
+            <Step title="ขอตั้งรหัสผ่านใหม่" icon={<MailOutlined />} />
+            <Step title="ระบุโทเคน" icon={<KeyOutlined />} />
+            <Step title="สำเร็จ" icon={<LockOutlined />} />
           </Steps>
 
           {/* Step 1: Request Password Reset */}
@@ -100,16 +100,16 @@ export const ResetPassword = () => {
               className="space-y-4"
             >
               <Form.Item
-                label="Email Address"
+                label="อีเมล"
                 name="email"
                 rules={[
-                  { required: true, message: "Please input your email!" },
-                  { type: "email", message: "Please enter a valid email!" }
+                  { required: true, message: "กรุณาระบุอีเมล" },
+                  { type: "email", message: "กรุณาระบุอีเมลที่ถูกต้อง" }
                 ]}
               >
                 <Input
                   prefix={<MailOutlined className="text-secondary" />}
-                  placeholder="Enter your email address"
+                  placeholder="ระบุอีเมลของคุณ"
                   size="large"
                   className="rounded-lg"
                 />
@@ -122,7 +122,7 @@ export const ResetPassword = () => {
                 size="large"
                 className="w-full rounded-lg bg-primary hover:bg-primary-dark border-primary hover:border-primary"
               >
-                Request Password Reset
+                ขอตั้งรหัสผ่านใหม่
               </Button>
             </Form>
           )}
@@ -131,10 +131,10 @@ export const ResetPassword = () => {
           {currentStep === 1 && (
             <div className="space-y-6">
               <Alert
-                message="Reset Token Generated"
+                message="สร้างโทเคนตั้งรหัสผ่านใหม่แล้ว"
                 description={
                   <div className="space-y-3">
-                    <Text>Your password reset token has been generated. Please copy the token below:</Text>
+                    <Text>สร้างโทเคนตั้งรหัสผ่านใหม่แล้ว กรุณาคัดลอกโทเคนด้านล่าง:</Text>
                     <div className="bg-surface p-3 rounded-lg break-all font-mali text-sm">
                       {resetToken}
                     </div>
@@ -144,10 +144,10 @@ export const ResetPassword = () => {
                       type="dashed"
                       className="w-full"
                     >
-                      Copy Token
+                      คัดลอกโทเคน
                     </Button>
                     <Text type="warning" className="block text-xs">
-                      Note: In a real application, this token would be sent to your email address.
+                      หมายเหตุ: ระบบจริงจะส่งโทเคนนี้ไปยังอีเมลของคุณ
                     </Text>
                   </div>
                 }
@@ -164,40 +164,40 @@ export const ResetPassword = () => {
                 initialValues={{ resetToken }}
               >
                 <Form.Item
-                  label="Reset Token"
+                  label="โทเคนตั้งรหัสผ่านใหม่"
                   name="resetToken"
-                  rules={[{ required: true, message: "Please input the reset token!" }]}
+                  rules={[{ required: true, message: "กรุณาระบุโทเคน" }]}
                 >
                   <Input
                     prefix={<KeyOutlined className="text-secondary" />}
-                    placeholder="Paste your reset token here"
+                    placeholder="วางโทเคนที่นี่"
                     size="large"
                     className="rounded-lg"
                   />
                 </Form.Item>
 
                 <Form.Item
-                  label="New Password"
+                  label="รหัสผ่านใหม่"
                   name="newPassword"
                   rules={[
-                    { required: true, message: "Please input your new password!" },
+                    { required: true, message: "กรุณาระบุรหัสผ่านใหม่" },
                     { min: 6, message: "Password must be at least 6 characters long!" }
                   ]}
                 >
                   <Input.Password
                     prefix={<LockOutlined className="text-secondary" />}
-                    placeholder="Enter your new password"
+                    placeholder="ระบุรหัสผ่านใหม่"
                     size="large"
                     className="rounded-lg"
                   />
                 </Form.Item>
 
                 <Form.Item
-                  label="Confirm New Password"
+                  label="ยืนยันรหัสผ่านใหม่"
                   name="confirmPassword"
                   dependencies={['newPassword']}
                   rules={[
-                    { required: true, message: "Please confirm your new password!" },
+                    { required: true, message: "กรุณายืนยันรหัสผ่านใหม่" },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
                         if (!value || getFieldValue('newPassword') === value) {
@@ -210,7 +210,7 @@ export const ResetPassword = () => {
                 >
                   <Input.Password
                     prefix={<LockOutlined className="text-secondary" />}
-                    placeholder="Confirm your new password"
+                    placeholder="ยืนยันรหัสผ่านใหม่"
                     size="large"
                     className="rounded-lg"
                   />
@@ -224,7 +224,7 @@ export const ResetPassword = () => {
                     size="large"
                     className="w-full rounded-lg bg-success hover:bg-success border-success hover:border-success"
                   >
-                    Reset Password
+                    ตั้งรหัสผ่านใหม่
                   </Button>
 
                   <Button
@@ -233,7 +233,7 @@ export const ResetPassword = () => {
                     size="large"
                     className="w-full rounded-lg"
                   >
-                    Back to Email Step
+                    กลับไปขั้นตอนอีเมล
                   </Button>
                 </Space>
               </Form>
@@ -245,10 +245,10 @@ export const ResetPassword = () => {
             <div className="text-center space-y-4">
               <div className="text-6xl text-success mb-4">✅</div>
               <Title level={3} className="text-success">
-                Password Reset Successful!
+                ตั้งรหัสผ่านใหม่สำเร็จ
               </Title>
               <Text className="text-secondary block mb-4">
-                Your password has been successfully reset. You will be redirected to the login page shortly.
+                ตั้งรหัสผ่านใหม่สำเร็จ ระบบจะพาคุณไปหน้าเข้าสู่ระบบ
               </Text>
               <Button
                 type="primary"
@@ -256,7 +256,7 @@ export const ResetPassword = () => {
                 onClick={() => navigate('/auth/signin')}
                 className="rounded-lg bg-primary hover:bg-primary-dark border-primary hover:border-primary"
               >
-                Go to Login Page
+                ไปหน้าเข้าสู่ระบบ
               </Button>
             </div>
           )}
@@ -265,7 +265,7 @@ export const ResetPassword = () => {
             <Text className="text-secondary">
               Remember your password?{" "}
               <Link to="/auth/signin" className="text-primary hover:text-primary font-medium">
-                Sign In
+                เข้าสู่ระบบ
               </Link>
             </Text>
           </div>

@@ -8,14 +8,14 @@ const NotFoundPage = () => {
     <div className="min-h-screen flex flex-col justify-center items-center bg-surface">
       <h1 className="text-6xl font-bold text-text mb-4">404 Not Found</h1>
       <p className="text-text text-lg mb-6">
-        Your visited page not found. You may go home page.
+        ไม่พบหน้าที่ต้องการ คุณสามารถกลับไปหน้าหลัก
       </p>
       <Button
         type="primary"
         className="bg-primary text-white px-6 py-2 rounded-lg"
         onClick={() => navigate("/")}
       >
-        Back to home page
+        กลับหน้าหลัก
       </Button>
     </div>
   );

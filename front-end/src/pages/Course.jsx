@@ -33,6 +33,7 @@ import { getProducts } from "../services/productService";
 import goodsService from "../services/goods-service";
 import image from "../assets/images/imageC1.png";
 import SEOHead from "../components/SEOHead";
+import { PRODUCT_CATEGORIES, getProductCategoryLabel } from "../constants/productCategories";
 
 const { Text } = Typography;
 
@@ -44,8 +45,12 @@ const Course = () => {
   const [isGoodsModalVisible, setIsGoodsModalVisible] = useState(false);
   const [selectedGoods, setSelectedGoods] = useState(null);
   const [productSortOrder, setProductSortOrder] = useState("asc");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [goodsSortOrder, setGoodsSortOrder] = useState("desc");
   const navigate = useNavigate();
+  const visibleProducts = selectedCategory === "all"
+    ? products
+    : products.filter((product) => product.category === selectedCategory);
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -74,10 +79,10 @@ const Course = () => {
       if (response.status === "success") {
         setProducts(response.data);
       } else {
-        message.error("Failed to load products");
+        message.error("โหลดสินค้าไม่สำเร็จ");
       }
     } catch (error) {
-      message.error("Failed to load products");
+      message.error("โหลดสินค้าไม่สำเร็จ");
       console.error(error);
     }
     setLoading(false);
@@ -94,10 +99,10 @@ const Course = () => {
       if (response.status === "success") {
         setGoods(response.data || []);
       } else {
-        message.error("Failed to load goods");
+        message.error("โหลดสินค้าไม่สำเร็จ");
       }
     } catch (error) {
-      message.error("Failed to load goods");
+      message.error("โหลดสินค้าไม่สำเร็จ");
       console.error(error);
     }
     setGoodsLoading(false);
@@ -150,7 +155,7 @@ const Course = () => {
         },
       });
     } else {
-      message.warning("Please login before proceeding to checkout");
+      message.warning("กรุณาเข้าสู่ระบบก่อนชำระเงิน");
       navigate("/auth/signin");
     }
   };
@@ -161,7 +166,7 @@ const Course = () => {
     if (isLoggedIn) {
       // ตรวจสอบสต็อกก่อน
       if (goodsItem.stock <= 0) {
-        message.error("This item is out of stock");
+        message.error("สินค้าหมด");
         return;
       }
       navigate("/checkout", {
@@ -171,7 +176,7 @@ const Course = () => {
         },
       });
     } else {
-      message.warning("Please login before proceeding to checkout");
+      message.warning("กรุณาเข้าสู่ระบบก่อนชำระเงิน");
       navigate("/auth/signin");
     }
   };
@@ -320,7 +325,7 @@ const Course = () => {
                   icon={<FireOutlined />}
                   className="shadow-md"
                 >
-                  Hot Sale
+                  ลดราคาพิเศษ
                 </Tag>
               )}
             </div>
@@ -336,6 +341,11 @@ const Course = () => {
       >
         <div className="flex-1">
           <div className="mb-3">
+            {product.category && (
+              <Tag color="processing" className="mb-2">
+                {getProductCategoryLabel(product.category)}
+              </Tag>
+            )}
             <h3 className="font-bold text-lg text-text mb-2">
               {product.sessions} Sessions
             </h3>
@@ -457,7 +467,7 @@ const Course = () => {
                   icon={<FireOutlined />}
                   className="shadow-md"
                 >
-                  Hot Sale
+                  ลดราคาพิเศษ
                 </Tag>
               )}
               {hasActivePromotion && !isOutOfStock && (
@@ -466,7 +476,7 @@ const Course = () => {
                   icon={<PercentageOutlined />}
                   className="shadow-md"
                 >
-                  Sale
+                  ลดราคา
                 </Tag>
               )}
             </div>
@@ -535,7 +545,7 @@ const Course = () => {
             onClick={() => showGoodsModal(goodsItem)}
             className="flex-1"
           >
-            View Details
+            ดูรายละเอียด
           </Button>
           {!isOutOfStock && (
             <Button
@@ -554,7 +564,7 @@ const Course = () => {
               `}
               onClick={() => handleGoodsCheckout(goodsItem)}
             >
-              Checkout
+              ชำระเงิน
             </Button>
           )}
         </div>
@@ -601,11 +611,31 @@ const Course = () => {
           <div className="mb-8">
             <div className="text-center mb-4">
               <h2 className="text-3xl font-bold text-primary mb-2">
-                Course Promotions
+                โปรโมชันคอร์ส
               </h2>
               <p className="text-secondary">
                 เลือกแพ็คเกจที่เหมาะกับคุณ พร้อมโปรโมชั่นพิเศษ
               </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 mb-6" aria-label="กรองหมวดหมู่โปรโมชั่น">
+              {[
+                { value: "all", label: "ทั้งหมด" },
+                ...PRODUCT_CATEGORIES,
+              ].map((category) => (
+                <button
+                  key={category.value}
+                  type="button"
+                  aria-pressed={selectedCategory === category.value}
+                  onClick={() => setSelectedCategory(category.value)}
+                  className={`px-4 py-2 rounded-full border font-semibold transition-colors ${
+                    selectedCategory === category.value
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white text-primary border-border hover:bg-surface"
+                  }`}
+                >
+                  {category.label}
+                </button>
+              ))}
             </div>
             <div className="flex justify-end mb-4">
               <Space>
@@ -642,23 +672,25 @@ const Course = () => {
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                 <div className="text-primary font-semibold">
-                  Loading courses...
+                  กำลังโหลดคอร์ส...
                 </div>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
-              {products.length > 0 ? (
-                products.map((product) => (
+              {visibleProducts.length > 0 ? (
+                visibleProducts.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))
               ) : (
                 <div className="col-span-full text-center py-20">
                   <div className="text-secondary text-xl mb-4">
-                    No courses available at the moment.
+                    {selectedCategory === "all"
+                      ? "ขณะนี้ยังไม่มีคอร์ส"
+                      : `ยังไม่มีคอร์สในหมวดหมู่ ${getProductCategoryLabel(selectedCategory)}`}
                   </div>
                   <div className="text-secondary">
-                    Please check back later for new promotions!
+                    โปรดกลับมาตรวจสอบโปรโมชันใหม่ภายหลัง
                   </div>
                 </div>
               )}
@@ -712,7 +744,7 @@ const Course = () => {
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                 <div className="text-primary font-semibold">
-                  Loading goods...
+                  กำลังโหลดสินค้า...
                 </div>
               </div>
             </div>
@@ -725,10 +757,10 @@ const Course = () => {
               ) : (
                 <div className="col-span-full text-center py-20">
                   <div className="text-secondary text-xl mb-4">
-                    No goods available at the moment.
+                    ขณะนี้ยังไม่มีสินค้า
                   </div>
                   <div className="text-secondary">
-                    Please check back later for new items!
+                    โปรดกลับมาตรวจสอบสินค้าใหม่ภายหลัง
                   </div>
                 </div>
               )}
@@ -740,12 +772,12 @@ const Course = () => {
 
       {/* Goods Detail Modal */}
       <Modal
-        title="Product Details"
+        title="รายละเอียดสินค้า"
         visible={isGoodsModalVisible}
         onCancel={handleGoodsModalCancel}
         footer={[
           <Button key="close" onClick={handleGoodsModalCancel}>
-            Close
+            ปิด
           </Button>,
           selectedGoods && selectedGoods.stock > 0 && (
             <Button
@@ -757,7 +789,7 @@ const Course = () => {
                 handleGoodsModalCancel();
               }}
             >
-              Checkout
+              ชำระเงิน
             </Button>
           ),
         ]}
@@ -834,12 +866,12 @@ const Course = () => {
                     )}
                     {selectedGoods.hotSale && (
                       <Tag color="error" icon={<FireOutlined />}>
-                        Hot Sale
+                        ลดราคาพิเศษ
                       </Tag>
                     )}
                     {isPromotionActive(selectedGoods.promotion) && (
                       <Tag color="error" icon={<PercentageOutlined />}>
-                        On Sale
+                        ลดราคา
                       </Tag>
                     )}
                   </div>
@@ -852,7 +884,7 @@ const Course = () => {
                   {/* Stock */}
                   <div className="stock-section">
                     <Space>
-                      <Text strong>Stock:</Text>
+                      <Text strong>สินค้าในคลัง:</Text>
                       <Tag
                         color={selectedGoods.stock > 0 ? "green" : "red"}
                         icon={<StockOutlined />}
@@ -866,7 +898,7 @@ const Course = () => {
                   {selectedGoods.detail && (
                     <div className="description-section">
                       <Text strong className="block mb-2">
-                        Description:
+                        รายละเอียด:
                       </Text>
                       <div className="text-secondary text-sm leading-relaxed">
                         {selectedGoods.detail}

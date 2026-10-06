@@ -70,7 +70,7 @@ const Footer = () => {
 
           {/* Support Section */}
           <div className="support">
-            <h3 className="text-lg font-semibold mb-3">Support</h3>
+            <h3 className="text-lg font-semibold mb-3">ช่วยเหลือ</h3>
             <div className="space-y-2">
               <p
                 className="text-sm hover:text-accent cursor-pointer transition-colors duration-300"
@@ -91,7 +91,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-sm hover:text-success transition-colors duration-300"
-                title="Contact via LINE"
+                title="ติดต่อผ่าน LINE"
               >
                 💬 LINE: {brand.lineId}
               </a>
@@ -103,14 +103,14 @@ const Footer = () => {
 
           {/* Account Section */}
           <div className="account">
-            <h3 className="text-lg font-semibold mb-3">Account</h3>
+            <h3 className="text-lg font-semibold mb-3">บัญชี</h3>
             <ul className="space-y-2">
               <li>
                 <button
                   onClick={handleMyAccount}
                   className="text-surface hover:text-surface transition-colors duration-300 text-left w-full"
                 >
-                  My Account
+                  บัญชีของฉัน
                 </button>
               </li>
               <li>
@@ -118,7 +118,7 @@ const Footer = () => {
                   onClick={handleLogin}
                   className="text-surface hover:text-surface transition-colors duration-300 text-left w-full"
                 >
-                  Login / Register
+                  เข้าสู่ระบบ / สมัครสมาชิก
                 </button>
               </li>
               <li>
@@ -126,7 +126,7 @@ const Footer = () => {
                   onClick={handleCart}
                   className="text-surface hover:text-surface transition-colors duration-300 text-left w-full"
                 >
-                  My Orders
+                  คำสั่งซื้อของฉัน
                 </button>
               </li>
               <li>
@@ -134,7 +134,7 @@ const Footer = () => {
                   to="/course"
                   className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
-                  Promotion
+                  โปรโมชัน
                 </Link>
               </li>
               <li>
@@ -142,7 +142,7 @@ const Footer = () => {
                   to="/class"
                   className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
-                  Course
+                  คอร์ส
                 </Link>
               </li>
             </ul>
@@ -150,14 +150,14 @@ const Footer = () => {
 
           {/* Quick Link Section */}
           <div className="quick-link">
-            <h3 className="text-lg font-semibold mb-3">Quick Link</h3>
+            <h3 className="text-lg font-semibold mb-3">ลิงก์ด่วน</h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   to="/contact"
                   className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
-                  Master
+                  ครูผู้สอน
                 </Link>
               </li>
               <li>
@@ -175,7 +175,7 @@ const Footer = () => {
                   to="/booking"
                   className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
-                  Book a Class
+                  จองคลาส
                 </Link>
               </li>
               <li>
@@ -198,14 +198,14 @@ const Footer = () => {
               to="/class"
               className="hover:text-accent transition-colors duration-300 ml-1"
             >
-              Yoga Classes
+              คลาสโยคะ
             </Link>{" "}
             |
             <Link
               to="/course"
               className="hover:text-accent transition-colors duration-300 ml-1"
             >
-              Promotions
+              โปรโมชัน
             </Link>
           </p>
         </div>

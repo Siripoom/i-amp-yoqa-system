@@ -21,8 +21,8 @@ const runReservationMutation = async (operation) => {
   return operation(undefined);
 };
 
-const validateBookingProfile = (user, yogaClass, res) => {
-  const missingFields = getMissingMemberProfileFields(user);
+const validateBookingProfile = (user, yogaClass, res, requireCompleteProfile = true) => {
+  const missingFields = requireCompleteProfile ? getMissingMemberProfileFields(user) : [];
   if (missingFields.length > 0) {
     res.status(422).json({
       code: "PROFILE_INCOMPLETE",
@@ -244,7 +244,7 @@ exports.adminCreateReservation = async (req, res) => {
     // Get user
     const user = await User.findById(user_id);
     if (!user) return res.status(404).json({ message: "User not found" });
-    if (!validateBookingProfile(user, yogaClass, res)) return;
+    if (!validateBookingProfile(user, yogaClass, res, false)) return;
 
     // Check if user has sessions
     if (!user.remaining_session || user.remaining_session <= 0) {

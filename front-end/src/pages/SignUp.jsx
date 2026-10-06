@@ -51,10 +51,10 @@ const SignUp = () => {
         console.log("Token saved after registration:", response.token);
       }
 
-      message.success("Registration successful! Redirecting...");
+      message.success("สมัครสมาชิกสำเร็จ กำลังเปลี่ยนหน้า...");
       setTimeout(() => navigate("/term"), 2000);
     } catch (error) {
-      message.error(error.response?.data?.message || "Registration failed");
+      message.error(error.response?.data?.message || "สมัครสมาชิกไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -75,40 +75,40 @@ const SignUp = () => {
         className="bg-white p-8 rounded-2xl shadow-lg w-96"
       >
         <Title level={2} className="text-center text-primary font-bold">
-          Sign-Up
+          สมัครสมาชิก
         </Title>
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="first_name"
-            rules={[{ required: true, message: "First name is required" }]}
+            rules={[{ required: true, message: "กรุณาระบุชื่อ" }]}
           >
-            <Input placeholder="Firstname" size="large" />
+            <Input placeholder="ชื่อ" size="large" />
           </Form.Item>
 
           <Form.Item
             name="last_name"
-            rules={[{ required: true, message: "Last name is required" }]}
+            rules={[{ required: true, message: "กรุณาระบุนามสกุล" }]}
           >
-            <Input placeholder="Lastname" size="large" />
+            <Input placeholder="นามสกุล" size="large" />
           </Form.Item>
 
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: "Email is required" },
-              { type: "email", message: "Enter a valid email" },
+              { required: true, message: "กรุณาระบุอีเมล" },
+              { type: "email", message: "กรุณาระบุอีเมลที่ถูกต้อง" },
             ]}
           >
-            <Input prefix={<MailOutlined />} placeholder="Email" size="large" />
+            <Input prefix={<MailOutlined />} placeholder="อีเมล" size="large" />
           </Form.Item>
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: "Password is required" }]}
+            rules={[{ required: true, message: "กรุณาระบุรหัสผ่าน" }]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Password"
+              placeholder="รหัสผ่าน"
               size="large"
             />
           </Form.Item>
@@ -117,20 +117,20 @@ const SignUp = () => {
             name="confirmPassword"
             dependencies={["password"]}
             rules={[
-              { required: true, message: "Please confirm your password" },
+              { required: true, message: "กรุณายืนยันรหัสผ่าน" },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue("password") === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error("Passwords do not match"));
+                  return Promise.reject(new Error("รหัสผ่านไม่ตรงกัน"));
                 },
               }),
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Confirm Password"
+              placeholder="ยืนยันรหัสผ่าน"
               size="large"
             />
           </Form.Item>
@@ -138,23 +138,23 @@ const SignUp = () => {
           <Form.Item
             name="phone"
             rules={[
-              { required: true, message: "Phone number is required" },
-              { pattern: /^[0-9]{10}$/, message: "Enter a valid phone number" },
+              { required: true, message: "กรุณาระบุเบอร์โทรศัพท์" },
+              { pattern: /^[0-9]{10}$/, message: "กรุณาระบุเบอร์โทรศัพท์ที่ถูกต้อง" },
             ]}
           >
             <Input
               prefix={<PhoneOutlined />}
-              placeholder="Phone"
+              placeholder="เบอร์โทรศัพท์"
               size="large"
             />
           </Form.Item>
 
           <Form.Item
             name="birth_date"
-            rules={[{ required: true, message: "Birth date is required" }]}
+            rules={[{ required: true, message: "กรุณาระบุวันเกิด" }]}
           >
             <DatePicker
-              placeholder="Select Birth Date"
+              placeholder="เลือกวันเกิด"
               size="large"
               className="w-full"
               format="YYYY-MM-DD"
@@ -219,14 +219,14 @@ const SignUp = () => {
           )}
 
           <Form.Item name="referrer_id">
-            <Input placeholder="Referrer ID (ถ้ามี)" size="large" />
+            <Input placeholder="รหัสผู้แนะนำ (ถ้ามี)" size="large" />
           </Form.Item>
 
           {/* <Form.Item name="special_rights">
             <Input
-              placeholder="Special Rights (สิทธิพิเศษ)"
+              placeholder="สิทธิพิเศษ"
               size="large"
-              defaultValue="Free class on birthday"
+              defaultValue="คลาสฟรีในวันเกิด"
             />
           </Form.Item> */}
 
@@ -241,7 +241,7 @@ const SignUp = () => {
 
           <div className="text-center mt-4">
             <Link to="/auth/signin" className="text-primary">
-              Cancel
+              ยกเลิก
             </Link>
           </div>
         </Form>

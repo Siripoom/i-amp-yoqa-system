@@ -122,7 +122,7 @@ const InstructorReport = () => {
   // Function to delete instructor report
   const handleDeleteInstructor = async (instructorName) => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete instructor reports.");
+      message.warning("คุณไม่มีสิทธิ์ลบรายงานครูผู้สอน");
       return;
     }
 

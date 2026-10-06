@@ -13,6 +13,7 @@ import {
   DatePicker,
   Switch,
   InputNumber,
+  Select,
   Image,
   Space,
   Tooltip,
@@ -49,6 +50,7 @@ import {
   restoreProduct,
 } from "../../services/productService";
 import dayjs from "dayjs";
+import { PRODUCT_CATEGORIES, getProductCategoryLabel } from "../../constants/productCategories";
 
 const { Sider, Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -98,10 +100,10 @@ const ProductPage = () => {
       if (response.status === "success") {
         setProducts(response.data);
       } else {
-        message.error("Failed to load products");
+        message.error("โหลดสินค้าไม่สำเร็จ");
       }
     } catch (error) {
-      message.error("Failed to load products");
+      message.error("โหลดสินค้าไม่สำเร็จ");
       console.error(error);
     }
     setLoading(false);
@@ -133,7 +135,7 @@ const ProductPage = () => {
 
   const showCreateModal = () => {
     if (!canCreate) {
-      message.warning("You don't have permission to create products.");
+      message.warning("คุณไม่มีสิทธิ์สร้างสินค้า");
       return;
     }
     setEditingProduct(null);
@@ -143,7 +145,7 @@ const ProductPage = () => {
 
   const showEditModal = (record) => {
     if (!canEdit && userRole !== "Accounting") {
-      message.warning("You don't have permission to edit products.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขสินค้า");
       return;
     }
     setEditingProduct(record);
@@ -178,17 +180,17 @@ const ProductPage = () => {
   const handleSave = async () => {
     // Check permissions
     if (userRole === "Accounting") {
-      message.warning("You don't have permission to modify product data.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขข้อมูลสินค้า");
       return;
     }
 
     if (editingProduct && !canEdit) {
-      message.warning("You don't have permission to edit products.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขสินค้า");
       return;
     }
 
     if (!editingProduct && !canCreate) {
-      message.warning("You don't have permission to create products.");
+      message.warning("คุณไม่มีสิทธิ์สร้างสินค้า");
       return;
     }
 
@@ -212,6 +214,7 @@ const ProductPage = () => {
         sessions: values.sessions,
         price: values.price,
         duration: values.duration,
+        category: values.category,
         hotSale: values.hotSale || false,
         promotion: promotionData, // จะเป็น null ถ้าไม่มีโปรโมชั่น
         image: values.image,
@@ -221,10 +224,10 @@ const ProductPage = () => {
 
       if (editingProduct) {
         await updateProduct(editingProduct._id, productData);
-        message.success("Product updated successfully");
+        message.success("แก้ไขสินค้าสำเร็จ");
       } else {
         await createProduct(productData);
-        message.success("Product created successfully");
+        message.success("สร้างสินค้าสำเร็จ");
       }
 
       fetchProducts();
@@ -238,23 +241,23 @@ const ProductPage = () => {
 
   const handleDelete = async () => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete products.");
+      message.warning("คุณไม่มีสิทธิ์ลบสินค้า");
       return;
     }
 
     try {
       await deleteProduct(editingProduct._id);
-      message.success("Product deleted successfully");
+      message.success("ลบสินค้าสำเร็จ");
       fetchProducts();
       setIsModalVisible(false);
     } catch (error) {
-      message.error("Failed to delete product");
+      message.error("ลบสินค้าไม่สำเร็จ");
     }
   };
 
   const handleToggleHotSale = async (productId, currentStatus) => {
     if (!canToggleHotSale) {
-      message.warning("You don't have permission to modify hot sale status.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขสถานะลดราคาพิเศษ");
       return;
     }
 
@@ -265,13 +268,13 @@ const ProductPage = () => {
       );
       fetchProducts();
     } catch (error) {
-      message.error("Failed to update hot sale status");
+      message.error("อัปเดตสถานะลดราคาพิเศษไม่สำเร็จ");
     }
   };
 
   const handleToggleActive = async (productId, currentStatus) => {
     if (!canEdit) {
-      message.warning("You don't have permission to modify active status.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขสถานะการใช้งาน");
       return;
     }
 
@@ -282,22 +285,22 @@ const ProductPage = () => {
       );
       fetchProducts();
     } catch (error) {
-      message.error("Failed to update active status");
+      message.error("อัปเดตสถานะการใช้งานไม่สำเร็จ");
     }
   };
 
   const handleRestore = async (productId) => {
     if (!canDelete) {
-      message.warning("You don't have permission to restore products.");
+      message.warning("คุณไม่มีสิทธิ์กู้คืนสินค้า");
       return;
     }
 
     try {
       await restoreProduct(productId);
-      message.success("Product restored successfully");
+      message.success("กู้คืนสินค้าสำเร็จ");
       fetchProducts();
     } catch (error) {
-      message.error("Failed to restore product");
+      message.error("กู้คืนสินค้าไม่สำเร็จ");
     }
   };
 
@@ -323,7 +326,7 @@ const ProductPage = () => {
 
   const columns = [
     {
-      title: "Image",
+      title: "รูปภาพ",
       dataIndex: "image",
       key: "image",
       width: 80,
@@ -331,7 +334,7 @@ const ProductPage = () => {
         image ? (
           <Image
             src={image}
-            alt="Product"
+            alt="สินค้า"
             width={50}
             height={50}
             style={{ objectFit: "cover", borderRadius: 4 }}
@@ -339,19 +342,25 @@ const ProductPage = () => {
           />
         ) : (
           <div className="w-12 h-12 bg-border rounded flex items-center justify-center">
-            <span className="text-secondary text-xs">No Image</span>
+            <span className="text-secondary text-xs">ไม่มีรูปภาพ</span>
           </div>
         ),
     },
     {
-      title: "Sessions",
+      title: "จำนวนครั้ง",
       dataIndex: "sessions",
       key: "sessions",
       sorter: (a, b) => a.sessions - b.sessions,
       render: (sessions) => <Tag color="processing">{sessions} Sessions</Tag>,
     },
     {
-      title: "Price",
+      title: "หมวดหมู่",
+      dataIndex: "category",
+      key: "category",
+      render: getProductCategoryLabel,
+    },
+    {
+      title: "ราคา",
       dataIndex: "price",
       key: "price",
       sorter: (a, b) => a.price - b.price,
@@ -376,43 +385,43 @@ const ProductPage = () => {
       ),
     },
     {
-      title: "Duration",
+      title: "ระยะเวลา",
       dataIndex: "duration",
       key: "duration",
       sorter: (a, b) => a.duration - b.duration,
       render: (duration) => <Tag color="success">{duration} Days</Tag>,
     },
     {
-      title: "Status",
+      title: "สถานะ",
       key: "status",
       render: (record) => (
         <Space direction="vertical" size="small">
           <div>
             {record.isDeleted && (
               <Tag color="error" icon={<StopOutlined />}>
-                Deleted
+                ลบแล้ว
               </Tag>
             )}
             {!record.isDeleted && record.isActive === false && (
               <Tag color="default" icon={<EyeInvisibleOutlined />}>
-                Inactive
+                ไม่ใช้งาน
               </Tag>
             )}
             {!record.isDeleted && record.isActive !== false && (
               <Tag color="success" icon={<EyeOutlined />}>
-                Active
+                ใช้งาน
               </Tag>
             )}
           </div>
           <div>
             {record.hotSale && (
               <Tag color="warning" icon={<FireOutlined />}>
-                Hot Sale
+                ลดราคาพิเศษ
               </Tag>
             )}
             {record.isPromotionActive && (
               <Tag color="error" icon={<PercentageOutlined />}>
-                On Promotion
+                อยู่ในโปรโมชัน
               </Tag>
             )}
           </div>
@@ -420,14 +429,14 @@ const ProductPage = () => {
       ),
     },
     {
-      title: "Actions",
+      title: "จัดการ",
       key: "actions",
       width: 220,
       render: (record) => (
         <Space size="small" wrap>
           {/* Edit Button - disabled for deleted products */}
           {canEdit && !record.isDeleted && (
-            <Tooltip title="Edit Product">
+            <Tooltip title="แก้ไขสินค้า">
               <Button
                 type="primary"
                 size="small"
@@ -447,12 +456,12 @@ const ProductPage = () => {
                   : "show this product to customers"
               }?`}
               onConfirm={() => handleToggleActive(record._id, record.isActive !== false)}
-              okText="Yes"
-              cancelText="No"
+              okText="ใช่"
+              cancelText="ไม่ใช่"
             >
               <Tooltip
                 title={
-                  record.isActive !== false ? "Hide from customers" : "Show to customers"
+                  record.isActive !== false ? "ซ่อนจากลูกค้า" : "แสดงให้ลูกค้าเห็น"
                 }
               >
                 <Button
@@ -475,8 +484,8 @@ const ProductPage = () => {
                   : "add this product to"
               } hot sale?`}
               onConfirm={() => handleToggleHotSale(record._id, record.hotSale)}
-              okText="Yes"
-              cancelText="No"
+              okText="ใช่"
+              cancelText="ไม่ใช่"
             >
               <Tooltip
                 title={
@@ -496,13 +505,13 @@ const ProductPage = () => {
           {/* Restore Button - only for deleted products */}
           {canDelete && record.isDeleted && (
             <Popconfirm
-              title="Restore Product?"
-              description="Are you sure you want to restore this product?"
+              title="กู้คืนสินค้า?"
+              description="ยืนยันการกู้คืนสินค้านี้?"
               onConfirm={() => handleRestore(record._id)}
-              okText="Yes"
-              cancelText="No"
+              okText="ใช่"
+              cancelText="ไม่ใช่"
             >
-              <Tooltip title="Restore Product">
+              <Tooltip title="กู้คืนสินค้า">
                 <Button
                   size="small"
                   icon={<UndoOutlined />}
@@ -524,7 +533,7 @@ const ProductPage = () => {
       </Sider>
 
       <Layout>
-        <Header title="Product Management" />
+        <Header title="จัดการสินค้า" />
 
         <Content className="product-container p-6">
           {userRole === "Accounting" && (
@@ -557,7 +566,7 @@ const ProductPage = () => {
             <Row gutter={[16, 16]} align="middle">
               <Col xs={24} sm={12} md={6}>
                 <Input
-                  placeholder="Search sessions, price, duration..."
+                  placeholder="ค้นหาจำนวนครั้ง ราคา หรือระยะเวลา..."
                   prefix={<SearchOutlined />}
                   value={searchText}
                   onChange={handleSearch}
@@ -569,17 +578,17 @@ const ProductPage = () => {
                   <Switch
                     checked={showDeleted}
                     onChange={(checked) => setShowDeleted(checked)}
-                    checkedChildren="Deleted"
-                    unCheckedChildren="Active"
+                    checkedChildren="ลบแล้ว"
+                    unCheckedChildren="ใช้งาน"
                   />
                   <span style={{ fontSize: '12px', color: colors["secondary"] }}>
-                    {showDeleted ? 'Show Deleted' : 'Hide Deleted'}
+                    {showDeleted ? 'แสดงรายการที่ลบแล้ว' : 'ซ่อนรายการที่ลบแล้ว'}
                   </span>
                 </Space>
               </Col>
               <Col xs={24} sm={12} md={2}>
                 <Button onClick={resetFilters} type="default">
-                  Reset
+                  รีเซ็ต
                 </Button>
               </Col>
               {canCreate && (
@@ -588,7 +597,7 @@ const ProductPage = () => {
                   icon={<PlusOutlined />}
                   onClick={showCreateModal}
                 >
-                  Create Product
+                  สร้างสินค้า
                 </Button>
               )}
             </Row>
@@ -624,11 +633,11 @@ const ProductPage = () => {
               editingProduct && canDelete && (
                 <Popconfirm
                   key="delete"
-                  title="Delete Product"
-                  description="Are you sure you want to delete this product? This action cannot be undone."
+                  title="ลบสินค้า"
+                  description="ยืนยันการลบสินค้านี้? ไม่สามารถย้อนกลับได้"
                   onConfirm={handleDelete}
-                  okText="Yes"
-                  cancelText="No"
+                  okText="ใช่"
+                  cancelText="ไม่ใช่"
                   okType="danger"
                 >
                   <Button
@@ -636,12 +645,12 @@ const ProductPage = () => {
                     icon={<DeleteOutlined />}
                     loading={loading}
                   >
-                    Delete
+                    ลบ
                   </Button>
                 </Popconfirm>
               ),
               <Button key="cancel" onClick={handleCancel}>
-                Cancel
+                ยกเลิก
               </Button>,
               // Only show Save button if user has permission to create/edit
               (canCreate || canEdit) && (
@@ -661,7 +670,7 @@ const ProductPage = () => {
                 <Col span={12}>
                   <Form.Item
                     name="sessions"
-                    label="Sessions"
+                    label="จำนวนครั้ง"
                     rules={[
                       {
                         required: true,
@@ -675,7 +684,7 @@ const ProductPage = () => {
                     ]}
                   >
                     <InputNumber
-                      placeholder="Enter number of sessions"
+                      placeholder="ระบุจำนวนครั้ง"
                       style={{ width: "100%" }}
                       min={1}
                       disabled={userRole === "Accounting"}
@@ -686,7 +695,7 @@ const ProductPage = () => {
                 <Col span={12}>
                   <Form.Item
                     name="price"
-                    label="Price (฿)"
+                    label="ราคา (฿)"
                     rules={[
                       { required: true, message: "Please enter the price" },
                       {
@@ -697,7 +706,7 @@ const ProductPage = () => {
                     ]}
                   >
                     <InputNumber
-                      placeholder="Enter price"
+                      placeholder="ระบุราคา"
                       style={{ width: "100%" }}
                       min={0}
                       formatter={(value) =>
@@ -714,7 +723,7 @@ const ProductPage = () => {
                 <Col span={12}>
                   <Form.Item
                     name="duration"
-                    label="Duration (Days)"
+                    label="ระยะเวลา (วัน)"
                     rules={[
                       { required: true, message: "Please enter the duration" },
                       {
@@ -725,7 +734,7 @@ const ProductPage = () => {
                     ]}
                   >
                     <InputNumber
-                      placeholder="Enter duration in days"
+                      placeholder="ระบุระยะเวลาเป็นวัน"
                       style={{ width: "100%" }}
                       min={1}
                       disabled={userRole === "Accounting"}
@@ -735,13 +744,29 @@ const ProductPage = () => {
 
                 <Col span={12}>
                   <Form.Item
+                    name="category"
+                    label="หมวดหมู่โปรโมชั่น"
+                    rules={[{ required: true, message: "กรุณาเลือกหมวดหมู่โปรโมชั่น" }]}
+                  >
+                    <Select
+                      placeholder="เลือกหมวดหมู่โปรโมชั่น"
+                      options={PRODUCT_CATEGORIES}
+                      disabled={userRole === "Accounting"}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
                     name="hotSale"
-                    label="Hot Sale"
+                    label="ลดราคาพิเศษ"
                     valuePropName="checked"
                   >
                     <Switch
-                      checkedChildren="Hot Sale"
-                      unCheckedChildren="Regular"
+                      checkedChildren="ลดราคาพิเศษ"
+                      unCheckedChildren="ปกติ"
                       disabled={userRole === "Accounting"}
                     />
                   </Form.Item>
@@ -749,7 +774,7 @@ const ProductPage = () => {
               </Row>
 
               <div className="flex justify-between items-center mb-4">
-                <h4>Promotion Settings</h4>
+                <h4>ตั้งค่าโปรโมชัน</h4>
                 {userRole !== "Accounting" && (
                   <Button
                     danger
@@ -759,10 +784,10 @@ const ProductPage = () => {
                         promotionPrice: null,
                         promotionDateRange: null,
                       });
-                      message.success("Promotion cleared!");
+                      message.success("ล้างโปรโมชันแล้ว");
                     }}
                   >
-                    Clear Promotion
+                    ล้างโปรโมชัน
                   </Button>
                 )}
               </div>
@@ -771,7 +796,7 @@ const ProductPage = () => {
                 <Col span={12}>
                   <Form.Item
                     name="promotionPrice"
-                    label="Promotion Price (฿)"
+                    label="ราคาโปรโมชัน (฿)"
                     rules={[
                       ({ getFieldValue }) => ({
                         validator(_, value) {
@@ -799,7 +824,7 @@ const ProductPage = () => {
                     ]}
                   >
                     <InputNumber
-                      placeholder="Enter promotion price"
+                      placeholder="ระบุราคาโปรโมชัน"
                       style={{ width: "100%" }}
                       min={0}
                       formatter={(value) =>
@@ -814,7 +839,7 @@ const ProductPage = () => {
                 <Col span={12}>
                   <Form.Item
                     name="promotionDateRange"
-                    label="Promotion Period"
+                    label="ช่วงโปรโมชัน"
                     rules={[
                       ({ getFieldValue }) => ({
                         validator(_, value) {
@@ -841,7 +866,7 @@ const ProductPage = () => {
                 </Col>
               </Row>
 
-              <Form.Item name="image" label="Product Image">
+              <Form.Item name="image" label="รูปสินค้า">
                 <Upload
                   name="image"
                   listType="picture-card"
@@ -863,7 +888,7 @@ const ProductPage = () => {
                   {userRole !== "Accounting" && (
                     <div>
                       <UploadOutlined />
-                      <div style={{ marginTop: 8 }}>Upload Image</div>
+                      <div style={{ marginTop: 8 }}>อัปโหลดรูปภาพ</div>
                     </div>
                   )}
                 </Upload>

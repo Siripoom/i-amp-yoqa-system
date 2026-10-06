@@ -131,7 +131,7 @@ const Schedule = () => {
       }
     } catch (error) {
       console.error("Error fetching reservations:", error);
-      message.error("Failed to load reservations");
+      message.error("โหลดรายการจองไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -147,14 +147,14 @@ const Schedule = () => {
       setMembers(memberUsers);
     } catch (error) {
       console.error("Error fetching members:", error);
-      message.error("Failed to load members");
+      message.error("โหลดรายชื่อสมาชิกไม่สำเร็จ");
     }
   };
 
   // Handle opening reservation modal
   const handleOpenReservationModal = () => {
     if (!canManageReservations) {
-      message.warning("You don't have permission to create reservations.");
+      message.warning("คุณไม่มีสิทธิ์สร้างรายการจอง");
       return;
     }
     setSelectedClass(null);
@@ -165,7 +165,7 @@ const Schedule = () => {
   // Handle creating reservation
   const handleCreateReservation = async () => {
     if (!selectedClass || !selectedMember) {
-      message.warning("Please select both a class and a member");
+      message.warning("กรุณาเลือกคลาสและสมาชิก");
       return;
     }
 
@@ -174,7 +174,7 @@ const Schedule = () => {
         selectedClass,
         selectedMember
       );
-      message.success("Reservation created successfully!");
+      message.success("สร้างรายการจองสำเร็จ");
       setIsReservationModalOpen(false);
       setSelectedClass(null);
       setSelectedMember(null);
@@ -184,7 +184,7 @@ const Schedule = () => {
     } catch (error) {
       console.error("Error creating reservation:", error);
       message.error(
-        error.message || "Failed to create reservation. Please try again."
+        error.message || "สร้างรายการจองไม่สำเร็จ กรุณาลองอีกครั้ง"
       );
     }
   };
@@ -192,20 +192,20 @@ const Schedule = () => {
   // Handle reservation cancellation using the admin endpoint
   const handleCancelReservation = async (reservationId) => {
     if (!canManageReservations) {
-      message.warning("You don't have permission to manage reservations.");
+      message.warning("คุณไม่มีสิทธิ์จัดการรายการจอง");
       return;
     }
 
     try {
       await reservationService.adminCancelReservation(reservationId);
-      message.success("Reservation cancelled successfully");
+      message.success("ยกเลิกรายการจองสำเร็จ");
       // Refresh data
       fetchReservations();
       fetchData();
     } catch (error) {
       console.error("Error cancelling reservation:", error);
       message.error(
-        "Failed to cancel reservation: " + (error.message || "Unknown error")
+        "ยกเลิกรายการจองไม่สำเร็จ: " + (error.message || "เกิดข้อผิดพลาด")
       );
     }
   };
@@ -213,7 +213,7 @@ const Schedule = () => {
   // 📌 เปิด Modal เพื่อเพิ่มหรือแก้ไขคลาส
   const handleOpenModal = (event = null, start = null, end = null) => {
     if (canViewOnly) {
-      message.warning("You don't have permission to modify classes.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขคลาส");
       return;
     }
 
@@ -269,7 +269,7 @@ const Schedule = () => {
   // 📌 เพิ่มหรือแก้ไขคลาส
   const handleSubmit = async () => {
     if (!canCreateClass && !canEditClass) {
-      message.warning("You don't have permission to modify classes.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขคลาส");
       return;
     }
 
@@ -297,18 +297,18 @@ const Schedule = () => {
 
       if (currentEvent) {
         if (!canEditClass) {
-          message.warning("You don't have permission to edit classes.");
+          message.warning("คุณไม่มีสิทธิ์แก้ไขคลาส");
           return;
         }
         await classService.updateClass(currentEvent.id, classData);
-        message.success("Class updated successfully!");
+        message.success("แก้ไขคลาสสำเร็จ");
       } else {
         if (!canCreateClass) {
-          message.warning("You don't have permission to create classes.");
+          message.warning("คุณไม่มีสิทธิ์สร้างคลาส");
           return;
         }
         await classService.createClass(classData);
-        message.success("Class added successfully!");
+        message.success("เพิ่มคลาสสำเร็จ");
       }
 
       await handleCloseModal();
@@ -316,7 +316,7 @@ const Schedule = () => {
       message.error(
         error.code === "CLASS_GENDER_CONFLICT"
           ? `เปลี่ยนเพศของคลาสไม่ได้ เนื่องจากมีผู้จองไม่ตรงเงื่อนไข ${error.incompatible_count} คน`
-          : error.message || "Error saving class!"
+          : error.message || "บันทึกคลาสไม่สำเร็จ"
       );
       console.error(error);
     }
@@ -325,17 +325,17 @@ const Schedule = () => {
   // 📌 ลบคลาส
   const handleDeleteEvent = async () => {
     if (!canDeleteClass) {
-      message.warning("You don't have permission to delete classes.");
+      message.warning("คุณไม่มีสิทธิ์ลบคลาส");
       return;
     }
 
     try {
       await classService.deleteClass(currentEvent.id);
-      message.success("Class deleted successfully!");
+      message.success("ลบคลาสสำเร็จ");
 
       await handleCloseModal();
     } catch (error) {
-      message.error("Error deleting class!");
+      message.error("ลบคลาสไม่สำเร็จ");
       console.error(error);
     }
   };
@@ -343,7 +343,7 @@ const Schedule = () => {
   // 📌 ลากแล้วเปลี่ยนเวลา
   const handleEventDrop = async ({ event, start, end }) => {
     if (!canEditClass) {
-      message.warning("You don't have permission to reschedule classes.");
+      message.warning("คุณไม่มีสิทธิ์เปลี่ยนเวลาคลาส");
       return;
     }
 
@@ -352,11 +352,11 @@ const Schedule = () => {
         start_time: start.toISOString(),
         end_time: end.toISOString(),
       });
-      message.success("Class rescheduled successfully!");
+      message.success("เปลี่ยนเวลาคลาสสำเร็จ");
 
       await fetchData();
     } catch (error) {
-      message.error("Error updating class schedule!");
+      message.error("แก้ไขตารางคลาสไม่สำเร็จ");
       console.error(error);
     }
   };
@@ -367,31 +367,21 @@ const Schedule = () => {
 
   const getMemberBookingIssue = (member) => {
     const selectedEvent = events.find((event) => event.id === selectedClass);
-    if (!member.gender || !member.address?.trim()) return "profile incomplete";
-    if (typeof member.has_medical_condition !== "boolean") {
-      return "profile incomplete";
-    }
-    if (
-      member.has_medical_condition &&
-      !member.medical_condition_details?.trim()
-    ) {
-      return "profile incomplete";
-    }
     if (!member.remaining_session || member.remaining_session <= 0) {
-      return "no sessions";
+      return "จำนวนครั้งคงเหลือไม่พอ";
     }
     if (
       member.sessions_expiry_date &&
       moment(member.sessions_expiry_date).isBefore(moment())
     ) {
-      return "package expired";
+      return "แพ็กเกจหมดอายุ";
     }
     if (
       selectedEvent &&
       selectedEvent.allowed_gender !== "all" &&
       selectedEvent.allowed_gender !== member.gender
     ) {
-      return "gender not allowed";
+      return "เพศไม่ตรงกับเงื่อนไขคลาส";
     }
     return null;
   };
@@ -429,7 +419,7 @@ const Schedule = () => {
   // 📌 ทำซ้ำคลาสตามวันที่ที่เลือก
   const handleDuplicateEvent = async () => {
     if (!canDuplicateClass) {
-      message.warning("You don't have permission to duplicate classes.");
+      message.warning("คุณไม่มีสิทธิ์ทำซ้ำคลาส");
       return;
     }
 
@@ -604,7 +594,7 @@ const Schedule = () => {
     const data = getHistoricalAttendanceDataSource();
 
     if (data.length === 0) {
-      message.warning("No data to export");
+      message.warning("ไม่มีข้อมูลสำหรับส่งออก");
       return;
     }
 
@@ -633,18 +623,18 @@ const Schedule = () => {
     link.click();
     document.body.removeChild(link);
 
-    message.success("Data exported successfully!");
+    message.success("ส่งออกข้อมูลสำเร็จ");
   };
 
   const reservationsColumns = [
     {
-      title: "Class",
+      title: "คลาส",
       dataIndex: "className",
       key: "className",
       sorter: (a, b) => a.className.localeCompare(b.className),
     },
     {
-      title: "Date",
+      title: "วันที่",
       dataIndex: "date",
       key: "date",
       sorter: (a, b) => {
@@ -653,42 +643,42 @@ const Schedule = () => {
       },
     },
     {
-      title: "Time",
+      title: "เวลา",
       key: "time",
       render: (_, record) => `${record.startTime} - ${record.endTime}`,
     },
     {
-      title: "Instructor",
+      title: "ครูผู้สอน",
       dataIndex: "instructor",
       key: "instructor",
       sorter: (a, b) => a.instructor.localeCompare(b.instructor),
     },
     {
-      title: "Member",
+      title: "สมาชิก",
       dataIndex: "userName",
       key: "userName",
       sorter: (a, b) => a.userName.localeCompare(b.userName),
     },
     {
-      title: "Status",
+      title: "สถานะ",
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Tag color={status === "Reserved" ? "green" : "red"}>{status}</Tag>
+        <Tag color={status === "Reserved" ? "green" : "red"}>{status === "Reserved" ? "จองแล้ว" : "ยกเลิกแล้ว"}</Tag>
       ),
     },
     {
-      title: "Action",
+      title: "จัดการ",
       key: "action",
       render: (_, record) =>
         canManageReservations ? (
           <Popconfirm
-            title="Cancel this reservation?"
-            description="Are you sure you want to cancel this reservation? This will return the session to the member."
+            title="ยกเลิกรายการจองนี้?"
+            description="ยืนยันการยกเลิก? ระบบจะคืนจำนวนครั้งให้สมาชิก"
             icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
             onConfirm={() => handleCancelReservation(record.reservationId)}
-            okText="Yes"
-            cancelText="No"
+            okText="ยืนยัน"
+            cancelText="ไม่ใช่"
           >
             <Button
               type="text"
@@ -696,11 +686,11 @@ const Schedule = () => {
               icon={<CloseCircleOutlined />}
               disabled={record.status !== "Reserved"}
             >
-              Cancel
+              ยกเลิก
             </Button>
           </Popconfirm>
         ) : (
-          <Text type="secondary">View Only</Text>
+          <Text type="secondary">ดูได้อย่างเดียว</Text>
         )
     },
   ];
@@ -708,7 +698,7 @@ const Schedule = () => {
   // Columns for historical attendance table
   const historicalColumns = [
     {
-      title: "Date",
+      title: "วันที่",
       dataIndex: "date",
       key: "date",
       sorter: (a, b) => {
@@ -718,35 +708,35 @@ const Schedule = () => {
       defaultSortOrder: "descend",
     },
     {
-      title: "Class",
+      title: "คลาส",
       dataIndex: "className",
       key: "className",
       sorter: (a, b) => a.className.localeCompare(b.className),
     },
     {
-      title: "Time",
+      title: "เวลา",
       key: "time",
       render: (_, record) => `${record.startTime} - ${record.endTime}`,
     },
     {
-      title: "Instructor",
+      title: "ครูผู้สอน",
       dataIndex: "instructor",
       key: "instructor",
       sorter: (a, b) => a.instructor.localeCompare(b.instructor),
     },
     {
-      title: "Member",
+      title: "สมาชิก",
       dataIndex: "userName",
       key: "userName",
       sorter: (a, b) => a.userName.localeCompare(b.userName),
     },
     {
-      title: "Status",
+      title: "สถานะ",
       dataIndex: "status",
       key: "status",
       render: (status) => (
         <Tag color={status === "Reserved" ? "blue" : status === "Cancelled" ? "red" : "default"}>
-          {status}
+          {status === "Reserved" ? "จองแล้ว" : status === "Cancelled" ? "ยกเลิกแล้ว" : status}
         </Tag>
       ),
     },
@@ -759,11 +749,11 @@ const Schedule = () => {
       </Sider>
 
       <Layout>
-        <Header title="Schedule" />
+        <Header title="ตารางเรียน" />
 
         <Content className="course-container">
           <div className="course-header">
-            <h2>Schedule</h2>
+            <h2>ตารางเรียน</h2>
             {canViewOnly && (
               <div style={{
                 marginTop: "8px",
@@ -774,7 +764,7 @@ const Schedule = () => {
                 color: colors["warning"]
               }}>
                 <Text>
-                  <strong>Note:</strong> You have view-only access to this page. You can view class schedules and reservations but cannot make any modifications.
+                  <strong>หมายเหตุ:</strong> คุณดูตารางเรียนและรายการจองได้ แต่ไม่สามารถแก้ไขข้อมูลได้
                 </Text>
               </div>
             )}
@@ -782,6 +772,7 @@ const Schedule = () => {
           <div style={{ padding: "16px" }}>
             <DragAndDropCalendar
               localizer={localizer}
+              messages={{ today: "วันนี้", previous: "ก่อนหน้า", next: "ถัดไป", month: "เดือน", week: "สัปดาห์", day: "วัน", agenda: "กำหนดการ", date: "วันที่", time: "เวลา", event: "คลาส", noEventsInRange: "ไม่มีคลาสในช่วงเวลานี้", showMore: (total) => `อีก ${total} คลาส` }}
               events={events}
               startAccessor="start"
               endAccessor="end"
@@ -792,19 +783,19 @@ const Schedule = () => {
                 if (canViewOnly) {
                   // For Accounting, show event details in read-only mode
                   Modal.info({
-                    title: `Class: ${event.title}`,
+                    title: `คลาส: ${event.title}`,
                     content: (
                       <div>
-                        <p><strong>Instructor:</strong> {event.instructor}</p>
-                        <p><strong>Room:</strong> {event.room_number}</p>
-                        <p><strong>Start:</strong> {dayjs(event.start).format("DD/MM/YYYY HH:mm")}</p>
-                        <p><strong>End:</strong> {dayjs(event.end).format("DD/MM/YYYY HH:mm")}</p>
-                        <p><strong>Description:</strong> {event.description}</p>
-                        {event.passcode && <p><strong>Passcode:</strong> {event.passcode}</p>}
-                        {event.zoom_link && <p><strong>Zoom Link:</strong> {event.zoom_link}</p>}
+                        <p><strong>ครูผู้สอน:</strong> {event.instructor}</p>
+                        <p><strong>ห้อง:</strong> {event.room_number}</p>
+                        <p><strong>เริ่ม:</strong> {dayjs(event.start).format("DD/MM/YYYY HH:mm")}</p>
+                        <p><strong>สิ้นสุด:</strong> {dayjs(event.end).format("DD/MM/YYYY HH:mm")}</p>
+                        <p><strong>รายละเอียด:</strong> {event.description}</p>
+                        {event.passcode && <p><strong>รหัสผ่าน:</strong> {event.passcode}</p>}
+                        {event.zoom_link && <p><strong>ลิงก์ Zoom:</strong> {event.zoom_link}</p>}
                       </div>
                     ),
-                    okText: "Close"
+                    okText: "ปิด"
                   });
                 } else {
                   handleOpenModal(event);
@@ -824,7 +815,7 @@ const Schedule = () => {
 
           {/* Reservations Management with Tabs */}
           <div style={{ padding: "16px", marginTop: "20px" }}>
-            <Title level={4}>Reservation Management</Title>
+            <Title level={4}>จัดการรายการจอง</Title>
 
             <Tabs
               activeKey={activeTab}
@@ -835,7 +826,7 @@ const Schedule = () => {
                   label: (
                     <span>
                       <CalendarOutlined />
-                      Upcoming Reservations
+                      รายการจองที่กำลังจะมาถึง
                     </span>
                   ),
                   children: (
@@ -849,7 +840,7 @@ const Schedule = () => {
                         }}
                       >
                         <Input
-                          placeholder="Search by member name"
+                          placeholder="ค้นหาชื่อสมาชิก"
                           value={searchText}
                           onChange={(e) => setSearchText(e.target.value)}
                           style={{ width: 300 }}
@@ -862,7 +853,7 @@ const Schedule = () => {
                             type="primary"
                             icon={<ReloadOutlined />}
                           >
-                            Refresh
+                            รีเฟรช
                           </Button>
                         )}
                       </div>
@@ -882,7 +873,7 @@ const Schedule = () => {
                   label: (
                     <span>
                       <CalendarOutlined />
-                      Historical Attendance
+                      ประวัติการเข้าร่วมคลาส
                     </span>
                   ),
                   children: (
@@ -903,11 +894,11 @@ const Schedule = () => {
                                 value={dateRange}
                                 onChange={setDateRange}
                                 format="DD/MM/YYYY"
-                                placeholder={["Start Date", "End Date"]}
+                                placeholder={["วันที่เริ่มต้น", "วันที่สิ้นสุด"]}
                                 style={{ width: 280 }}
                               />
                               <Input
-                                placeholder="Search by member name"
+                                placeholder="ค้นหาชื่อสมาชิก"
                                 value={historicalSearchText}
                                 onChange={(e) => setHistoricalSearchText(e.target.value)}
                                 style={{ width: 250 }}
@@ -920,7 +911,7 @@ const Schedule = () => {
                                   setHistoricalSearchText("");
                                 }}
                               >
-                                Clear Filters
+                                ล้างตัวกรอง
                               </Button>
                             </Space>
                             <Button
@@ -928,11 +919,11 @@ const Schedule = () => {
                               icon={<DownloadOutlined />}
                               onClick={exportHistoricalData}
                             >
-                              Export to CSV
+                              ส่งออก CSV
                             </Button>
                           </div>
                           <Text type="secondary">
-                            Showing {getHistoricalAttendanceDataSource().length} past attendance records
+                            แสดงประวัติการเข้าร่วม {getHistoricalAttendanceDataSource().length} รายการ
                           </Text>
                         </Space>
                       </Card>
@@ -942,7 +933,7 @@ const Schedule = () => {
                         loading={loading}
                         pagination={{
                           pageSize: 10,
-                          showTotal: (total) => `Total ${total} records`,
+                          showTotal: (total) => `ทั้งหมด ${total} รายการ`,
                         }}
                         size="middle"
                         scroll={{ x: "max-content" }}
@@ -965,13 +956,13 @@ const Schedule = () => {
                   marginBottom: "16px",
                 }}
               >
-                <Title level={4}>Create Reservation for Member</Title>
+                <Title level={4}>สร้างรายการจองให้สมาชิก</Title>
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={handleOpenReservationModal}
                 >
-                  Create Reservation
+                  สร้างรายการจอง
                 </Button>
               </div>
             </div>
@@ -981,7 +972,7 @@ const Schedule = () => {
 
       {/* Modal for Creating Reservation */}
       <Modal
-        title="Create Reservation for Member"
+        title="สร้างรายการจองให้สมาชิก"
         open={isReservationModalOpen}
         onCancel={() => {
           setIsReservationModalOpen(false);
@@ -997,7 +988,7 @@ const Schedule = () => {
               setSelectedMember(null);
             }}
           >
-            Cancel
+            ยกเลิก
           </Button>,
           <Button
             key="submit"
@@ -1005,22 +996,21 @@ const Schedule = () => {
             onClick={handleCreateReservation}
             disabled={!selectedClass || !selectedMember}
           >
-            Create Reservation
+            สร้างรายการจอง
           </Button>,
         ]}
       >
         <div style={{ marginBottom: "16px" }}>
           <Text type="secondary">
-            Select a class and a member to create a reservation on their behalf.
-            The member must have remaining sessions available.
+            เลือกคลาสและสมาชิกที่ต้องการจอง สมาชิกต้องมีจำนวนครั้งคงเหลือ
           </Text>
         </div>
 
         <div style={{ marginBottom: "16px" }}>
-          <Title level={5}>Select Class</Title>
+          <Title level={5}>เลือกคลาส</Title>
           <Select
             style={{ width: "100%" }}
-            placeholder="Select a class"
+            placeholder="เลือกคลาส"
             value={selectedClass}
             onChange={(value) => {
               setSelectedClass(value);
@@ -1053,10 +1043,10 @@ const Schedule = () => {
         </div>
 
         <div>
-          <Title level={5}>Select Member</Title>
+          <Title level={5}>เลือกสมาชิก</Title>
           <Select
             style={{ width: "100%" }}
-            placeholder="Select a member"
+            placeholder="เลือกสมาชิก"
             value={selectedMember}
             onChange={setSelectedMember}
             showSearch
@@ -1071,7 +1061,7 @@ const Schedule = () => {
                   member.nickname
                     ? `${member.nickname} ${member.first_name}`
                     : member.first_name
-                } ${member.last_name} (${member.remaining_session || 0} sessions)${
+                } ${member.last_name} (คงเหลือ ${member.remaining_session || 0} ครั้ง)${
                   issue ? ` - ${issue}` : ""
                 }`,
                 value: member._id,
@@ -1085,9 +1075,9 @@ const Schedule = () => {
                 {(() => {
                   const member = members.find((m) => m._id === selectedMember);
                   if (member) {
-                    return `Remaining sessions: ${member.remaining_session}${
+                    return `จำนวนครั้งคงเหลือ: ${member.remaining_session}${
                       member.sessions_expiry_date
-                        ? ` | Expires: ${moment(
+                        ? ` | หมดอายุ: ${moment(
                             member.sessions_expiry_date
                           ).format("DD/MM/YYYY")}`
                         : ""
@@ -1107,8 +1097,8 @@ const Schedule = () => {
           isDuplicating
             ? "ทำซ้ำคลาส"
             : currentEvent
-            ? "Edit Class"
-            : "Add Class"
+            ? "แก้ไขคลาส"
+            : "เพิ่มคลาส"
         }
         open={isModalOpen}
         onCancel={handleCloseModal}
@@ -1124,7 +1114,7 @@ const Schedule = () => {
           ),
           currentEvent && !isDuplicating && canDeleteClass && (
             <Button key="delete" danger onClick={handleDeleteEvent}>
-              Delete
+              ลบ
             </Button>
           ),
           <Button key="cancel" onClick={handleCloseModal}>
@@ -1226,32 +1216,32 @@ const Schedule = () => {
           <Form form={form} layout="vertical">
             {/* ส่วนเลือกประเภทอาจารย์ */}
             <Form.Item
-              label="Instructor Type"
+              label="ประเภทครูผู้สอน"
               name="instructor_type"
               rules={[
-                { required: true, message: "Please select instructor type" },
+                { required: true, message: "กรุณาเลือกประเภทครูผู้สอน" },
               ]}
             >
               <Select
-                placeholder="Select instructor type"
+                placeholder="เลือกประเภทครูผู้สอน"
                 onChange={(value) => {
                   setInstructorType(value);
                   form.setFieldsValue({ instructor: "" });
                 }}
               >
-                <Select.Option value="internal">Internal Teacher</Select.Option>
-                <Select.Option value="guest">Guest Teacher</Select.Option>
+                <Select.Option value="internal">ครูประจำ</Select.Option>
+                <Select.Option value="guest">ครูรับเชิญ</Select.Option>
               </Select>
             </Form.Item>
 
             {/* ส่วนเลือกอาจารย์ */}
             {instructorType === "internal" ? (
               <Form.Item
-                label="Teacher"
+                label="ครูผู้สอน"
                 name="instructor"
-                rules={[{ required: true, message: "Please select a teacher" }]}
+                rules={[{ required: true, message: "กรุณาเลือกครูผู้สอน" }]}
               >
-                <Select placeholder="Select a teacher">
+                <Select placeholder="เลือกครูผู้สอน">
                   {users.map((user) => (
                     <Select.Option
                       key={user._id}
@@ -1264,29 +1254,29 @@ const Schedule = () => {
               </Form.Item>
             ) : instructorType === "guest" ? (
               <Form.Item
-                label="Teacher"
+                label="ครูผู้สอน"
                 name="instructor"
                 rules={[
                   {
                     required: true,
-                    message: "Please enter a guest teacher name",
+                    message: "กรุณาระบุชื่อครูรับเชิญ",
                   },
                 ]}
               >
-                <Input placeholder="Enter guest teacher's name" />
+                <Input placeholder="ระบุชื่อครูรับเชิญ" />
               </Form.Item>
             ) : null}
 
             {/* ส่วนอื่นๆ ของฟอร์ม */}
             <Form.Item
-              label="Class Title"
+              label="ชื่อคลาส"
               name="title"
               rules={[
-                { required: true, message: "Please select a class title" },
+                { required: true, message: "กรุณาเลือกชื่อคลาส" },
               ]}
             >
               <Select
-                placeholder="Select a class"
+                placeholder="เลือกคลาส"
                 onChange={(value) => {
                   const selectedCourse = courses.find(
                     (course) => course.course_name === value
@@ -1306,8 +1296,8 @@ const Schedule = () => {
               </Select>
             </Form.Item>
 
-            <Form.Item label="Description" name="description">
-              <Input.TextArea rows={2} placeholder="Class description" />
+            <Form.Item label="รายละเอียด" name="description">
+              <Input.TextArea rows={2} placeholder="รายละเอียดคลาส" />
             </Form.Item>
 
             <Form.Item
@@ -1323,19 +1313,19 @@ const Schedule = () => {
             </Form.Item>
 
             <Form.Item label="📌 Room Number" name="room_number">
-              <Input placeholder="Enter Room Number" />
+              <Input placeholder="ระบุหมายเลขห้อง" />
             </Form.Item>
 
             <Form.Item label="🔑 Passcode" name="passcode">
-              <Input placeholder="Enter Passcode" />
+              <Input placeholder="ระบุรหัสผ่าน" />
             </Form.Item>
 
             <Form.Item label="🔗 Zoom Link" name="zoom_link">
-              <Input placeholder="Enter Zoom Link" />
+              <Input placeholder="ระบุลิงก์ Zoom" />
             </Form.Item>
 
             <Form.Item
-              label="Start Time"
+              label="เวลาเริ่ม"
               name="start_time"
               rules={[{ required: true }]}
             >
@@ -1343,14 +1333,14 @@ const Schedule = () => {
             </Form.Item>
 
             <Form.Item
-              label="End Time"
+              label="เวลาสิ้นสุด"
               name="end_time"
               rules={[{ required: true }]}
             >
               <Input type="datetime-local" />
             </Form.Item>
             <Form.Item
-              label="Color"
+              label="สี"
               name="color"
               getValueFromEvent={(color) =>
                 color.toHexString().replace("#", "")

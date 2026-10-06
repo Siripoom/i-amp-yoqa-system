@@ -84,7 +84,7 @@ const Myplane = () => {
 
   // Format expiration date with relative time
   const formatExpiryDate = (date) => {
-    if (!date) return "Not set";
+    if (!date) return "ยังไม่ได้ระบุ";
 
     const expiryDate = moment(date);
     const now = moment();
@@ -116,20 +116,20 @@ const Myplane = () => {
     const { remaining_session, sessions_expiry_date } = userInfo;
 
     if (remaining_session <= 0) {
-      return <Tag color="error">Inactive</Tag>;
+      return <Tag color="error">ไม่ใช้งาน</Tag>;
     }
 
     if (!sessions_expiry_date) {
-      return <Tag color="success">Active</Tag>;
+      return <Tag color="success">ใช้งาน</Tag>;
     }
 
     const expiryDate = moment(sessions_expiry_date);
     const now = moment();
 
     if (expiryDate.isBefore(now)) {
-      return <Tag color="error">Expired</Tag>;
+      return <Tag color="error">หมดอายุ</Tag>;
     } else {
-      return <Tag color="success">Active</Tag>;
+      return <Tag color="success">ใช้งาน</Tag>;
     }
   };
 
@@ -175,26 +175,26 @@ const Myplane = () => {
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
           <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
             <Title level={4} className="text-text font-semibold">
-              Manage My Account
+              จัดการบัญชีของฉัน
             </Title>
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
                 className="text-secondary cursor-pointer block"
               >
-                My Profile
+                โปรไฟล์ของฉัน
               </Link>
               <Link
                 to="/my-plane"
                 className="text-primary font-semibold cursor-pointer block"
               >
-                My Plane
+                แพ็กเกจของฉัน
               </Link>
               <Link
                 to="/my-orders"
                 className="text-secondary cursor-pointer block"
               >
-                My Orders
+                คำสั่งซื้อของฉัน
               </Link>
             </div>
           </Card>
@@ -204,25 +204,25 @@ const Myplane = () => {
               <div className="mb-6 bg-background p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <Title level={4} className="mb-0">
-                    Subscription Status
+                    สถานะแพ็กเกจ
                   </Title>
                   {getSubscriptionStatus()}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p>
-                      <strong>Remaining Sessions:</strong>{" "}
+                      <strong>จำนวนครั้งคงเหลือ:</strong>{" "}
                       {userInfo.remaining_session || 0}
                     </p>
                     <p>
-                      <strong>Expiration Date:</strong>{" "}
+                      <strong>วันหมดอายุ:</strong>{" "}
                       {formatExpiryDate(userInfo.sessions_expiry_date)}
                     </p>
                   </div>
                   <div className="text-right">
                     <Link to="/course">
                       <Button type="primary" className="bg-primary">
-                        Buy More Sessions
+                        ซื้อจำนวนครั้งเพิ่ม
                       </Button>
                     </Link>
                   </div>
@@ -234,8 +234,8 @@ const Myplane = () => {
                     "days"
                   ) <= 7 && (
                     <Alert
-                      message="Expiration Warning"
-                      description="Your sessions will expire soon. Please consider purchasing a new package."
+                      message="แจ้งเตือนวันหมดอายุ"
+                      description="จำนวนครั้งของคุณใกล้หมดอายุ กรุณาพิจารณาซื้อแพ็กเกจใหม่"
                       type="warning"
                       showIcon
                       className="mt-3"
@@ -245,8 +245,8 @@ const Myplane = () => {
                 {userInfo.sessions_expiry_date &&
                   moment(userInfo.sessions_expiry_date).isBefore(moment()) && (
                     <Alert
-                      message="Sessions Expired"
-                      description="Your sessions have expired. Please purchase a new package to continue booking classes."
+                      message="แพ็กเกจหมดอายุ"
+                      description="แพ็กเกจของคุณหมดอายุแล้ว กรุณาซื้อแพ็กเกจใหม่เพื่อจองคลาสต่อ"
                       type="error"
                       showIcon
                       className="mt-3"
@@ -257,11 +257,11 @@ const Myplane = () => {
 
             <div className="flex justify-between items-center mb-4">
               <Title level={3} className="text-primary mb-0">
-                My Booked Classes
+                คลาสที่จองไว้
               </Title>
               <Link to="/booking">
                 <Button type="primary" className="bg-primary">
-                  Book More Classes
+                  จองคลาสเพิ่มเติม
                 </Button>
               </Link>
             </div>
@@ -307,19 +307,19 @@ const Myplane = () => {
                         }
                       >
                         <p>
-                          <strong>Instructor:</strong> {classItem.instructor}
+                          <strong>ครูผู้สอน:</strong> {classItem.instructor}
                         </p>
                         <p>
-                          <strong>Class Date:</strong>{" "}
+                          <strong>วันที่เรียน:</strong>{" "}
                           {moment(classItem.date).format("MMMM Do YYYY, h:mm a")}
                         </p>
                         <p>
-                          <strong>Booked Date:</strong>{" "}
+                          <strong>วันที่จอง:</strong>{" "}
                           {moment(classItem.reservationDate).format("MMMM Do YYYY")}
                         </p>
                         {classItem.zoomLink && (
                           <p>
-                            <strong>Zoom Link:</strong>{" "}
+                            <strong>ลิงก์ Zoom:</strong>{" "}
                             <a
                               href={classItem.zoomLink}
                               target="_blank"
@@ -327,13 +327,13 @@ const Myplane = () => {
                               className="text-primary hover:text-primary"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              Join Class
+                              เข้าร่วมคลาส
                             </a>
                           </p>
                         )}
                         {classItem.roomNumber && (
                           <p>
-                            <strong>Room:</strong> {classItem.roomNumber}
+                            <strong>ห้อง:</strong> {classItem.roomNumber}
                           </p>
                         )}
                         {/* <div className="mt-4">
@@ -344,7 +344,7 @@ const Myplane = () => {
                               handleCancelReservation(classItem.reservationId, classItem.title);
                             }}
                           >
-                            Cancel Reservation
+                            ยกเลิกการจอง
                           </Button>
                         </div> */}
                       </Card>

@@ -28,7 +28,7 @@ const Class = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching yoga classes:", error);
-      message.error("Failed to load yoga classes. Please try again later.");
+      message.error("โหลดคลาสโยคะไม่สำเร็จ กรุณาลองอีกครั้งภายหลัง");
       setLoading(false);
     }
   };
@@ -52,13 +52,13 @@ const Class = () => {
           {/* เพิ่ม padding-bottom เพื่อไม่ให้ติด footer */}
           <div className="container mx-auto px-4 py-10">
             <Title level={2} className="text-center text-primary mb-8">
-              CLASS YOGA
+              คลาสโยคะ
             </Title>
 
             <Row gutter={[16, 24]} justify="center">
               {loading ? (
                 <Col span={24} className="text-center py-12">
-                  <div className="loading">Loading...</div>
+                  <div className="loading">กำลังโหลด...</div>
                 </Col>
               ) : (
                 yogaClasses.map((yogaClass, index) => (

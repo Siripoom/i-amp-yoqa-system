@@ -61,7 +61,7 @@ const Checkout = () => {
 
       if (!userId) {
         console.error("❌ No user_id found in localStorage");
-        message.error("No user ID found. Please login again.");
+        message.error("ไม่พบรหัสผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
         navigate("/auth/signin");
         return;
       }
@@ -103,7 +103,7 @@ const Checkout = () => {
         }
       } else {
         console.error("❌ No user data in response:", response);
-        message.error("User data not found. Please check your account.");
+        message.error("ไม่พบข้อมูลผู้ใช้ กรุณาตรวจสอบบัญชี");
       }
     } catch (error) {
       console.error("💥 Error fetching user data:", error);
@@ -191,17 +191,17 @@ const Checkout = () => {
           if (Array.isArray(response.data) && response.data.length > 0) {
             setQr(response.data[0].image);
           } else {
-            message.error("QR code data not found");
+            message.error("ไม่พบข้อมูลคิวอาร์โค้ด");
           }
         } catch (error) {
-          message.error("Failed to load QR code");
+          message.error("โหลดคิวอาร์โค้ดไม่สำเร็จ");
           console.error(error);
         }
       };
 
       fetchQrCode();
     } else {
-      message.error("No item selected. Redirecting...");
+      message.error("ยังไม่ได้เลือกรายการ กำลังเปลี่ยนหน้า...");
       navigate("/course");
     }
   }, [location, navigate]);
@@ -212,7 +212,7 @@ const Checkout = () => {
 
     // ตรวจสอบสต็อกสำหรับ goods
     if (orderType === "goods" && newQuantity > item.stock) {
-      message.warning(`Only ${item.stock} items available in stock`);
+      message.warning(`สินค้าในคลังเหลือเพียง ${item.stock} ชิ้น`);
       setQuantity(item.stock);
       return;
     }
@@ -271,7 +271,7 @@ const Checkout = () => {
       // Validate goods specific requirements
       if (orderType === "goods") {
         if (item.stock < quantity) {
-          message.error("Insufficient stock available");
+          message.error("สินค้าในคลังไม่เพียงพอ");
           return;
         }
 
@@ -399,7 +399,7 @@ const Checkout = () => {
 
             {item.hotSale && (
               <Tag color="error" icon={<FireOutlined />} size="small">
-                Hot Sale
+                ลดราคาพิเศษ
               </Tag>
             )}
           </div>
@@ -538,7 +538,7 @@ const Checkout = () => {
       <div className="container mx-auto py-12 px-6">
         <Title level={3} className="mb-6">
           Billing Details -{" "}
-          {orderType === "product" ? "Course Order" : "Goods Order"}
+          {orderType === "product" ? "คำสั่งซื้อคอร์ส" : "คำสั่งซื้อสินค้า"}
         </Title>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -547,7 +547,7 @@ const Checkout = () => {
             <Form form={form} layout="vertical">
               {/* Payment Section */}
               <div className="bg-surface p-4 rounded-md mb-6">
-                <Title level={4}>Payment Details</Title>
+                <Title level={4}>รายละเอียดการชำระเงิน</Title>
                 <Text>ชำระค่าบริการช่องทางอื่น ๆ ติดต่อได้ที่ไลน์ {brand.lineId}</Text>
               </div>
 
@@ -556,7 +556,7 @@ const Checkout = () => {
                 {qr && (
                   <img
                     src={qr}
-                    alt="QR Code"
+                    alt="คิวอาร์โค้ด"
                     className="w-64 h-auto rounded-md"
                   />
                 )}
@@ -619,13 +619,13 @@ const Checkout = () => {
               {/* Upload Payment Slip */}
               <Form.Item
                 name="paymentSlip"
-                label="Upload Payment Slip"
+                label="อัปโหลดสลิปชำระเงิน"
                 valuePropName="fileList"
                 getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 rules={[
                   {
                     required: true,
-                    message: "Please upload your payment slip",
+                    message: "กรุณาอัปโหลดสลิปชำระเงิน",
                   },
                 ]}
               >
@@ -635,7 +635,7 @@ const Checkout = () => {
                   beforeUpload={() => false}
                   maxCount={1}
                 >
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                  <Button icon={<UploadOutlined />}>คลิกเพื่ออัปโหลด</Button>
                 </Upload>
               </Form.Item>
 
@@ -651,7 +651,7 @@ const Checkout = () => {
                     (orderType === "goods" && item && item.stock < quantity)
                   }
                 >
-                  {orderType === "product" ? "Buy Course" : "Buy Goods"}
+                  {orderType === "product" ? "ซื้อคอร์ส" : "ซื้อสินค้า"}
                 </Button>
               </Form.Item>
             </Form>
@@ -661,7 +661,7 @@ const Checkout = () => {
           {item && (
             <div className="flex-1 lg:w-1/3 bg-white p-6 rounded-md shadow-md">
               <Title level={4} className="mb-4">
-                Order Summary
+                สรุปคำสั่งซื้อ
               </Title>
 
               <div className="flex items-center gap-4 mb-4">

@@ -17,7 +17,7 @@ const SignIn = () => {
       liff.login();
     } catch (error) {
       console.error("LIFF login failed:", error);
-      message.error("LIFF login failed. Please try again.");
+      message.error("เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองอีกครั้ง");
     }
   };
 
@@ -57,30 +57,30 @@ const SignIn = () => {
       if (error.response) {
         // Server responded with error status
         const statusCode = error.response.status;
-        const errorMessage = error.response.data?.message || "Login failed";
+        const errorMessage = error.response.data?.message || "เข้าสู่ระบบไม่สำเร็จ";
 
         switch (statusCode) {
           case 404:
-            message.error("Email not found. Please check your email or sign up for an account.");
+            message.error("ไม่พบอีเมล กรุณาตรวจสอบหรือสมัครสมาชิก");
             break;
           case 401:
-            message.error("Incorrect password. Please try again.");
+            message.error("รหัสผ่านไม่ถูกต้อง กรุณาลองอีกครั้ง");
             break;
           case 400:
-            message.error("Invalid email or password format. Please check your credentials.");
+            message.error("รูปแบบอีเมลหรือรหัสผ่านไม่ถูกต้อง");
             break;
           case 500:
-            message.error("Server error. Please try again later.");
+            message.error("เซิร์ฟเวอร์ขัดข้อง กรุณาลองอีกครั้งภายหลัง");
             break;
           default:
-            message.error(`Login failed: ${errorMessage}`);
+            message.error(`เข้าสู่ระบบไม่สำเร็จ: ${errorMessage}`);
         }
       } else if (error.request) {
         // Network error
-        message.error("Unable to connect to server. Please check your internet connection.");
+        message.error("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต");
       } else {
         // Other error
-        message.error("An unexpected error occurred. Please try again.");
+        message.error("เกิดข้อผิดพลาด กรุณาลองอีกครั้ง");
       }
     }
   };
@@ -100,30 +100,30 @@ const SignIn = () => {
         className="bg-white p-8 rounded-2xl shadow-lg w-96"
       >
         <Title level={2} className="text-center text-primary font-bold">
-          Sign-In
+          เข้าสู่ระบบ
         </Title>
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="username"
-            rules={[{ required: true, message: "Please enter your username!" }]}
+            rules={[{ required: true, message: "กรุณาระบุชื่อผู้ใช้" }]}
           >
-            <Input prefix={<UserOutlined />} placeholder="Email" size="large" />
+            <Input prefix={<UserOutlined />} placeholder="อีเมล" size="large" />
           </Form.Item>
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: "Please enter your password!" }]}
+            rules={[{ required: true, message: "กรุณาระบุรหัสผ่าน" }]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Password"
+              placeholder="รหัสผ่าน"
               size="large"
             />
           </Form.Item>
 
           {/* <div className="flex justify-between items-center mb-4">
-            <Checkbox>Remember Me</Checkbox>
-            <Link className="text-primary">Forget Password</Link>
+            <Checkbox>จดจำฉัน</Checkbox>
+            <Link className="text-primary">ลืมรหัสผ่าน</Link>
           </div> */}
 
           <Button
@@ -155,7 +155,7 @@ const SignIn = () => {
               alignItems: "center", // Centering icon and text vertically
             }}
           >
-            Login with LINE
+            เข้าสู่ระบบด้วย LINE
           </Button>
         </div>
 
@@ -163,14 +163,14 @@ const SignIn = () => {
         <div className="text-center mt-4">
           <Text>Don&apos;t have an account?</Text>{" "}
           <Link to="/auth/signup" className="text-primary">
-            Sign Up
+            สมัครสมาชิก
           </Link>
         </div>
 
         {/* Forgot password link */}
         <div className="text-center mt-2">
           <Link to="/auth/reset-password" className="text-secondary hover:text-primary">
-            Forgot Password?
+            ลืมรหัสผ่าน?
           </Link>
         </div>
       </motion.div>

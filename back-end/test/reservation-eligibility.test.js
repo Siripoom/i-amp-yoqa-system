@@ -37,6 +37,7 @@ function fixture({ userOverrides = {}, classOverrides = {} } = {}) {
   class Reservation {
     constructor(data) { Object.assign(this, data); }
     async save() { events.push("reservation-save"); }
+    static async findOne() { return null; }
   }
 
   const filename = path.resolve(
@@ -81,6 +82,27 @@ test("incomplete member profile is rejected before booking mutations", async () 
   assert.equal(f.res.body.code, "PROFILE_INCOMPLETE");
   assert.deepEqual(f.events, []);
   assert.equal(f.user.remaining_session, 2);
+});
+
+test("admin can book a member with an incomplete profile for an all-gender class", async () => {
+  const f = fixture({
+    userOverrides: { gender: undefined, address: "", has_medical_condition: undefined },
+    classOverrides: { allowed_gender: "all" },
+  });
+  f.req.user.role = "Admin";
+  await f.controller.adminCreateReservation(f.req, f.res);
+  assert.equal(f.res.statusCode, 201);
+  assert.equal(f.user.remaining_session, 1);
+  assert.deepEqual(f.events, ["user-save", "class-save", "reservation-save"]);
+});
+
+test("admin cannot book a member without gender for a gender-restricted class", async () => {
+  const f = fixture({ userOverrides: { gender: undefined } });
+  f.req.user.role = "Admin";
+  await f.controller.adminCreateReservation(f.req, f.res);
+  assert.equal(f.res.statusCode, 403);
+  assert.equal(f.res.body.code, "GENDER_NOT_ALLOWED");
+  assert.deepEqual(f.events, []);
 });
 
 test("gender mismatch is rejected before booking mutations", async () => {

@@ -26,7 +26,7 @@ const Sidebar = () => {
       <div className="sidebar-logo">
         <img
           src={brand.logoPath}
-          alt={`${brand.name} logo`}
+          alt={`โลโก้ ${brand.name}`}
           className="logo-icon"
         />
       </div>
@@ -36,70 +36,70 @@ const Sidebar = () => {
           activeClassName="active"
           className="nav-item"
         >
-          <DashboardOutlined /> <span>Dashboard</span>
+          <DashboardOutlined /> <span>แดชบอร์ด</span>
         </NavLink>
           <NavLink
             to="/admin/schedule"
             activeClassName="active"
             className="nav-item"
           >
-            <CalendarOutlined /> <span>Schedule</span>
+            <CalendarOutlined /> <span>ตารางเรียน</span>
           </NavLink>
           <NavLink
             to="/admin/terms"
             activeClassName="active"
             className="nav-item"
           >
-            <ReadOutlined /> <span>Terms</span>
+            <ReadOutlined /> <span>ข้อกำหนด</span>
           </NavLink>
           <NavLink
             to="/admin/users"
             activeClassName="active"
             className="nav-item"
           >
-            <UserOutlined /> <span>Users</span>
+            <UserOutlined /> <span>ผู้ใช้</span>
           </NavLink>
         <NavLink
           to="/admin/orders"
           activeClassName="active"
           className="nav-item"
         >
-          <ShoppingCartOutlined /> <span>Order</span>
+          <ShoppingCartOutlined /> <span>คำสั่งซื้อ</span>
         </NavLink>
         <NavLink
           to="/admin/productManage"
           activeClassName="active"
           className="nav-item"
         >
-          <AppstoreOutlined /> <span>Courses</span>
+          <AppstoreOutlined /> <span>คอร์ส</span>
         </NavLink>
         <NavLink
           to="/admin/goods"
           activeClassName="active"
           className="nav-item"
         >
-          <AppstoreOutlined /> <span>Product</span>
+          <AppstoreOutlined /> <span>สินค้า</span>
         </NavLink>
         <NavLink
           to="/admin/courses"
           activeClassName="active"
           className="nav-item"
         >
-          <ReadOutlined /> <span>Class</span>
+          <ReadOutlined /> <span>คลาส</span>
         </NavLink>
         {/* <NavLink
           to="/"
           activeClassName="active"
           className="nav-item"
         >
-          <FileTextOutlined /> <span>Home</span>
+          <FileTextOutlined /> <span>หน้าหลัก</span>
         </NavLink> */}
         <NavLink
           to="/admin/finance"
           activeClassName="active"
           className="nav-item"
         >
-          <DollarOutlined /> <span>Finance</span>
+          <DollarOutlined /> <span>การเงิน</span>
         </NavLink>
         {canSeeImageSetup && (
           <NavLink
@@ -107,7 +107,7 @@ const Sidebar = () => {
             activeClassName="active"
             className="nav-item"
           >
-            <FileImageOutlined /> <span>Image Setup</span>
+            <FileImageOutlined /> <span>จัดการรูปภาพ</span>
           </NavLink>
         )}
         {canSeeMasterReport && (
@@ -116,11 +116,11 @@ const Sidebar = () => {
             activeClassName="active"
             className="nav-item"
           >
-            <FileTextOutlined /> <span>Master Report</span>
+            <FileTextOutlined /> <span>รายงานรวม</span>
           </NavLink>
         )}
         {/* <NavLink to="/" activeClassName="active" className="nav-item">
-          <LogoutOutlined /> <span>Sign Out</span>
+          <LogoutOutlined /> <span>ออกจากระบบ</span>
         </NavLink> */}
       </nav>
     </div>

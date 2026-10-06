@@ -4,7 +4,7 @@ import { Card } from "antd";
 const TopProductsTable = ({ products }) => {
   return (
     <Card className="top-products-card">
-      <h3 className="card-header">Top Products</h3>
+      <h3 className="card-header">สินค้าขายดี</h3>
       {products.map((product, index) => (
         <div className="table-row" key={index}>
           <span className="table-cell font-bold">{index + 1}</span>

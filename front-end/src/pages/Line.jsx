@@ -27,7 +27,7 @@ const Line = () => {
       // Store LINE login indicator for auto-logout purposes
       localStorage.setItem("loginMethod", "line");
 
-      message.success("LINE login successful!");
+      message.success("เข้าสู่ระบบด้วย LINE สำเร็จ");
 
       // Check if user has accepted terms
       if (!response.data.userTerms) {
@@ -63,7 +63,7 @@ const Line = () => {
         if (liff.isLoggedIn()) {
           await handleLiffLogin();
         } else {
-          setError("Not logged in via LINE");
+          setError("ยังไม่ได้เข้าสู่ระบบผ่าน LINE");
           setLoading(false);
         }
       } catch (error) {
@@ -82,7 +82,7 @@ const Line = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-lg font-semibold text-text">
-            Processing LINE login...
+            กำลังเข้าสู่ระบบด้วย LINE...
           </p>
         </div>
       </div>
@@ -94,13 +94,13 @@ const Line = () => {
       <div className="flex items-center justify-center h-screen bg-surface">
         <div className="text-center">
           <div className="text-error text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-error mb-2">Login Error</h1>
+          <h1 className="text-2xl font-bold text-error mb-2">เข้าสู่ระบบไม่สำเร็จ</h1>
           <p className="text-text mb-6">{error}</p>
           <button
             onClick={() => navigate("/auth/signin")}
             className="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded"
           >
-            Go to Login Page
+            ไปหน้าเข้าสู่ระบบ
           </button>
         </div>
       </div>
@@ -111,8 +111,8 @@ const Line = () => {
     <div className="flex items-center justify-center h-screen bg-surface">
       <div className="text-center">
         <div className="text-success text-6xl mb-4">✅</div>
-        <h1 className="text-2xl font-bold text-success">Login Successful</h1>
-        <p className="text-text">Redirecting...</p>
+        <h1 className="text-2xl font-bold text-success">เข้าสู่ระบบสำเร็จ</h1>
+        <p className="text-text">กำลังเปลี่ยนหน้า...</p>
       </div>
     </div>
   );

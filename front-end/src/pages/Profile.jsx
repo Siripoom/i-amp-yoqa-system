@@ -70,7 +70,7 @@ const Profile = () => {
 
   // Format expiration date with relative time
   const formatExpiryDate = (date) => {
-    if (!date) return "Not set";
+    if (!date) return "ยังไม่ได้ระบุ";
 
     const expiryDate = moment(date).endOf("day");
     const now = moment().startOf("day");
@@ -114,20 +114,20 @@ const Profile = () => {
     const { remaining_session, sessions_expiry_date } = user;
 
     if (remaining_session <= 0) {
-      return <Tag color="error">Inactive</Tag>;
+      return <Tag color="error">ไม่ใช้งาน</Tag>;
     }
 
     if (!sessions_expiry_date) {
-      return <Tag color="success">Active</Tag>;
+      return <Tag color="success">ใช้งาน</Tag>;
     }
 
     const expiryDate = moment(sessions_expiry_date).endOf("day");
     const now = moment().startOf("day");
 
     if (expiryDate.isBefore(now)) {
-      return <Tag color="error">Expired</Tag>;
+      return <Tag color="error">หมดอายุ</Tag>;
     } else {
-      return <Tag color="success">Active</Tag>;
+      return <Tag color="success">ใช้งาน</Tag>;
     }
   };
 
@@ -145,20 +145,20 @@ const Profile = () => {
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center">
           <Card className="w-full lg:w-1/4 p-6 rounded-2xl shadow-lg bg-white">
             <Title level={4} className="text-text font-semibold">
-              Manage My Account
+              จัดการบัญชีของฉัน
             </Title>
             <div className="mt-4 space-y-3 flex flex-col">
               <Link
                 to="/profile"
                 className="text-primary font-semibold block"
               >
-                My Profile
+                โปรไฟล์ของฉัน
               </Link>
               <Link to="/my-plane" className="text-secondary block">
-                My Plane
+                แพ็กเกจของฉัน
               </Link>
               <Link to="/my-orders" className="text-secondary block">
-                My Orders
+                คำสั่งซื้อของฉัน
               </Link>
             </div>
           </Card>
@@ -166,7 +166,7 @@ const Profile = () => {
           {/* Profile Form */}
           <Card className="w-full lg:w-3/4 p-8 lg:ml-6 mt-6 lg:mt-0 rounded-2xl shadow-md">
             <Title level={3} className="text-primary">
-              My Profile
+              โปรไฟล์ของฉัน
             </Title>
 
             {/* Subscription Information Section */}
@@ -174,7 +174,7 @@ const Profile = () => {
               <div className="mb-6 bg-background p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                   <Title level={4} className="mb-0">
-                    Subscription Status
+                    สถานะแพ็กเกจ
                   </Title>
                   {getSubscriptionStatus()}
                 </div>
@@ -182,7 +182,7 @@ const Profile = () => {
                 <Row gutter={24}>
                   <Col xs={24} md={12}>
                     <Statistic
-                      title="Remaining Sessions"
+                      title="จำนวนครั้งคงเหลือ"
                       value={user.remaining_session || 0}
                       prefix={<HourglassOutlined />}
                       valueStyle={{
@@ -193,7 +193,7 @@ const Profile = () => {
                   </Col>
                   <Col xs={24} md={12}>
                     <Statistic
-                      title="Expiration"
+                      title="วันหมดอายุ"
                       value={formatExpiryDate(user.sessions_expiry_date)}
                       prefix={<CalendarOutlined />}
                       valueStyle={{
@@ -224,8 +224,8 @@ const Profile = () => {
                     .endOf("day")
                     .diff(moment().startOf("day"), "days") > 0 && (
                     <Alert
-                      message="Expiration Warning"
-                      description="Your sessions will expire soon. Please consider purchasing a new package."
+                      message="แจ้งเตือนวันหมดอายุ"
+                      description="จำนวนครั้งของคุณใกล้หมดอายุ กรุณาพิจารณาซื้อแพ็กเกจใหม่"
                       type="warning"
                       showIcon
                       className="mt-3"
@@ -237,8 +237,8 @@ const Profile = () => {
                     .endOf("day")
                     .isBefore(moment().startOf("day")) && (
                     <Alert
-                      message="Sessions Expired"
-                      description="Your sessions have expired. Please purchase a new package to continue booking classes."
+                      message="แพ็กเกจหมดอายุ"
+                      description="แพ็กเกจของคุณหมดอายุแล้ว กรุณาซื้อแพ็กเกจใหม่เพื่อจองคลาสต่อ"
                       type="error"
                       showIcon
                       className="mt-3"
@@ -249,7 +249,7 @@ const Profile = () => {
                 <Divider />
                 <div className="bg-white p-3 rounded-lg text-sm text-secondary">
                   {/* <p>
-                    <strong>How sessions expiration works:</strong>
+                    <strong>การหมดอายุของจำนวนครั้ง:</strong>
                   </p>
                   <ul className="list-disc ml-5">
                     <li>
@@ -261,13 +261,13 @@ const Profile = () => {
                       follows your package duration.
                     </li>
                     <li>
-                      You cannot book classes after your sessions have expired.
+                      คุณไม่สามารถจองคลาสได้หลังแพ็กเกจหมดอายุ
                     </li>
                   </ul> */}
                   <div className="mt-3 text-right">
                     <Link to="/course">
                       <Button type="primary" className="bg-primary">
-                        Buy More Sessions
+                        ซื้อจำนวนครั้งเพิ่ม
                       </Button>
                     </Link>
                   </div>
@@ -280,7 +280,7 @@ const Profile = () => {
             {/* User Profile Information */}
             {loading ? (
               <div className="text-center py-4">
-                Loading profile information...
+                กำลังโหลดข้อมูลโปรไฟล์...
               </div>
             ) : user ? (
               <Form
@@ -291,22 +291,22 @@ const Profile = () => {
               >
                 <Form.Item label="ชื่อจริง" name="first_name" rules={[{ required: true }]}>
                   <Input
-                    placeholder="First Name"
+                    placeholder="ชื่อ"
                   />
                 </Form.Item>
 
                 <Form.Item label="นามสกุล" name="last_name" rules={[{ required: true }]}>
                   <Input
-                    placeholder="Last Name"
+                    placeholder="นามสกุล"
                   />
                 </Form.Item>
 
                 <Form.Item label="อีเมลล์">
-                  <Input placeholder="Email" value={user.email} disabled />
+                  <Input placeholder="อีเมล" value={user.email} disabled />
                 </Form.Item>
 
                 <Form.Item label="เบอร์โทร" name="phone" rules={[{ required: true }]}>
-                  <Input placeholder="Phone" />
+                  <Input placeholder="เบอร์โทรศัพท์" />
                 </Form.Item>
 
                 <Form.Item label="เพศ" name="gender" rules={[{ required: true, message: "กรุณาเลือกเพศ" }]}>
@@ -348,7 +348,7 @@ const Profile = () => {
 
                 <Form.Item label="จำนวนครั้งทั้งหมด (Total Classes) ">
                   <Input
-                    placeholder="Class"
+                    placeholder="คลาส"
                     value={user.total_classes}
                     disabled
                   />
@@ -356,7 +356,7 @@ const Profile = () => {
 
                 <Form.Item label="จำนวนครั้งคงเหลือ (Remaining Session)">
                   <Input
-                    placeholder="Session"
+                    placeholder="ครั้ง"
                     value={user.remaining_session}
                     disabled
                   />
@@ -364,36 +364,36 @@ const Profile = () => {
               </Form>
             ) : (
               <div className="text-center py-4">
-                No profile information available.
+                ไม่มีข้อมูลโปรไฟล์
               </div>
             )}
 
             <Title level={5} className="mt-6">
-              Password Changes
+              เปลี่ยนรหัสผ่าน
             </Title>
             <div className="grid grid-cols-1 gap-4">
-              <Form.Item label="Current Password">
-                <Input.Password placeholder="Current Password" />
+              <Form.Item label="รหัสผ่านปัจจุบัน">
+                <Input.Password placeholder="รหัสผ่านปัจจุบัน" />
               </Form.Item>
 
-              <Form.Item label="New Password">
-                <Input.Password placeholder="New Password" />
+              <Form.Item label="รหัสผ่านใหม่">
+                <Input.Password placeholder="รหัสผ่านใหม่" />
               </Form.Item>
 
-              <Form.Item label="Confirm New Password">
-                <Input.Password placeholder="Confirm New Password" />
+              <Form.Item label="ยืนยันรหัสผ่านใหม่">
+                <Input.Password placeholder="ยืนยันรหัสผ่านใหม่" />
               </Form.Item>
             </div>
 
             <div className="flex justify-between mt-6">
-              <Button type="text">Cancel</Button>
+              <Button type="text">ยกเลิก</Button>
               <Button
                 type="primary"
                 className="bg-primary text-white"
                 loading={saving}
                 onClick={() => form.submit()}
               >
-                Save Changes
+                บันทึกการเปลี่ยนแปลง
               </Button>
             </div>
           </Card>

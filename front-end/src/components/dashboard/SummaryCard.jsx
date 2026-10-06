@@ -17,10 +17,10 @@ const SummaryCard = ({ type, value, change }) => {
   };
 
   const labels = {
-    sales: "Total Sales",
-    orders: "Total Orders",
-    sold: "Product Sold",
-    customers: "New Customers",
+    sales: "ยอดขายรวม",
+    orders: "คำสั่งซื้อทั้งหมด",
+    sold: "สินค้าที่ขาย",
+    customers: "ลูกค้าใหม่",
   };
 
   return (

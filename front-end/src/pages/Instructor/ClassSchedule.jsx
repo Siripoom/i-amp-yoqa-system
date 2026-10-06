@@ -136,15 +136,15 @@ const Schedule = () => {
 
       if (currentEvent) {
         await classService.updateClass(currentEvent.id, classData);
-        message.success("Class updated successfully!");
+        message.success("แก้ไขคลาสสำเร็จ");
       } else {
         await classService.createClass(classData);
-        message.success("Class added successfully!");
+        message.success("เพิ่มคลาสสำเร็จ");
       }
 
       await handleCloseModal();
     } catch (error) {
-      message.error("Error saving class!");
+      message.error("บันทึกคลาสไม่สำเร็จ");
       console.error(error);
     }
   };
@@ -153,10 +153,10 @@ const Schedule = () => {
   const handleDeleteEvent = async () => {
     try {
       await classService.deleteClass(currentEvent.id);
-      message.success("Class deleted successfully!");
+      message.success("ลบคลาสสำเร็จ");
       await handleCloseModal();
     } catch (error) {
-      message.error("Error deleting class!");
+      message.error("ลบคลาสไม่สำเร็จ");
       console.error(error);
     }
   };
@@ -185,11 +185,11 @@ const Schedule = () => {
       </Sider> */}
 
       <Layout>
-        <Header title="Schedule" />
+        <Header title="ตารางเรียน" />
 
         <Content className="course-container">
           <div className="course-header">
-            <h2>Schedule</h2>
+            <h2>ตารางเรียน</h2>
           </div>
           {/* แสดงผลเฉพาะ event ที่ยังไม่มี Teacher หรือมี Teacher เป็นตัวเอง */}
           <Row gutter={[16, 16]} style={{ padding: "16px" }}>
@@ -224,14 +224,14 @@ const Schedule = () => {
                   >
                     {event.instructor && (
                       <p>
-                        <strong>Teacher:</strong> {event.instructor}
+                        <strong>ครูผู้สอน:</strong> {event.instructor}
                       </p>
                     )}
                     <p>
-                      <strong>Room:</strong> {event.room_number}
+                      <strong>ห้อง:</strong> {event.room_number}
                     </p>
                     <p>
-                      <strong>Participants:</strong>{" "}
+                      <strong>ผู้เข้าร่วม:</strong>{" "}
                       {event.allowed_gender === "male"
                         ? "เฉพาะชาย"
                         : event.allowed_gender === "female"
@@ -240,11 +240,11 @@ const Schedule = () => {
                     </p>
                     <p>{event.description}</p>
                     <p>
-                      <strong>Start:</strong>{" "}
+                      <strong>เริ่ม:</strong>{" "}
                       {moment(event.start).format("LLL")}
                     </p>
                     <p>
-                      <strong>End:</strong> {moment(event.end).format("LLL")}
+                      <strong>สิ้นสุด:</strong> {moment(event.end).format("LLL")}
                     </p>
                   </Card>
                 </Col>
@@ -255,31 +255,31 @@ const Schedule = () => {
 
       {/* Modal สำหรับเพิ่ม/แก้ไขอีเวนต์ */}
       <Modal
-        title={currentEvent ? "Edit Class" : "Add Class"}
+        title={currentEvent ? "แก้ไขคลาส" : "เพิ่มคลาส"}
         open={isModalOpen}
         onCancel={handleCloseModal}
         footer={[
           currentEvent && (
             <Button key="delete" danger onClick={handleDeleteEvent}>
-              Delete
+              ลบ
             </Button>
           ),
           <Button key="cancel" onClick={handleCloseModal}>
-            Cancel
+            ยกเลิก
           </Button>,
           <Button key="submit" type="primary" onClick={handleSubmit}>
-            {currentEvent ? "Save" : "Add"}
+            {currentEvent ? "บันทึก" : "เพิ่ม"}
           </Button>,
         ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="Class Title"
+            label="ชื่อคลาส"
             name="title"
-            rules={[{ required: true, message: "Please select a class title" }]}
+            rules={[{ required: true, message: "กรุณาเลือกชื่อคลาส" }]}
           >
             <Select
-              placeholder="Select a class"
+              placeholder="เลือกคลาส"
               onChange={(value) => {
                 const selectedCourse = courses.find(
                   (course) => course.course_name === value
@@ -297,11 +297,11 @@ const Schedule = () => {
             </Select>
           </Form.Item>
           <Form.Item
-            label="Teacher"
+            label="ครูผู้สอน"
             name="instructor"
-            rules={[{ required: true, message: "Please select a teacher" }]}
+            rules={[{ required: true, message: "กรุณาเลือกครูผู้สอน" }]}
           >
-            <Select placeholder="Select a teacher">
+            <Select placeholder="เลือกครูผู้สอน">
               {users.map((user) => (
                 <Select.Option
                   key={user._id}
@@ -312,7 +312,7 @@ const Schedule = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="Description" name="description">
+          <Form.Item label="รายละเอียด" name="description">
             <Input.TextArea rows={2} placeholder="รายละเอียดของคลาส" />
           </Form.Item>
           <Form.Item
@@ -327,23 +327,23 @@ const Schedule = () => {
             </Select>
           </Form.Item>
           <Form.Item label="📌 Room Number" name="room_number">
-            <Input placeholder="Enter Room Number" />
+            <Input placeholder="ระบุหมายเลขห้อง" />
           </Form.Item>
           <Form.Item label="🔑 Passcode" name="passcode">
-            <Input placeholder="Enter Passcode" />
+            <Input placeholder="ระบุรหัสผ่าน" />
           </Form.Item>
           <Form.Item label="🔗 Zoom Link" name="zoom_link">
-            <Input placeholder="Enter Zoom Link" />
+            <Input placeholder="ระบุลิงก์ Zoom" />
           </Form.Item>
           <Form.Item
-            label="Start Time"
+            label="เวลาเริ่ม"
             name="start_time"
             rules={[{ required: true }]}
           >
             <Input type="datetime-local" />
           </Form.Item>
           <Form.Item
-            label="End Time"
+            label="เวลาสิ้นสุด"
             name="end_time"
             rules={[{ required: true }]}
           >

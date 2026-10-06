@@ -134,11 +134,11 @@ const ImageSetup = () => {
       if (response.status === "success" && Array.isArray(response.data)) {
         setSliderImages(response.data);
       } else {
-        message.error("Failed to fetch slider images");
+        message.error("โหลดรูปภาพสไลด์ไม่สำเร็จ");
       }
     } catch (err) {
       console.error("Error fetching slider images:", err);
-      message.error("Failed to fetch slider images");
+      message.error("โหลดรูปภาพสไลด์ไม่สำเร็จ");
     }
   };
   const handleSliderFormSubmit = async (values) => {
@@ -176,7 +176,7 @@ const ImageSetup = () => {
     }
 
     if (!hasFile && isSliderCreateMode) {
-      message.error("Please select an image to upload");
+      message.error("กรุณาเลือกรูปภาพที่จะอัปโหลด");
       setUploadingSlider(false);
       return;
     }
@@ -191,13 +191,13 @@ const ImageSetup = () => {
       let response;
       if (isSliderCreateMode) {
         response = await SliderImage.createSliderImage(formData);
-        message.success("Slider image created successfully");
+        message.success("เพิ่มรูปภาพสไลด์สำเร็จ");
       } else {
         response = await SliderImage.updateSliderImage(
           selectedSliderImage._id,
           formData
         );
-        message.success("Slider image updated successfully");
+        message.success("แก้ไขรูปภาพสไลด์สำเร็จ");
       }
 
       console.log("API Response:", response); // Debug log
@@ -211,7 +211,7 @@ const ImageSetup = () => {
       // แสดงข้อความข้อผิดพลาดที่ชัดเจนขึ้น
       const errorMessage =
         err.response?.data?.message || err.message || "Operation failed";
-      message.error(`Operation failed: ${errorMessage}`);
+      message.error(`ดำเนินการไม่สำเร็จ: ${errorMessage}`);
     } finally {
       setUploadingSlider(false);
     }
@@ -219,22 +219,22 @@ const ImageSetup = () => {
 
   const deleteSliderImage = async (id) => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete slider images.");
+      message.warning("คุณไม่มีสิทธิ์ลบรูปภาพสไลด์");
       return;
     }
 
     try {
       await SliderImage.deleteSliderImage(id);
-      message.success("Slider image deleted successfully");
+      message.success("ลบรูปภาพสไลด์สำเร็จ");
       fetchSliderImages();
     } catch {
-      message.error("Delete failed");
+      message.error("ลบไม่สำเร็จ");
     }
   };
 
   const createSliderImage = () => {
     if (!canCreate) {
-      message.warning("You don't have permission to create slider images.");
+      message.warning("คุณไม่มีสิทธิ์สร้างรูปภาพสไลด์");
       return;
     }
 
@@ -254,7 +254,7 @@ const ImageSetup = () => {
 
   const updateSliderImage = (record) => {
     if (!canEdit) {
-      message.warning("You don't have permission to edit slider images.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขรูปภาพสไลด์");
       return;
     }
 
@@ -276,43 +276,43 @@ const ImageSetup = () => {
   // 5. เพิ่ม columns สำหรับ slider table
   const sliderImageColumns = [
     {
-      title: "Order",
+      title: "ลำดับ",
       dataIndex: "order",
       key: "order",
       sorter: (a, b) => a.order - b.order,
       width: 80,
     },
     // {
-    //   title: "Title",
+    //   title: "ชื่อ",
     //   dataIndex: "title",
     //   key: "title",
     //   render: (text) => text || "No Title",
     // },
     {
-      title: "Preview",
+      title: "ตัวอย่าง",
       dataIndex: "image",
       key: "image",
-      render: (url) => (url ? <Image width={100} src={url} /> : "No image"),
+      render: (url) => (url ? <Image width={100} src={url} /> : "ไม่มีรูปภาพ"),
     },
     // {
-    //   title: "Description",
+    //   title: "รายละเอียด",
     //   dataIndex: "description",
     //   key: "description",
     //   ellipsis: true,
     //   render: (text) => text || "No Description",
     // },
     {
-      title: "Status",
+      title: "สถานะ",
       dataIndex: "isActive",
       key: "isActive",
       render: (isActive) => (
         <Tag color={isActive ? "green" : "red"}>
-          {isActive ? "Active" : "Inactive"}
+          {isActive ? "ใช้งาน" : "ไม่ใช้งาน"}
         </Tag>
       ),
     },
     {
-      title: "Action",
+      title: "จัดการ",
       key: "action",
       render: (record) => (
         <Space>
@@ -321,7 +321,7 @@ const ImageSetup = () => {
               icon={<EditOutlined />}
               onClick={() => updateSliderImage(record)}
             >
-              Update
+              อัปเดต
             </Button>
           )}
           {canDelete ? (
@@ -330,16 +330,16 @@ const ImageSetup = () => {
               icon={<DeleteOutlined />}
               onClick={() => deleteSliderImage(record._id)}
             >
-              Delete
+              ลบ
             </Button>
           ) : (
-            <Tooltip title="No permission to delete">
+            <Tooltip title="ไม่มีสิทธิ์ลบ">
               <Button
                 danger
                 icon={<DeleteOutlined />}
                 disabled
               >
-                Delete
+                ลบ
               </Button>
             </Tooltip>
           )}
@@ -353,11 +353,11 @@ const ImageSetup = () => {
       if (response.status === "success" && Array.isArray(response.data)) {
         setClassCatalogs(response.data);
       } else {
-        message.error("Failed to fetch class catalogs");
+        message.error("โหลดรายการคลาสไม่สำเร็จ");
       }
     } catch (err) {
       console.error("Error fetching class catalogs:", err);
-      message.error("Failed to fetch class catalogs");
+      message.error("โหลดรายการคลาสไม่สำเร็จ");
     }
   };
 
@@ -367,10 +367,10 @@ const ImageSetup = () => {
       if (response.status === "success" && Array.isArray(response.data)) {
         setQrcodes(response.data);
       } else {
-        message.error("Failed to fetch QR Code images");
+        message.error("โหลดรูปคิวอาร์โค้ดไม่สำเร็จ");
       }
     } catch {
-      message.error("Error fetching QR Code images");
+      message.error("โหลดรูปคิวอาร์โค้ดไม่สำเร็จ");
     }
   };
 
@@ -382,11 +382,11 @@ const ImageSetup = () => {
         setHeroImages(response.data);
       } else {
         console.error("Fetched data is not in the expected format:", response);
-        message.error("Failed to fetch hero images");
+        message.error("โหลดรูปภาพหลักไม่สำเร็จ");
       }
     } catch (err) {
       console.error("Error fetching hero images:", err);
-      message.error("Failed to fetch hero images");
+      message.error("โหลดรูปภาพหลักไม่สำเร็จ");
     }
   };
 
@@ -398,10 +398,10 @@ const ImageSetup = () => {
         setMasterImages(response.data);
       } else {
         console.error("Fetched data is not in the expected format:", response);
-        message.error("Failed to fetch master images");
+        message.error("โหลดรูปครูผู้สอนไม่สำเร็จ");
       }
     } catch {
-      message.error("Failed to fetch master images");
+      message.error("โหลดรูปครูผู้สอนไม่สำเร็จ");
     }
   };
 
@@ -436,11 +436,11 @@ const ImageSetup = () => {
       if (isEditingMaster) {
         // Update existing master
         await MasterImage.updateMasterImage(selectedMasterImage._id, formData);
-        message.success("Master updated successfully");
+        message.success("แก้ไขข้อมูลครูผู้สอนสำเร็จ");
       } else {
         // Create new master
         await MasterImage.createMasterImage(formData);
-        message.success("Master created successfully");
+        message.success("เพิ่มครูผู้สอนสำเร็จ");
       }
 
       // Reset form and fetch updated data
@@ -466,7 +466,7 @@ const ImageSetup = () => {
   // Open modal for creating a new master
   const createMaster = () => {
     if (!canCreate) {
-      message.warning("You don't have permission to create master profiles.");
+      message.warning("คุณไม่มีสิทธิ์สร้างโปรไฟล์ครูผู้สอน");
       return;
     }
 
@@ -486,7 +486,7 @@ const ImageSetup = () => {
   // Open modal for updating an existing master
   const updateMaster = (record) => {
     if (!canEdit) {
-      message.warning("You don't have permission to edit master profiles.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขโปรไฟล์ครูผู้สอน");
       return;
     }
 
@@ -520,14 +520,14 @@ const ImageSetup = () => {
       if (isClassCreateMode) {
         // Create new class catalog
         await ImageCatalog.createImageCatalog(formData);
-        message.success("Class catalog created successfully");
+        message.success("เพิ่มคลาสในรายการสำเร็จ");
       } else {
         // Update existing class catalog
         await ImageCatalog.updateImageCatalog(
           selectedClassCatalog._id,
           formData
         );
-        message.success("Class catalog updated successfully");
+        message.success("แก้ไขรายการคลาสสำเร็จ");
       }
 
       // Reset form and fetch updated data
@@ -547,23 +547,23 @@ const ImageSetup = () => {
   // Delete Class Catalog
   const deleteClassCatalog = async (id) => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete class catalogs.");
+      message.warning("คุณไม่มีสิทธิ์ลบรายการคลาส");
       return;
     }
 
     try {
       await ImageCatalog.deleteImageCatalog(id);
-      message.success("Class catalog deleted successfully");
+      message.success("ลบรายการคลาสสำเร็จ");
       fetchClassCatalogs();
     } catch {
-      message.error("Delete failed");
+      message.error("ลบไม่สำเร็จ");
     }
   };
 
   // Open modal for creating a new class catalog
   const createClassCatalog = () => {
     if (!canCreate) {
-      message.warning("You don't have permission to create class catalogs.");
+      message.warning("คุณไม่มีสิทธิ์สร้างรายการคลาส");
       return;
     }
 
@@ -576,7 +576,7 @@ const ImageSetup = () => {
   // Open modal for updating an existing class catalog
   const updateClassCatalog = (record) => {
     if (!canEdit) {
-      message.warning("You don't have permission to edit class catalogs.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขรายการคลาส");
       return;
     }
 
@@ -600,10 +600,10 @@ const ImageSetup = () => {
           selectedQrcodeImage._id,
           formData
         );
-        message.success("QR Code updated");
+        message.success("แก้ไขคิวอาร์โค้ดสำเร็จ");
       } else {
         await QrcodePayment.createQrcodePayment(formData);
-        message.success("QR Code uploaded");
+        message.success("อัปโหลดคิวอาร์โค้ดสำเร็จ");
       }
       fetchQrcodeImages();
       setIsQrcodeModalVisible(false);
@@ -619,22 +619,22 @@ const ImageSetup = () => {
 
   const deleteQrcodeImage = async (id) => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete QR codes.");
+      message.warning("คุณไม่มีสิทธิ์ลบคิวอาร์โค้ด");
       return;
     }
 
     try {
       await QrcodePayment.deleteQrcodePayment(id);
-      message.success("QR Code deleted");
+      message.success("ลบคิวอาร์โค้ดสำเร็จ");
       fetchQrcodeImages();
     } catch {
-      message.error("QR Code delete failed");
+      message.error("ลบคิวอาร์โค้ดไม่สำเร็จ");
     }
   };
 
   const updateQrcodeImage = (record) => {
     if (!canEdit) {
-      message.warning("You don't have permission to edit QR codes.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขคิวอาร์โค้ด");
       return;
     }
 
@@ -651,17 +651,17 @@ const ImageSetup = () => {
     try {
       if (selectedHeroImage) {
         await HeroImage.updateHeroImage(selectedHeroImage._id, formData);
-        message.success("Hero image updated successfully");
+        message.success("แก้ไขรูปภาพหลักสำเร็จ");
       } else {
         await HeroImage.createHeroImage(formData);
-        message.success("Hero image uploaded successfully");
+        message.success("อัปโหลดรูปภาพหลักสำเร็จ");
       }
       fetchHeroImages();
       setIsHeroUpdateModalVisible(false);
       setSelectedHeroImage(null);
       info.onSuccess?.({ status: "success" });
     } catch (error) {
-      message.error(apiErrorMessage(error, "Hero image upload failed"));
+      message.error(apiErrorMessage(error, "อัปโหลดรูปภาพหลักไม่สำเร็จ"));
       info.onError?.(error);
     } finally {
       setUploadingHero(false);
@@ -671,39 +671,39 @@ const ImageSetup = () => {
   // Delete Hero Image
   const deleteHeroImage = async (id) => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete hero images.");
+      message.warning("คุณไม่มีสิทธิ์ลบรูปภาพหลัก");
       return;
     }
 
     try {
       await HeroImage.deleteHeroImage(id);
-      message.success("Hero image deleted");
+      message.success("ลบรูปภาพหลักสำเร็จ");
       fetchHeroImages();
     } catch {
-      message.error("Delete failed");
+      message.error("ลบไม่สำเร็จ");
     }
   };
 
   // Delete Master Image
   const deleteMasterImage = async (id) => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete master profiles.");
+      message.warning("คุณไม่มีสิทธิ์ลบโปรไฟล์ครูผู้สอน");
       return;
     }
 
     try {
       await MasterImage.deleteMasterImage(id);
-      message.success("Master deleted successfully");
+      message.success("ลบครูผู้สอนสำเร็จ");
       fetchMasterImages();
     } catch {
-      message.error("Delete failed");
+      message.error("ลบไม่สำเร็จ");
     }
   };
 
   // Update Hero Image (opens the modal)
   const updateHeroImage = (record) => {
     if (!canEdit) {
-      message.warning("You don't have permission to edit hero images.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขรูปภาพหลัก");
       return;
     }
 
@@ -714,24 +714,24 @@ const ImageSetup = () => {
   // Columns for displaying images in the table
   const classCatalogColumns = [
     {
-      title: "Class Name",
+      title: "ชื่อคลาส",
       dataIndex: "classname",
       key: "classname",
     },
     {
-      title: "Preview",
+      title: "ตัวอย่าง",
       dataIndex: "image",
       key: "image",
-      render: (url) => (url ? <Image width={100} src={url} /> : "No image"),
+      render: (url) => (url ? <Image width={100} src={url} /> : "ไม่มีรูปภาพ"),
     },
     {
-      title: "Description",
+      title: "รายละเอียด",
       dataIndex: "description",
       key: "description",
       ellipsis: true,
     },
     {
-      title: "Action",
+      title: "จัดการ",
       key: "action",
       render: (record) => (
         <Space>
@@ -740,7 +740,7 @@ const ImageSetup = () => {
               icon={<EditOutlined />}
               onClick={() => updateClassCatalog(record)}
             >
-              Update
+              อัปเดต
             </Button>
           )}
           {canDelete ? (
@@ -749,16 +749,16 @@ const ImageSetup = () => {
               icon={<DeleteOutlined />}
               onClick={() => deleteClassCatalog(record._id)}
             >
-              Delete
+              ลบ
             </Button>
           ) : (
-            <Tooltip title="No permission to delete">
+            <Tooltip title="ไม่มีสิทธิ์ลบ">
               <Button
                 danger
                 icon={<DeleteOutlined />}
                 disabled
               >
-                Delete
+                ลบ
               </Button>
             </Tooltip>
           )}
@@ -769,13 +769,13 @@ const ImageSetup = () => {
 
   const qrcodeImageColumns = (onDelete, onUpdate) => [
     {
-      title: "Preview",
+      title: "ตัวอย่าง",
       dataIndex: "image",
       key: "image",
       render: (url) => <Image width={100} src={url} />,
     },
     {
-      title: "Action",
+      title: "จัดการ",
       key: "action",
       render: (record) => (
         <Space>
@@ -784,7 +784,7 @@ const ImageSetup = () => {
               icon={<EditOutlined />}
               onClick={() => onUpdate(record)}
             >
-              Update
+              อัปเดต
             </Button>
           )}
           {canDelete ? (
@@ -793,16 +793,16 @@ const ImageSetup = () => {
               icon={<DeleteOutlined />}
               onClick={() => onDelete(record._id)}
             >
-              Delete
+              ลบ
             </Button>
           ) : (
-            <Tooltip title="No permission to delete">
+            <Tooltip title="ไม่มีสิทธิ์ลบ">
               <Button
                 danger
                 icon={<DeleteOutlined />}
                 disabled
               >
-                Delete
+                ลบ
               </Button>
             </Tooltip>
           )}
@@ -814,13 +814,13 @@ const ImageSetup = () => {
   // Columns for displaying hero images in the table
   const heroImageColumns = (onDelete, onUpdate) => [
     {
-      title: "Preview",
+      title: "ตัวอย่าง",
       dataIndex: "image",
       key: "image",
       render: (url) => <Image width={100} src={url} />,
     },
     {
-      title: "Action",
+      title: "จัดการ",
       key: "action",
       render: (record) => (
         <Space>
@@ -829,7 +829,7 @@ const ImageSetup = () => {
               icon={<EditOutlined />}
               onClick={() => onUpdate(record)}
             >
-              Update
+              อัปเดต
             </Button>
           )}
           {canDelete ? (
@@ -838,16 +838,16 @@ const ImageSetup = () => {
               icon={<DeleteOutlined />}
               onClick={() => onDelete(record._id)}
             >
-              Delete
+              ลบ
             </Button>
           ) : (
-            <Tooltip title="No permission to delete">
+            <Tooltip title="ไม่มีสิทธิ์ลบ">
               <Button
                 danger
                 icon={<DeleteOutlined />}
                 disabled
               >
-                Delete
+                ลบ
               </Button>
             </Tooltip>
           )}
@@ -859,18 +859,18 @@ const ImageSetup = () => {
   // Columns for displaying master images in the table
   const masterImageColumns = [
     {
-      title: "Master Name",
+      title: "ชื่อครูผู้สอน",
       dataIndex: "mastername",
       key: "mastername",
     },
     {
-      title: "Preview",
+      title: "ตัวอย่าง",
       dataIndex: "image",
       key: "image",
       render: (url) => <Image width={100} src={url} />,
     },
     {
-      title: "YouTube Video",
+      title: "วิดีโอ YouTube",
       dataIndex: "videoUrl",
       key: "videoUrl",
       render: (url) =>
@@ -880,27 +880,27 @@ const ImageSetup = () => {
             icon={<YoutubeOutlined />}
             onClick={() => window.open(url, "_blank")}
           >
-            View Video
+            ดูวิดีโอ
           </Button>
         ) : (
-          "No video"
+          "ไม่มีวิดีโอ"
         ),
     },
     {
-      title: "Description",
+      title: "รายละเอียด",
       dataIndex: "description",
       key: "description",
       ellipsis: true,
     },
 
     {
-      title: "Action",
+      title: "จัดการ",
       key: "action",
       render: (record) => (
         <Space>
           {canEdit && (
             <Button icon={<EditOutlined />} onClick={() => updateMaster(record)}>
-              Edit
+              แก้ไข
             </Button>
           )}
           {canDelete ? (
@@ -909,16 +909,16 @@ const ImageSetup = () => {
               icon={<DeleteOutlined />}
               onClick={() => deleteMasterImage(record._id)}
             >
-              Delete
+              ลบ
             </Button>
           ) : (
-            <Tooltip title="No permission to delete">
+            <Tooltip title="ไม่มีสิทธิ์ลบ">
               <Button
                 danger
                 icon={<DeleteOutlined />}
                 disabled
               >
-                Delete
+                ลบ
               </Button>
             </Tooltip>
           )}
@@ -934,7 +934,7 @@ const ImageSetup = () => {
       </Sider>
 
       <Layout>
-        <Header title="Image Setup" />
+        <Header title="จัดการรูปภาพ" />
 
         <Content className="user-container">
           {/* แสดงข้อความแจ้งเตือนสำหรับ role ที่มีข้อจำกัด */}
@@ -948,7 +948,7 @@ const ImageSetup = () => {
               fontSize: "14px",
               color: colors["warning"]
             }}>
-              <strong>⚠️ Admin Role:</strong> You can view, create, and edit image content but cannot delete images.
+              <strong>⚠️ Admin Role:</strong> คุณดู เพิ่ม และแก้ไขรูปภาพได้ แต่ลบรูปภาพไม่ได้
             </div>
           )}
 
@@ -962,15 +962,15 @@ const ImageSetup = () => {
               fontSize: "14px",
               color: colors["info"]
             }}>
-              <strong>ℹ️ Accounting Role:</strong> You can view, create, and edit image content but cannot delete images.
+              <strong>ℹ️ Accounting Role:</strong> คุณดู เพิ่ม และแก้ไขรูปภาพได้ แต่ลบรูปภาพไม่ได้
             </div>
           )}
 
           <Tabs defaultActiveKey="1">
-            <TabPane tab="Hero Images" key="1">
+            <TabPane tab="รูปภาพหลัก" key="1">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2>Hero Images</h2>
+                  <h2>รูปภาพหลัก</h2>
                   {canCreate && (
                     <Upload
                       customRequest={handleHeroUpload}
@@ -978,7 +978,7 @@ const ImageSetup = () => {
                       accept="image/*"
                     >
                       <Button icon={<UploadOutlined />} loading={uploadingHero}>
-                        Upload Hero Image
+                        อัปโหลดรูปภาพหลัก
                       </Button>
                     </Upload>
                   )}
@@ -993,17 +993,17 @@ const ImageSetup = () => {
               </div>
             </TabPane>
 
-            <TabPane tab="Master Profiles" key="2">
+            <TabPane tab="โปรไฟล์ครูผู้สอน" key="2">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2>Master Profiles</h2>
+                  <h2>โปรไฟล์ครูผู้สอน</h2>
                   {canCreate && (
                     <Button
                       type="primary"
                       icon={<PlusOutlined />}
                       onClick={createMaster}
                     >
-                      Add New Master
+                      เพิ่มครูผู้สอน
                     </Button>
                   )}
                 </div>
@@ -1017,10 +1017,10 @@ const ImageSetup = () => {
               </div>
             </TabPane>
 
-            <TabPane tab="QR Code Payment" key="3">
+            <TabPane tab="คิวอาร์โค้ดชำระเงิน" key="3">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2>QR Code Payment</h2>
+                  <h2>คิวอาร์โค้ดชำระเงิน</h2>
                   {canCreate && (
                     <Upload
                       customRequest={handleQrcodeUpload}
@@ -1028,7 +1028,7 @@ const ImageSetup = () => {
                       accept="image/*"
                     >
                       <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
-                        Upload QR Code
+                        อัปโหลดคิวอาร์โค้ด
                       </Button>
                     </Upload>
                   )}
@@ -1046,17 +1046,17 @@ const ImageSetup = () => {
               </div>
             </TabPane>
 
-            <TabPane tab="Class Catalogs" key="4">
+            <TabPane tab="รายการคลาส" key="4">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2>Class Catalogs</h2>
+                  <h2>รายการคลาส</h2>
                   {canCreate && (
                     <Button
                       type="primary"
                       icon={<PlusOutlined />}
                       onClick={createClassCatalog}
                     >
-                      Add New Class
+                      เพิ่มคลาสใหม่
                     </Button>
                   )}
                 </div>
@@ -1069,17 +1069,17 @@ const ImageSetup = () => {
                 />
               </div>
             </TabPane>
-            <TabPane tab="Slider Images" key="5">
+            <TabPane tab="รูปภาพสไลด์" key="5">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2>Slider Images</h2>
+                  <h2>รูปภาพสไลด์</h2>
                   {canCreate && (
                     <Button
                       type="primary"
                       icon={<PlusOutlined />}
                       onClick={createSliderImage}
                     >
-                      Add New Slider Image
+                      เพิ่มรูปภาพสไลด์
                     </Button>
                   )}
                 </div>
@@ -1097,7 +1097,7 @@ const ImageSetup = () => {
       </Layout>
       <Modal
         title={
-          isSliderCreateMode ? "Add New Slider Image" : "Update Slider Image"
+          isSliderCreateMode ? "Add New Slider Image" : "แก้ไขรูปภาพสไลด์"
         }
         visible={isSliderModalVisible}
         onCancel={() => {
@@ -1115,37 +1115,37 @@ const ImageSetup = () => {
             order: 0,
           }}
         >
-          {/* <Form.Item name="title" label="Title">
-            <Input placeholder="Enter image title (optional)" />
+          {/* <Form.Item name="title" label="ชื่อ">
+            <Input placeholder="ระบุชื่อรูปภาพ (ไม่บังคับ)" />
           </Form.Item> */}
 
-          {/* <Form.Item name="description" label="Description">
+          {/* <Form.Item name="description" label="รายละเอียด">
             <Input.TextArea
               rows={3}
-              placeholder="Enter image description (optional)"
+              placeholder="ระบุรายละเอียดรูปภาพ (ไม่บังคับ)"
             />
           </Form.Item> */}
 
           <Form.Item name="order" label="เลขลำดับการแสดงผล">
             <InputNumber
               min={0}
-              placeholder="Enter display order (0 = first)"
+              placeholder="ระบุลำดับการแสดง (0 = ลำดับแรก)"
               style={{ width: "100%" }}
             />
           </Form.Item>
 
           <Form.Item
             name="isActive"
-            label="Active Status"
+            label="สถานะใช้งาน"
             valuePropName="checked"
           >
-            <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+            <Switch checkedChildren="ใช้งาน" unCheckedChildren="ไม่ใช้งาน" />
           </Form.Item>
 
           {/* แก้ไขส่วน Upload ให้ถูกต้อง */}
           <Form.Item
             name="image"
-            label="Slider Image"
+            label="รูปภาพสไลด์"
             valuePropName="fileList"
             getValueFromEvent={(e) => {
               if (Array.isArray(e)) {
@@ -1155,7 +1155,7 @@ const ImageSetup = () => {
             }}
             rules={
               isSliderCreateMode
-                ? [{ required: true, message: "Please upload an image" }]
+                ? [{ required: true, message: "กรุณาอัปโหลดรูปภาพ" }]
                 : []
             }
           >
@@ -1166,14 +1166,14 @@ const ImageSetup = () => {
                 // ตรวจสอบประเภทไฟล์
                 const isImage = file.type.startsWith("image/");
                 if (!isImage) {
-                  message.error("You can only upload image files!");
+                  message.error("อัปโหลดได้เฉพาะไฟล์รูปภาพ");
                   return Upload.LIST_IGNORE;
                 }
 
                 // ตรวจสอบขนาดไฟล์ (5MB)
                 const isLt5M = file.size / 1024 / 1024 < 5;
                 if (!isLt5M) {
-                  message.error("Image must be smaller than 5MB!");
+                  message.error("รูปภาพต้องมีขนาดไม่เกิน 5 MB");
                   return Upload.LIST_IGNORE;
                 }
 
@@ -1184,7 +1184,7 @@ const ImageSetup = () => {
             >
               <div>
                 <PlusOutlined />
-                <div style={{ marginTop: 8 }}>Upload</div>
+                <div style={{ marginTop: 8 }}>อัปโหลด</div>
               </div>
             </Upload>
           </Form.Item>
@@ -1199,14 +1199,14 @@ const ImageSetup = () => {
               {isSliderCreateMode ? "Create" : "Update"}
             </Button>
             <Button onClick={() => setIsSliderModalVisible(false)}>
-              Cancel
+              ยกเลิก
             </Button>
           </Form.Item>
         </Form>
       </Modal>
       {/* Modal for QR Code Update */}
       <Modal
-        title="Update QR Code"
+        title="อัปเดตคิวอาร์โค้ด"
         visible={isQrcodeModalVisible}
         onCancel={() => {
           setIsQrcodeModalVisible(false);
@@ -1220,14 +1220,14 @@ const ImageSetup = () => {
           accept="image/*"
         >
           <Button icon={<UploadOutlined />} loading={uploadingQrcode}>
-            Update QR Code
+            อัปเดตคิวอาร์โค้ด
           </Button>
         </Upload>
       </Modal>
 
       {/* Modal for Hero Image Update */}
       <Modal
-        title="Update Hero Image"
+        title="อัปเดตภาพหลัก"
         visible={isHeroUpdateModalVisible}
         onCancel={() => setIsHeroUpdateModalVisible(false)}
         footer={null}
@@ -1238,7 +1238,7 @@ const ImageSetup = () => {
           accept="image/*"
         >
           <Button icon={<UploadOutlined />} loading={uploadingHero}>
-            Update Hero Image
+            อัปเดตภาพหลัก
           </Button>
         </Upload>
       </Modal>
@@ -1246,7 +1246,7 @@ const ImageSetup = () => {
       {/* Modal for Master Create/Update with YouTube link */}
       <Modal
         title={
-          isEditingMaster ? "Edit Master Profile" : "Add New Master Profile"
+          isEditingMaster ? "แก้ไขโปรไฟล์ครูผู้สอน" : "เพิ่มโปรไฟล์ครูผู้สอน"
         }
         visible={isMasterModalVisible}
         onCancel={() => setIsMasterModalVisible(false)}
@@ -1255,7 +1255,7 @@ const ImageSetup = () => {
       >
         <div style={{ padding: "20px 0" }}>
           <div style={{ marginBottom: "24px" }}>
-            <Title level={5}>Master Profile Information</Title>
+            <Title level={5}>ข้อมูลโปรไฟล์ครูผู้สอน</Title>
             <Text type="secondary">
               Add information about the yoga master including profile image,
               YouTube video and biography.
@@ -1264,9 +1264,9 @@ const ImageSetup = () => {
 
           <Form layout="vertical">
             <Form.Item
-              label="Master Name"
+              label="ชื่อครูผู้สอน"
               required
-              tooltip="The name of the yoga master"
+              tooltip="ชื่อครูโยคะ"
             >
               <Input
                 value={masterFormData.mastername}
@@ -1276,13 +1276,13 @@ const ImageSetup = () => {
                     mastername: e.target.value,
                   })
                 }
-                placeholder="Enter master's name"
+                placeholder="ระบุชื่อครูผู้สอน"
               />
             </Form.Item>
             <Form.Item
               label="description"
 
-              tooltip="The description of the yoga master"
+              tooltip="รายละเอียดครูโยคะ"
             >
               <Input
                 value={masterFormData.description}
@@ -1292,7 +1292,7 @@ const ImageSetup = () => {
                     description: e.target.value,
                   })
                 }
-                placeholder="Enter description"
+                placeholder="ระบุรายละเอียด"
               />
             </Form.Item>
 
@@ -1309,8 +1309,8 @@ const ImageSetup = () => {
                 <Form.Item
                   label={
                     <Space>
-                      <span>Profile Image</span>
-                      <Tooltip title="Upload a professional photo of the yoga master">
+                      <span>รูปโปรไฟล์</span>
+                      <Tooltip title="อัปโหลดรูปครูโยคะ">
                         <InfoCircleOutlined />
                       </Tooltip>
                     </Space>
@@ -1331,7 +1331,7 @@ const ImageSetup = () => {
                   >
                     <div>
                       <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>Upload</div>
+                      <div style={{ marginTop: 8 }}>อัปโหลด</div>
                     </div>
                   </Upload>
                 </Form.Item>
@@ -1341,8 +1341,8 @@ const ImageSetup = () => {
                 <Form.Item
                   label={
                     <Space>
-                      <span>YouTube Video URL</span>
-                      <Tooltip title="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=xxxxxxxxxxx)">
+                      <span>ลิงก์วิดีโอ YouTube</span>
+                      <Tooltip title="ระบุลิงก์วิดีโอ YouTube">
                         <InfoCircleOutlined />
                       </Tooltip>
                     </Space>
@@ -1357,7 +1357,7 @@ const ImageSetup = () => {
                           videoUrl: e.target.value,
                         })
                       }
-                      placeholder="Enter YouTube video URL"
+                      placeholder="ระบุลิงก์วิดีโอ YouTube"
                       prefix={<YoutubeOutlined style={{ color: "red" }} />}
                       style={{ marginRight: "10px", flex: 1 }}
                     />
@@ -1366,7 +1366,7 @@ const ImageSetup = () => {
                       onClick={showVideoPreview}
                       disabled={!masterFormData.videoUrl}
                     >
-                      Preview
+                      ตัวอย่าง
                     </Button>
                   </div>
                   <Text type="secondary" style={{ fontSize: "12px" }}>
@@ -1387,7 +1387,7 @@ const ImageSetup = () => {
                 onClick={() => setIsMasterModalVisible(false)}
                 style={{ marginRight: 8 }}
               >
-                Cancel
+                ยกเลิก
               </Button>
               <Button
                 type="primary"
@@ -1395,7 +1395,7 @@ const ImageSetup = () => {
                 loading={uploadingMaster}
                 disabled={!masterFormData.mastername}
               >
-                {isEditingMaster ? "Update Master" : "Add Master"}
+                {isEditingMaster ? "แก้ไขครูผู้สอน" : "เพิ่มครูผู้สอน"}
               </Button>
             </div>
           </Form>
@@ -1404,7 +1404,7 @@ const ImageSetup = () => {
 
       {/* Modal for YouTube Video Preview */}
       <Modal
-        title="YouTube Video Preview"
+        title="ตัวอย่างวิดีโอ YouTube"
         visible={videoPreviewVisible}
         onCancel={() => setVideoPreviewVisible(false)}
         footer={null}
@@ -1430,7 +1430,7 @@ const ImageSetup = () => {
               border: "none",
             }}
             src={getYoutubeEmbedUrl(masterFormData.videoUrl)}
-            title="YouTube Video Preview"
+            title="ตัวอย่างวิดีโอ YouTube"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           ></iframe>
@@ -1448,15 +1448,15 @@ const ImageSetup = () => {
         footer={null}
       >
         <Form form={form} layout="vertical" onFinish={handleClassFormSubmit}>
-          <Form.Item name="classname" label="Class Name">
-            <Input placeholder="Enter class name" />
+          <Form.Item name="classname" label="ชื่อคลาส">
+            <Input placeholder="ระบุชื่อคลาส" />
           </Form.Item>
 
-          <Form.Item name="description" label="Description">
-            <TextArea rows={4} placeholder="Enter class description" />
+          <Form.Item name="description" label="รายละเอียด">
+            <TextArea rows={4} placeholder="ระบุรายละเอียดคลาส" />
           </Form.Item>
 
-          <Form.Item name="image" label="Class Image" valuePropName="file">
+          <Form.Item name="image" label="รูปคลาส" valuePropName="file">
             <Upload
               listType="picture-card"
               beforeUpload={() => false}
@@ -1465,7 +1465,7 @@ const ImageSetup = () => {
             >
               <div>
                 <PlusOutlined />
-                <div style={{ marginTop: 8 }}>Upload</div>
+                <div style={{ marginTop: 8 }}>อัปโหลด</div>
               </div>
             </Upload>
           </Form.Item>
@@ -1480,7 +1480,7 @@ const ImageSetup = () => {
               {isClassCreateMode ? "Create" : "Update"}
             </Button>
             <Button onClick={() => setIsClassModalVisible(false)}>
-              Cancel
+              ยกเลิก
             </Button>
           </Form.Item>
         </Form>

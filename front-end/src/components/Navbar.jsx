@@ -35,10 +35,10 @@ const Navbar = () => {
   const userMenu = (
     <Menu>
       <Menu.Item key="profile">
-        <Link to="/profile">Profile</Link>
+        <Link to="/profile">โปรไฟล์</Link>
       </Menu.Item>
       <Menu.Item key="logout" onClick={handleLogout}>
-        Logout
+        ออกจากระบบ
       </Menu.Item>
     </Menu>
   );
@@ -118,7 +118,7 @@ const Navbar = () => {
                 type="primary"
                 className="bg-primary text-white font-semibold px-4 rounded-2xl hover:bg-primary"
               >
-                Sign-In
+                เข้าสู่ระบบ
               </Button>
             </Link>
           )}
@@ -177,7 +177,7 @@ const Navbar = () => {
                   type="primary"
                   className="bg-primary text-white font-semibold px-4 rounded-2xl hover:bg-primary"
                 >
-                  Sign-In
+                  เข้าสู่ระบบ
                 </Button>
               </Link>
             )}

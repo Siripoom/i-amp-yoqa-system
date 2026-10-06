@@ -29,12 +29,12 @@ const Home = () => {
         if (response.status === "success" && Array.isArray(response.data)) {
           setProducts(response.data);
         } else {
-          message.error("Failed to load products");
+          message.error("โหลดสินค้าไม่สำเร็จ");
         }
       })
       .catch((error) => {
         // console.error("Error fetching products:", error);
-        message.error("Failed to load products");
+        message.error("โหลดสินค้าไม่สำเร็จ");
       })
       .finally(() => setLoading(false));
   }, []);
@@ -90,17 +90,17 @@ const Home = () => {
           variants={fadeInVariant}
           className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-primary mb-2"
         >
-          EXPLORE OUR PRODUCT
+          เลือกชมสินค้าของเรา
         </motion.h2>
         <motion.p
           variants={fadeInVariant}
           className="text-center text-text mb-6"
         >
-          Yoga
+          โยคะ
         </motion.p>
         <div className="flex justify-center flex-wrap gap-3 sm:gap-4 md:gap-6">
           {loading ? (
-            <p className="text-center text-secondary">Loading products...</p>
+            <p className="text-center text-secondary">กำลังโหลดสินค้า...</p>
           ) : products.length > 0 ? (
             products.slice(0, 6).map((product, index) => (
               <div
@@ -109,19 +109,19 @@ const Home = () => {
               >
                 <img
                   src={product.image || image1}
-                  alt="Product"
+                  alt="สินค้า"
                   className="w-full h-24 sm:h-28 md:h-32 object-cover rounded-t-lg"
                   loading="lazy"
                 />
                 <p className="mt-2 text-text font-semibold text-center text-xs sm:text-sm">
                   {product.sessions
                     ? `${product.sessions} sessions`
-                    : "No session data"}
+                    : "ไม่มีข้อมูลจำนวนครั้ง"}
                 </p>
               </div>
             ))
           ) : (
-            <p className="text-center text-secondary">No products available</p>
+            <p className="text-center text-secondary">ไม่มีสินค้า</p>
           )}
         </div>
         <motion.div variants={fadeInVariant} className="text-center mt-6">
@@ -130,7 +130,7 @@ const Home = () => {
               type="primary"
               className="btn-primary font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-2xl hover:bg-primary-dark text-sm sm:text-base"
             >
-              View All Courses
+              ดูคอร์สทั้งหมด
             </Button>
           </Link>
         </motion.div>
@@ -156,7 +156,7 @@ const Home = () => {
           variants={fadeInVariant}
           className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-primary mb-6"
         >
-          COURSE
+          คอร์ส
         </motion.h2>
         <motion.div
           variants={staggerVariant}
@@ -179,7 +179,7 @@ const Home = () => {
           >
             {/* Benefits Section */}
             <h3 className="text-lg font-bold text-primary mb-4">
-              Why Learn Yoga?
+              ทำไมจึงควรเรียนโยคะ?
             </h3>
             <ul className="text-text text-sm space-y-2">
               <li>🌟 Enhance flexibility and strength.</li>
@@ -194,7 +194,7 @@ const Home = () => {
                   type="primary"
                   className="btn-primary font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full hover:bg-primary-dark text-sm sm:text-base"
                 >
-                  Join Now
+                  เข้าร่วมตอนนี้
                 </Button>
               </Link>
             </div>

@@ -47,7 +47,7 @@ const CoursesPage = () => {
       const response = await getCourses();
       setCourses(response.courses);
     } catch (error) {
-      message.error("Failed to load courses");
+      message.error("โหลดคอร์สไม่สำเร็จ");
     }
   };
 
@@ -87,37 +87,37 @@ const CoursesPage = () => {
 
       if (editingCourse) {
         await updateCourse(editingCourse._id, formData);
-        message.success("Course updated successfully");
+        message.success("แก้ไขคอร์สสำเร็จ");
       } else {
         await createCourse(formData);
-        message.success("Course created successfully");
+        message.success("สร้างคอร์สสำเร็จ");
       }
 
       fetchCourses(); // Refresh the course list
       setIsModalVisible(false);
     } catch (error) {
-      message.error("Failed to save course");
+      message.error("บันทึกคอร์สไม่สำเร็จ");
     }
   };
 
   const handleDelete = async () => {
     try {
       await deleteCourse(editingCourse._id);
-      message.success("Course deleted successfully");
+      message.success("ลบคอร์สสำเร็จ");
       fetchCourses(); // Refresh the course list
       setIsModalVisible(false);
     } catch (error) {
-      message.error("Failed to delete course");
+      message.error("ลบคอร์สไม่สำเร็จ");
     }
   };
 
   const columns = [
-    // { title: "COURSE ID", dataIndex: "_id", key: "_id" },
-    { title: "COURSE NAME", dataIndex: "course_name", key: "course_name" },
-    { title: "CATEGORY", dataIndex: "details", key: "details" },
-    { title: "DIFFICULTY", dataIndex: "difficulty", key: "difficulty" },
+    // { title: "รหัสคอร์ส", dataIndex: "_id", key: "_id" },
+    { title: "ชื่อคอร์ส", dataIndex: "course_name", key: "course_name" },
+    { title: "หมวดหมู่", dataIndex: "details", key: "details" },
+    { title: "ระดับความยาก", dataIndex: "difficulty", key: "difficulty" },
     {
-      title: "ACTION",
+      title: "จัดการ",
       key: "action",
       render: (record) => (
         <Button
@@ -136,18 +136,18 @@ const CoursesPage = () => {
       </Sider>
 
       <Layout>
-        <Header title="Courses" />
+        <Header title="คอร์ส" />
 
         <Content className="course-container">
           <div className="course-header">
-            <h2>Courses</h2>
+            <h2>คอร์ส</h2>
             <Button
               type="primary"
               className="create-course-button"
               icon={<PlusOutlined />}
               onClick={showCreateModal}
             >
-              Create Course
+              สร้างคอร์ส
             </Button>
           </div>
           <div className="course-filters">
@@ -155,11 +155,11 @@ const CoursesPage = () => {
               defaultValue="Course Name"
               style={{ width: 150, marginRight: 10 }}
             >
-              {/* <Option value="Course ID">Course ID</Option> */}
-              <Option value="Course Name">Course Name</Option>
+              {/* <Option value="Course ID">รหัสคอร์ส</Option> */}
+              <Option value="Course Name">ชื่อคอร์ส</Option>
             </Select>
             <Input
-              placeholder="Search"
+              placeholder="ค้นหา"
               prefix={<SearchOutlined />}
               style={{ width: 200, marginRight: 10 }}
               onChange={handleSearch}
@@ -175,7 +175,7 @@ const CoursesPage = () => {
           />
 
           <Modal
-            title={editingCourse ? "Edit Course" : "Create Course"}
+            title={editingCourse ? "แก้ไขคอร์ส" : "สร้างคอร์ส"}
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={[
@@ -186,41 +186,41 @@ const CoursesPage = () => {
                   icon={<DeleteOutlined />}
                   onClick={handleDelete}
                 >
-                  Delete
+                  ลบ
                 </Button>
               ),
               <Button key="cancel" onClick={handleCancel}>
-                Cancel
+                ยกเลิก
               </Button>,
               <Button key="save" type="primary" onClick={handleSave}>
-                Save
+                บันทึก
               </Button>,
             ]}
           >
             <Form form={form} layout="vertical">
               <Form.Item
                 name="course_name"
-                label="Course Name"
+                label="ชื่อคอร์ส"
                 rules={[
-                  { required: true, message: "Please enter the course name" },
+                  { required: true, message: "กรุณาระบุชื่อคอร์ส" },
                 ]}
               >
                 <Input />
               </Form.Item>
               <Form.Item
                 name="details"
-                label="Details"
+                label="รายละเอียด"
                 rules={[
-                  { required: true, message: "Please enter course details" },
+                  { required: true, message: "กรุณาระบุรายละเอียดคอร์ส" },
                 ]}
               >
                 <Input />
               </Form.Item>
               <Form.Item
                 name="difficulty"
-                label="Difficulty"
+                label="ระดับความยาก"
                 rules={[
-                  { required: true, message: "Please enter course difficulty" },
+                  { required: true, message: "กรุณาระบุระดับความยาก" },
                 ]}
               >
                 <Input type="number" />

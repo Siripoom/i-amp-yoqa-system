@@ -75,10 +75,10 @@ const Dashboard = () => {
         });
         setLastYearCourses(filteredCourses);
       } else {
-        message.error("Failed to fetch courses.");
+        message.error("โหลดคอร์สไม่สำเร็จ");
       }
     } catch (error) {
-      message.error(`Failed to fetch courses: ${error.message}`);
+      message.error(`โหลดคอร์สไม่สำเร็จ: ${error.message}`);
     }
   };
 
@@ -99,10 +99,10 @@ const Dashboard = () => {
         });
         setLastYearUsers(filteredUsers);
       } else {
-        message.error("Failed to fetch users.");
+        message.error("โหลดผู้ใช้ไม่สำเร็จ");
       }
     } catch (error) {
-      message.error(`Failed to fetch users: ${error.message}`);
+      message.error(`โหลดผู้ใช้ไม่สำเร็จ: ${error.message}`);
     }
   };
 
@@ -137,10 +137,10 @@ const Dashboard = () => {
         }, 0);
         setLastYearTotalSales(currentYearTotal);
       } else {
-        message.error("Failed to fetch orders.");
+        message.error("โหลดคำสั่งซื้อไม่สำเร็จ");
       }
     } catch (error) {
-      message.error(`Failed to fetch orders: ${error.message}`);
+      message.error(`โหลดคำสั่งซื้อไม่สำเร็จ: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -241,8 +241,8 @@ const Dashboard = () => {
       return {
         labels: [],
         datasets: [
-          { label: "Products", backgroundColor: colors["primary"], data: [] },
-          { label: "Courses", backgroundColor: colors["success"], data: [] },
+          { label: "สินค้า", backgroundColor: colors["primary"], data: [] },
+          { label: "คอร์ส", backgroundColor: colors["success"], data: [] },
         ],
       };
     }
@@ -326,12 +326,12 @@ const Dashboard = () => {
       labels,
       datasets: [
         {
-          label: "Products",
+          label: "สินค้า",
           backgroundColor: colors["primary"],
           data: productData,
         },
         {
-          label: "Courses",
+          label: "คอร์ส",
           backgroundColor: colors["success"],
           data: courseData,
         },
@@ -347,7 +347,7 @@ const Dashboard = () => {
       </Sider>
 
       <Layout>
-        <Header title="Dashboard" />
+        <Header title="แดชบอร์ด" />
 
         <Content className="dashboard-container">
           <Card className="sales-summary-card">
@@ -356,7 +356,7 @@ const Dashboard = () => {
                 <h3 className="font-semibold text-lg text-text">
                   This Year Sales ({new Date().getFullYear()})
                 </h3>
-                <p className="text-secondary">Sales Summary</p>
+                <p className="text-secondary">สรุปยอดขาย</p>
               </div>
               <div>
                 <Button
@@ -365,7 +365,7 @@ const Dashboard = () => {
                   onClick={exportDashboardToCSV}
                   loading={exportLoading}
                 >
-                  Export CSV
+                  ส่งออก CSV
                 </Button>
               </div>
             </div>
@@ -378,7 +378,7 @@ const Dashboard = () => {
                     style={{ color: colors["error"], fontSize: 30 }}
                   />
                   <h4>{lastYearTotalSales.toLocaleString()} THB</h4>
-                  <p>Total Sales</p>
+                  <p>ยอดขายรวม</p>
                 </Card>
               </Col>
 
@@ -389,7 +389,7 @@ const Dashboard = () => {
                     style={{ color: colors["warning"], fontSize: 30 }}
                   />
                   <h4>{lastYearOrders.length}</h4>
-                  <p>Total Order</p>
+                  <p>คำสั่งซื้อทั้งหมด</p>
                 </Card>
               </Col>
               <Col xs={24} sm={12} lg={6}>
@@ -399,7 +399,7 @@ const Dashboard = () => {
                     style={{ color: colors["success"], fontSize: 30 }}
                   />
                   <h4>{lastYearCourses.length}</h4>
-                  <p>Product Sold</p>
+                  <p>สินค้าที่ขาย</p>
                 </Card>
               </Col>
               <Col xs={24} sm={12} lg={6}>
@@ -409,7 +409,7 @@ const Dashboard = () => {
                     style={{ color: colors["info"], fontSize: 30 }}
                   />
                   <h4>{lastYearUsers.length}</h4>
-                  <p>New Customers</p>
+                  <p>ลูกค้าใหม่</p>
                 </Card>
               </Col>
             </Row>
@@ -419,7 +419,7 @@ const Dashboard = () => {
           <Row gutter={[16, 16]}>
             {/* <Col xs={24} lg={12}>
               <Card className="top-products-card">
-                <h3 className="card-header">Top Products</h3>
+                <h3 className="card-header">สินค้าขายดี</h3>
                 {productsData.map((product, index) => (
                   <div className="table-row" key={index}>
                     <span className="table-cell font-bold">{index + 1}</span>
@@ -446,7 +446,7 @@ const Dashboard = () => {
 
             <Col xs={24} lg={12}>
               <Card className="top-courses-card">
-                <h3 className="card-header">Top Courses</h3>
+                <h3 className="card-header">คอร์สยอดนิยม</h3>
                 {coursesData.map((course, index) => (
                   <div className="table-row" key={index}>
                     <span className="table-cell font-bold">{index + 1}</span>
@@ -474,15 +474,15 @@ const Dashboard = () => {
             <Col span={24}>
               <Card className="total-revenue-card">
                 <div className="revenue-header">
-                  <h3 className="card-header">Total Revenue</h3>
+                  <h3 className="card-header">รายได้รวม</h3>
                   <Select
                     defaultValue="weekly"
                     style={{ width: 120 }}
                     onChange={(value) => setTimeframe(value)}
                   >
-                    <Option value="weekly">Weekly</Option>
-                    <Option value="monthly">Monthly</Option>
-                    <Option value="yearly">Yearly</Option>
+                    <Option value="weekly">รายสัปดาห์</Option>
+                    <Option value="monthly">รายเดือน</Option>
+                    <Option value="yearly">รายปี</Option>
                   </Select>
                 </div>
 

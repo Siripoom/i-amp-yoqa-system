@@ -3,7 +3,7 @@ import { Card } from "antd";
 const TopCoursesTable = ({ courses }) => {
   return (
     <Card className="top-courses-card">
-      <h3 className="card-header">Top Courses</h3>
+      <h3 className="card-header">คอร์สยอดนิยม</h3>
       {courses.map((course, index) => (
         <div className="table-row" key={index}>
           <span className="table-cell font-bold">{index + 1}</span>

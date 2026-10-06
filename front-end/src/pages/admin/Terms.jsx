@@ -65,7 +65,7 @@ const UserPage = () => {
         setFilteredUserTerms(response.data);
       }
     } catch (error) {
-      message.error("Failed to fetch user terms data");
+      message.error("โหลดข้อกำหนดผู้ใช้ไม่สำเร็จ");
       console.error("Error fetching user terms:", error);
     } finally {
       setLoading(false);
@@ -133,13 +133,13 @@ const UserPage = () => {
       };
 
       await updateUserTerms(editingUserTerm._id, updateData);
-      message.success("User terms updated successfully");
+      message.success("แก้ไขข้อกำหนดผู้ใช้สำเร็จ");
       setIsModalVisible(false);
       setEditingUserTerm(null);
       form.resetFields();
       fetchUserTerms();
     } catch (error) {
-      message.error("Failed to update user terms");
+      message.error("แก้ไขข้อกำหนดผู้ใช้ไม่สำเร็จ");
       console.error("Error updating user terms:", error);
     }
   };
@@ -148,10 +148,10 @@ const UserPage = () => {
   const handleDelete = async (id) => {
     try {
       await deleteUserTerms(id);
-      message.success("User terms deleted successfully");
+      message.success("ลบข้อกำหนดผู้ใช้สำเร็จ");
       fetchUserTerms();
     } catch (error) {
-      message.error("Failed to delete user terms");
+      message.error("ลบข้อกำหนดผู้ใช้ไม่สำเร็จ");
       console.error("Error deleting user terms:", error);
     }
   };
@@ -255,15 +255,15 @@ const UserPage = () => {
         .save()
         .then(() => {
           document.body.removeChild(element);
-          message.success("PDF exported successfully!");
+          message.success("ส่งออก PDF สำเร็จ");
         })
         .catch((error) => {
           document.body.removeChild(element);
-          message.error("Failed to export PDF");
+          message.error("ส่งออก PDF ไม่สำเร็จ");
           console.error("Error exporting PDF:", error);
         });
     } catch (error) {
-      message.error("Failed to export PDF");
+      message.error("ส่งออก PDF ไม่สำเร็จ");
       console.error("Error exporting PDF:", error);
     }
   };
@@ -282,7 +282,7 @@ const UserPage = () => {
     //   ),
     // },
     {
-      title: "Full Name",
+      title: "ชื่อเต็ม",
       dataIndex: "fullName",
       key: "fullName",
       render: (text) => (
@@ -324,35 +324,35 @@ const UserPage = () => {
       ),
     },
     {
-      title: "Accepted Date",
+      title: "วันที่ยอมรับ",
       dataIndex: "acceptedAt",
       key: "acceptedAt",
       render: (date) => (
         <div className="flex items-center gap-2">
           <CalendarOutlined className="text-secondary" />
           <span>
-            {date ? moment(date).format("DD/MM/YYYY HH:mm") : "Not accepted"}
+            {date ? moment(date).format("DD/MM/YYYY HH:mm") : "ยังไม่ยอมรับ"}
           </span>
         </div>
       ),
     },
     {
-      title: "Actions",
+      title: "จัดการ",
       key: "actions",
       width: 150,
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="Export PDF">
+          <Tooltip title="ส่งออก PDF">
             <Button
               type="primary"
               icon={<FilePdfOutlined />}
               size="small"
               onClick={() => handleExportPDF(record)}
             >
-              Export
+              ส่งออก
             </Button>
           </Tooltip>
-          {/* <Tooltip title="Edit">
+          {/* <Tooltip title="แก้ไข">
             <Button
               type="default"
               icon={<EditOutlined />}
@@ -360,12 +360,12 @@ const UserPage = () => {
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
-          <Tooltip title="Delete">
+          <Tooltip title="ลบ">
             <Popconfirm
-              title="Are you sure you want to delete this user terms?"
+              title="ยืนยันการลบข้อกำหนดผู้ใช้นี้?"
               onConfirm={() => handleDelete(record._id)}
-              okText="Yes"
-              cancelText="No"
+              okText="ใช่"
+              cancelText="ไม่ใช่"
             >
               <Button
                 type="primary"
@@ -392,16 +392,16 @@ const UserPage = () => {
       </Sider>
 
       <Layout>
-        <Header title="Terms Management" />
+        <Header title="จัดการข้อกำหนด" />
 
         <Content className="user-container p-2 sm:p-4 lg:p-6">
           <div className="user-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold m-0">
-              User Terms Management
+              จัดการข้อกำหนดผู้ใช้
             </h2>
             <div className="flex gap-2">
               <Button type="primary" onClick={fetchUserTerms} loading={loading}>
-                Refresh
+                รีเฟรช
               </Button>
             </div>
           </div>
@@ -416,12 +416,12 @@ const UserPage = () => {
               style={{ width: "100%" }}
               className="sm:w-40"
             >
-              <Option value="all">All Status</Option>
-              <Option value="accepted">Accepted</Option>
-              <Option value="pending">Pending</Option>
+              <Option value="all">ทุกสถานะ</Option>
+              <Option value="accepted">ยอมรับแล้ว</Option>
+              <Option value="pending">รอดำเนินการ</Option>
             </Select>
             <Input
-              placeholder="Search by name or ID"
+              placeholder="ค้นหาชื่อหรือรหัส"
               prefix={<SearchOutlined />}
               style={{ width: "100%" }}
               className="sm:w-48"
@@ -450,7 +450,7 @@ const UserPage = () => {
 
           {/* Edit Modal */}
           <Modal
-            title="Edit User Terms"
+            title="แก้ไขข้อกำหนดผู้ใช้"
             open={isModalVisible}
             onCancel={() => {
               setIsModalVisible(false);
@@ -467,13 +467,13 @@ const UserPage = () => {
               className="mt-4"
             >
               <Form.Item
-                label="Full Name"
+                label="ชื่อเต็ม"
                 name="fullName"
                 rules={[
-                  { required: true, message: "Please input the full name!" },
+                  { required: true, message: "กรุณาระบุชื่อเต็ม" },
                 ]}
               >
-                <Input placeholder="Enter full name" />
+                <Input placeholder="ระบุชื่อเต็ม" />
               </Form.Item>
 
               <Form.Item
@@ -524,10 +524,10 @@ const UserPage = () => {
                       form.resetFields();
                     }}
                   >
-                    Cancel
+                    ยกเลิก
                   </Button>
                   <Button type="primary" htmlType="submit">
-                    Update
+                    อัปเดต
                   </Button>
                 </Space>
               </Form.Item>

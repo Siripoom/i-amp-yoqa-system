@@ -432,7 +432,7 @@ const ReceiptManagement = () => {
                 <Card size="small" title="ข้อมูลใบเสร็จ">
                   <p><strong>เลขที่ใบเสร็จ:</strong> {selectedReceipt.receiptNumber}</p>
                   <p><strong>วันที่สร้าง:</strong> {dayjs(selectedReceipt.createdAt).format('DD/MM/YYYY HH:mm')}</p>
-                  <p><strong>Order ID:</strong> {selectedReceipt.orderId}</p>
+                  <p><strong>รหัสคำสั่งซื้อ:</strong> {selectedReceipt.orderId}</p>
                 </Card>
               </Col>
               <Col span={12}>

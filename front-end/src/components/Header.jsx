@@ -31,10 +31,10 @@ const Header = ({ title }) => {
   };
   const menu = (
     <Menu>
-      {/* <Menu.Item key="0">Profile</Menu.Item>
-      <Menu.Item key="1">Settings</Menu.Item> */}
+      {/* <Menu.Item key="0">โปรไฟล์</Menu.Item>
+      <Menu.Item key="1">ตั้งค่า</Menu.Item> */}
       <Menu.Item key="logout" onClick={handleLogout}>
-        Logout
+        ออกจากระบบ
       </Menu.Item>
     </Menu>
   );
@@ -45,7 +45,7 @@ const Header = ({ title }) => {
       <div className="header-user">
         <Dropdown overlay={menu} trigger={["click"]}>
           <div className="user-info">
-            {/* <Avatar src={person} alt="User Avatar" /> */}
+            {/* <Avatar src={person} alt="รูปโปรไฟล์ผู้ใช้" /> */}
             <div className="user-details">
               <span className="user-name">{user}</span>
             </div>

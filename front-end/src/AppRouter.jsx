@@ -34,6 +34,7 @@ import UserTerms from "./pages/admin/Terms"
 import GoodsPages from "./pages/admin/Goods";
 import Finance from "./pages/admin/Finance";
 import TestFinancePage from "./pages/TestFinancePage";
+import LineContactButton from "./components/LineContactButton";
 
 const AppRouter = () => (
   <Router>
@@ -216,6 +217,7 @@ const AppRouter = () => (
         {/* 404 route */}
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      <LineContactButton />
     </AutoLogoutProvider>
   </Router>
 );

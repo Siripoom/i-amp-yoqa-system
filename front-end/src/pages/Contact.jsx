@@ -31,10 +31,10 @@ const Contact = () => {
       if (response.status === "success" && Array.isArray(response.data)) {
         setMasterImages(response.data);
       } else {
-        console.error("Failed to fetch master images");
+        console.error("โหลดรูปครูผู้สอนไม่สำเร็จ");
       }
     } catch (err) {
-      console.error("Failed to fetch master images", err);
+      console.error("โหลดรูปครูผู้สอนไม่สำเร็จ", err);
     } finally {
       setLoading(false);
     }
@@ -93,12 +93,12 @@ const Contact = () => {
       {/* Grid Layout สำหรับแสดงครูโยคะ */}
       <div className="container mx-auto px-4 py-10">
         <Title level={2} className="text-center text-primary mb-8">
-          Meet Our Yoga Masters
+          พบกับครูโยคะของเรา
         </Title>
 
         {loading ? (
           <div className="text-center text-primary font-semibold">
-            Loading masters...
+            กำลังโหลดข้อมูลครูผู้สอน...
           </div>
         ) : (
           <Row gutter={[24, 24]} justify="center">
@@ -162,7 +162,7 @@ const Contact = () => {
                     {instructor.description && (
                       <div className="text-start mb-3">
                         <Text strong className="text-text text-base block mb-2">
-                          Certificate
+                          ประกาศนียบัตร
                         </Text>
                         {instructor.description.split(',').map((item, index) => (
                           <div key={index} className="mb-1">
@@ -204,7 +204,7 @@ const Contact = () => {
                         onClick={() => showVideoModal(instructor)}
                         className="bg-primary border-none"
                       >
-                        Watch Video
+                        ดูวิดีโอ
                       </Button>
                     </div>
                   )}
@@ -217,9 +217,9 @@ const Contact = () => {
         {!loading && masterImages.length === 0 && (
           <div className="text-center text-secondary py-8">
             <Title level={4} className="text-secondary">
-              No masters available at the moment
+              ขณะนี้ยังไม่มีข้อมูลครูผู้สอน
             </Title>
-            <Text>Please check back later for our yoga masters.</Text>
+            <Text>โปรดกลับมาตรวจสอบข้อมูลครูผู้สอนภายหลัง</Text>
           </div>
         )}
       </div>
@@ -271,13 +271,13 @@ const Contact = () => {
           <div style={{ padding: "16px" }}>
             {selectedMaster.specialization && (
               <div className="mb-2">
-                <Text strong>Specialization: </Text>
+                <Text strong>ความเชี่ยวชาญ: </Text>
                 <Text>{selectedMaster.specialization}</Text>
               </div>
             )}
             {selectedMaster.bio && (
               <div>
-                <Text strong>About: </Text>
+                <Text strong>เกี่ยวกับ: </Text>
                 <Text>{selectedMaster.bio}</Text>
               </div>
             )}

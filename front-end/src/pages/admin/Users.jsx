@@ -90,17 +90,17 @@ const UserPage = () => {
       if (response.status === "success") {
         setUsers(response.users); // Extract `users` from the response
       } else {
-        message.error("Failed to fetch users.");
+        message.error("โหลดรายชื่อผู้ใช้ไม่สำเร็จ");
       }
     } catch (error) {
-      message.error(`Failed to fetch users: ${error.message}`);
+      message.error(`โหลดรายชื่อผู้ใช้ไม่สำเร็จ: ${error.message}`);
     }
   };
 
   // ฟังก์ชันใหม่สำหรับดึงประวัติการจองของผู้ใช้
   const fetchUserHistory = async (userId, userName) => {
     if (!canViewHistory) {
-      message.warning("You don't have permission to view user history.");
+      message.warning("คุณไม่มีสิทธิ์ดูประวัติผู้ใช้");
       return;
     }
 
@@ -114,11 +114,11 @@ const UserPage = () => {
       if (response && response.reservations) {
         setUserReservations(response.reservations);
       } else {
-        message.info("No reservation history found for this user.");
+        message.info("ไม่พบประวัติการจองของผู้ใช้นี้");
       }
     } catch (error) {
       console.error("Error fetching reservation history:", error);
-      message.error("Failed to fetch reservation history.");
+      message.error("โหลดประวัติการจองไม่สำเร็จ");
     } finally {
       setLoadingHistory(false);
     }
@@ -127,7 +127,7 @@ const UserPage = () => {
   // ฟังก์ชันสำหรับดึงประวัติการซื้อของผู้ใช้
   const fetchUserOrders = async (userId, userName) => {
     if (!canViewHistory) {
-      message.warning("You don't have permission to view user orders.");
+      message.warning("คุณไม่มีสิทธิ์ดูคำสั่งซื้อของผู้ใช้");
       return;
     }
 
@@ -141,11 +141,11 @@ const UserPage = () => {
       if (response && response.data) {
         setUserOrders(response.data);
       } else {
-        message.info("No order history found for this user.");
+        message.info("ไม่พบประวัติคำสั่งซื้อของผู้ใช้นี้");
       }
     } catch (error) {
       console.error("Error fetching order history:", error);
-      message.error("Failed to fetch order history.");
+      message.error("โหลดประวัติคำสั่งซื้อไม่สำเร็จ");
     } finally {
       setLoadingOrders(false);
     }
@@ -153,7 +153,7 @@ const UserPage = () => {
 
   const showCreateModal = () => {
     if (!canCreate) {
-      message.warning("You don't have permission to create users.");
+      message.warning("คุณไม่มีสิทธิ์สร้างผู้ใช้");
       return;
     }
     setEditingUser(null);
@@ -165,7 +165,7 @@ const UserPage = () => {
 
   const showEditModal = (record) => {
     if (!canEdit && userRole !== "Accounting") {
-      message.warning("You don't have permission to edit users.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขผู้ใช้");
       return;
     }
     setEditingUser(record);
@@ -202,17 +202,17 @@ const UserPage = () => {
   const handleSave = async () => {
     // Check permissions
     if (userRole === "Accounting") {
-      message.warning("You don't have permission to modify user data.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขข้อมูลผู้ใช้");
       return;
     }
 
     if (editingUser && !canEdit) {
-      message.warning("You don't have permission to edit users.");
+      message.warning("คุณไม่มีสิทธิ์แก้ไขผู้ใช้");
       return;
     }
 
     if (!editingUser && !canCreate) {
-      message.warning("You don't have permission to create users.");
+      message.warning("คุณไม่มีสิทธิ์สร้างผู้ใช้");
       return;
     }
 
@@ -253,37 +253,37 @@ const UserPage = () => {
 
       if (editingUser) {
         await updateUser(editingUser._id, userPayload);
-        message.success("User updated successfully");
+        message.success("แก้ไขข้อมูลผู้ใช้สำเร็จ");
       } else {
         await createUser(userPayload);
-        message.success("User created successfully");
+        message.success("สร้างผู้ใช้สำเร็จ");
       }
       fetchUsers();
       setIsModalVisible(false);
     } catch (error) {
-      message.error(`Failed to save user: ${error.message}`);
+      message.error(`บันทึกผู้ใช้ไม่สำเร็จ: ${error.message}`);
     }
   };
 
   const handleDelete = async () => {
     if (!canDelete) {
-      message.warning("You don't have permission to delete users.");
+      message.warning("คุณไม่มีสิทธิ์ลบผู้ใช้");
       return;
     }
 
     try {
       await deleteUser(editingUser._id);
-      message.success("User deleted successfully");
+      message.success("ลบผู้ใช้สำเร็จ");
       fetchUsers(); // Refresh the user list
       setIsModalVisible(false);
     } catch (error) {
-      message.error(`Failed to delete user: ${error.message}`);
+      message.error(`ลบผู้ใช้ไม่สำเร็จ: ${error.message}`);
     }
   };
 
   // Function to format expiry date and calculate days left
   const formatExpiryInfo = (date) => {
-    if (!date) return { text: "Not set", daysLeft: null };
+    if (!date) return { text: "ยังไม่ได้ระบุ", daysLeft: null };
 
     const expiryDate = moment(date).endOf("day");
     const now = moment().startOf("day");
@@ -301,28 +301,28 @@ const UserPage = () => {
   };
 
   const columns = [
-    { title: "Code", dataIndex: "code", key: "code" },
-    { title: "Nickname", dataIndex: "nickname", key: "nickname" },
-    { title: "First Name", dataIndex: "first_name", key: "first_name" },
-    { title: "Last Name", dataIndex: "last_name", key: "last_name" },
-    { title: "Email", dataIndex: "email", key: "email" },
+    { title: "รหัส", dataIndex: "code", key: "code" },
+    { title: "ชื่อเล่น", dataIndex: "nickname", key: "nickname" },
+    { title: "ชื่อ", dataIndex: "first_name", key: "first_name" },
+    { title: "นามสกุล", dataIndex: "last_name", key: "last_name" },
+    { title: "อีเมล", dataIndex: "email", key: "email" },
     // {
     //   title: "Birth Date",
     //   dataIndex: "birth_date",
     //   key: "birth_date",
     //   render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : null),
     // },
-    {title: "Phone", dataIndex: "phone", key: "phone" },
+    {title: "เบอร์โทรศัพท์", dataIndex: "phone", key: "phone" },
     {
-      title: "Gender",
+      title: "เพศ",
       dataIndex: "gender",
       key: "gender",
       render: (gender) => gender === "male" ? "ชาย" : gender === "female" ? "หญิง" : "-",
     },
-    { title: "Address", dataIndex: "address", key: "address" },
+    { title: "ที่อยู่", dataIndex: "address", key: "address" },
     ...(canEdit
       ? [{
-          title: "Medical Condition",
+          title: "โรคประจำตัว",
           key: "medical_condition",
           render: (_, record) => record.has_medical_condition
             ? record.medical_condition_details || "มี"
@@ -330,7 +330,7 @@ const UserPage = () => {
         }]
       : []),
     {
-      title: "Remaining Session",
+      title: "จำนวนครั้งคงเหลือ",
       dataIndex: "remaining_session",
       key: "remaining_session",
       render: (sessions) => (
@@ -338,13 +338,13 @@ const UserPage = () => {
       ),
     },
     {
-      title: "Expiration Date",
+      title: "วันหมดอายุ",
       dataIndex: "sessions_expiry_date",
       key: "sessions_expiry_date",
       render: (date) => {
         const { text, daysLeft, status } = formatExpiryInfo(date);
         return (
-          <Tooltip title={daysLeft !== null ? `${daysLeft} days left` : ""}>
+          <Tooltip title={daysLeft !== null ? `เหลือ ${daysLeft} วัน` : ""}>
             <Tag icon={date ? <CalendarOutlined /> : null} color={status}>
               {text}
               {daysLeft !== null && daysLeft > 0 ? ` (${daysLeft} days)` : ""}
@@ -354,12 +354,12 @@ const UserPage = () => {
       },
     },
     {
-      title: "Role",
+      title: "บทบาท",
       dataIndex: ["role_id"], // Access nested field
       key: "role_id",
     },
     // {
-    //   title: "Status",
+    //   title: "สถานะ",
     //   key: "status",
     //   render: (record) => (
     //     <Tag color={record.deleted ? "red" : "green"}>
@@ -368,7 +368,7 @@ const UserPage = () => {
     //   ),
     // },
     {
-      title: "Action",
+      title: "จัดการ",
       key: "action",
       render: (record) => (
         <Space>
@@ -390,7 +390,7 @@ const UserPage = () => {
                   `${record.first_name} ${record.last_name}`
                 )
               }
-              title="View Reservation History"
+              title="ดูประวัติการจอง"
             >
 
             </Button>
@@ -406,7 +406,7 @@ const UserPage = () => {
                   `${record.first_name} ${record.last_name}`
                 )
               }
-              title="View Order History"
+              title="ดูประวัติคำสั่งซื้อ"
             >
 
             </Button>
@@ -422,13 +422,13 @@ const UserPage = () => {
       return (
         <div style={{ textAlign: "center", padding: "40px 0" }}>
           <Spin size="large" />
-          <div style={{ marginTop: 16 }}>Loading reservation history...</div>
+          <div style={{ marginTop: 16 }}>กำลังโหลดประวัติการจอง...</div>
         </div>
       );
     }
 
     if (!userReservations || userReservations.length === 0) {
-      return <Empty description="No reservation history found" />;
+      return <Empty description="ไม่พบประวัติการจอง" />;
     }
 
     return (
@@ -464,31 +464,31 @@ const UserPage = () => {
                 }
                 title={
                   <Space>
-                    <span>{classInfo.title || "Unknown Class"}</span>
+                    <span>{classInfo.title || "ไม่ทราบชื่อคลาส"}</span>
                     <Tag color={item.status === "Reserved" ? "green" : "red"}>
-                      {item.status}
+                      {item.status === "Reserved" ? "จองแล้ว" : item.status === "Cancelled" ? "ยกเลิกแล้ว" : item.status}
                     </Tag>
                   </Space>
                 }
                 description={
                   <div>
                     <p>
-                      <strong>Date:</strong> {classDate}
+                      <strong>วันที่:</strong> {classDate}
                     </p>
                     <p>
-                      <strong>Time:</strong> {classTime}
+                      <strong>เวลา:</strong> {classTime}
                     </p>
                     <p>
-                      <strong>Instructor:</strong>{" "}
+                      <strong>ครูผู้สอน:</strong>{" "}
                       {classInfo.instructor || "N/A"}
                     </p>
                     {item.status === "Reserved" && classInfo.room_number && (
                       <p>
-                        <strong>Room:</strong> {classInfo.room_number}
+                        <strong>ห้อง:</strong> {classInfo.room_number}
                       </p>
                     )}
                     <p>
-                      <strong>Reservation Date:</strong>{" "}
+                      <strong>วันที่จอง:</strong>{" "}
                       {moment(item.reservation_date).format(
                         "DD MMM YYYY HH:mm"
                       )}
@@ -514,13 +514,13 @@ const UserPage = () => {
       return (
         <div style={{ textAlign: "center", padding: "40px 0" }}>
           <Spin size="large" />
-          <div style={{ marginTop: 16 }}>Loading order history...</div>
+          <div style={{ marginTop: 16 }}>กำลังโหลดประวัติคำสั่งซื้อ...</div>
         </div>
       );
     }
 
     if (!userOrders || userOrders.length === 0) {
-      return <Empty description="No order history found" />;
+      return <Empty description="ไม่พบประวัติคำสั่งซื้อ" />;
     }
 
     return (
@@ -586,24 +586,24 @@ const UserPage = () => {
                 description={
                   <div>
                     <p>
-                      <strong>Order Date:</strong> {orderDate}
+                      <strong>วันที่สั่งซื้อ:</strong> {orderDate}
                     </p>
                     {order.status === "อนุมัติ" && (
                       <p>
-                        <strong>Approval Date:</strong> {approvalDate}
+                        <strong>วันที่อนุมัติ:</strong> {approvalDate}
                       </p>
                     )}
                     <p>
-                      <strong>Quantity:</strong> {order.quantity || 1}
+                      <strong>จำนวน:</strong> {order.quantity || 1}
                     </p>
                     {isProduct && (
                       <>
                         <p>
-                          <strong>Total Sessions:</strong>{" "}
+                          <strong>จำนวนครั้งทั้งหมด:</strong>{" "}
                           {order.total_sessions || 0}
                         </p>
                         <p>
-                          <strong>Duration:</strong> {order.total_duration || 0}{" "}
+                          <strong>ระยะเวลา:</strong> {order.total_duration || 0}{" "}
                           days
                         </p>
                       </>
@@ -612,23 +612,23 @@ const UserPage = () => {
                       <>
                         {order.size && (
                           <p>
-                            <strong>Size:</strong> {order.size}
+                            <strong>ขนาด:</strong> {order.size}
                           </p>
                         )}
                         {order.color && (
                           <p>
-                            <strong>Color:</strong> {order.color}
+                            <strong>สี:</strong> {order.color}
                           </p>
                         )}
                       </>
                     )}
                     <p>
-                      <strong>Total Price:</strong>{" "}
+                      <strong>ราคารวม:</strong>{" "}
                       {(order.total_price || 0).toLocaleString()} ฿
                     </p>
                     {order.invoice_number && (
                       <p>
-                        <strong>Invoice Number:</strong> {order.invoice_number}
+                        <strong>เลขที่ใบแจ้งหนี้:</strong> {order.invoice_number}
                       </p>
                     )}
                   </div>
@@ -653,7 +653,7 @@ const UserPage = () => {
       </Sider>
 
       <Layout>
-        <Header title="Users" />
+        <Header title="ผู้ใช้" />
 
         <Content className="user-container">
           {userRole === "Accounting" && (
@@ -669,7 +669,7 @@ const UserPage = () => {
             </div>
           )}
           <div className="user-header">
-            <h2>Users</h2>
+            <h2>ผู้ใช้</h2>
             {canCreate && (
               <Button
                 type="primary"
@@ -677,7 +677,7 @@ const UserPage = () => {
                 icon={<PlusOutlined />}
                 onClick={showCreateModal}
               >
-                Create User
+                สร้างผู้ใช้
               </Button>
             )}
           </div>
@@ -687,10 +687,10 @@ const UserPage = () => {
               defaultValue="User Name"
               style={{ width: 150, marginRight: 10 }}
             >
-              <Option value="User Name">User Name</Option>
+              <Option value="User Name">ชื่อผู้ใช้</Option>
             </Select>
             <Input
-              placeholder="Search"
+              placeholder="ค้นหา"
               prefix={<SearchOutlined />}
               style={{ width: 200, marginRight: 10 }}
               onChange={handleSearch}
@@ -712,7 +712,7 @@ const UserPage = () => {
 
           {/* Modal สำหรับเพิ่ม/แก้ไขข้อมูลผู้ใช้ */}
           <Modal
-            title={editingUser ? "Edit User" : "Create User"}
+            title={editingUser ? "แก้ไขผู้ใช้" : "สร้างผู้ใช้"}
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={[
@@ -723,74 +723,75 @@ const UserPage = () => {
                   icon={<DeleteOutlined />}
                   onClick={handleDelete}
                 >
-                  Delete
+                  ลบ
                 </Button>
               ),
-              <Button key="cancel" onClick={handleCancel}>
-                Cancel
+                <Button key="cancel" onClick={handleCancel}>
+                  ยกเลิก
               </Button>,
               // Only show Save button if user has permission to create/edit
               (canCreate || canEdit) && (
                 <Button key="save" type="primary" onClick={handleSave}>
-                  Save
+                  บันทึก
                 </Button>
               ),
             ].filter(Boolean)} // Remove null/undefined elements
           >
             <Form form={form} layout="vertical">
-              <Form.Item name="email" label="Email">
+              <Form.Item name="email" label="อีเมล">
                 <Input disabled={userRole !== "SuperAdmin"} />
               </Form.Item>
-              <Form.Item name="password" label="Password">
+              <Form.Item name="password" label="รหัสผ่าน">
                 <Input.Password disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="first_name"
-                label="First Name"
+                label="ชื่อ"
                 rules={[
-                  { required: true, message: "Please enter the first name" },
+                  { required: true, message: "กรุณาระบุชื่อ" },
                 ]}
               >
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="last_name"
-                label="Last Name"
+                label="นามสกุล"
                 rules={[
-                  { required: true, message: "Please enter the last name" },
+                  { required: true, message: "กรุณาระบุนามสกุล" },
                 ]}
               >
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
-              <Form.Item name="nickname" label="Nickname">
+              <Form.Item name="nickname" label="ชื่อเล่น">
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
-              <Form.Item name="code" label="code">
+              <Form.Item name="code" label="รหัส"
+              >
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="phone"
-                label="Phone"
+                label="เบอร์โทรศัพท์"
                 rules={[
-                  { required: true, message: "Please enter the phone number" },
+                  { required: true, message: "กรุณาระบุเบอร์โทรศัพท์" },
                 ]}
               >
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="birth_date"
-                label="Birth Date"
-                rules={[{ message: "Please enter the birth date" }]}
+                label="วันเกิด"
+                rules={[{ message: "กรุณาระบุวันเกิด" }]}
               >
                 <Input type="date" disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="gender"
-                label="Gender"
+                label="เพศ"
                 rules={[
                   {
                     required: selectedRole === "Member",
-                    message: "Please select gender",
+                    message: "กรุณาเลือกเพศ",
                   },
                 ]}
               >
@@ -801,12 +802,12 @@ const UserPage = () => {
               </Form.Item>
               <Form.Item
                 name="address"
-                label="Address"
+                label="ที่อยู่"
                 rules={[
                   {
                     required: selectedRole === "Member",
                     whitespace: true,
-                    message: "Please enter address",
+                    message: "กรุณาระบุที่อยู่",
                   },
                 ]}
               >
@@ -815,11 +816,11 @@ const UserPage = () => {
               {canEdit && (
                 <Form.Item
                   name="has_medical_condition"
-                  label="Medical Condition"
+                  label="โรคประจำตัว"
                   rules={[
                     {
                       required: selectedRole === "Member",
-                      message: "Please specify medical condition",
+                      message: "กรุณาระบุข้อมูลโรคประจำตัว",
                     },
                   ]}
                 >
@@ -832,12 +833,12 @@ const UserPage = () => {
               {canEdit && hasMedicalCondition === true && (
                 <Form.Item
                   name="medical_condition_details"
-                  label="Medical Condition Details"
+                  label="รายละเอียดโรคประจำตัว"
                   rules={[
                     {
                       required: true,
                       whitespace: true,
-                      message: "Please enter medical condition details",
+                      message: "กรุณาระบุรายละเอียดโรคประจำตัว",
                     },
                   ]}
                 >
@@ -846,38 +847,38 @@ const UserPage = () => {
               )}
               <Form.Item
                 name="role_id"
-                label="Role"
-                rules={[{ required: true, message: "Please select the role" }]}
+                label="บทบาท"
+                rules={[{ required: true, message: "กรุณาเลือกบทบาท" }]}
               >
                 <Select disabled={userRole === "Accounting"}>
-                  <Option value="Member">Member</Option>
-                  <Option value="Instructor">Instructor</Option>
-                  <Option value="Admin">Admin</Option>
-                  <Option value="Accounting">Accounting</Option>
+                  <Option value="Member">สมาชิก</Option>
+                  <Option value="Instructor">ครูผู้สอน</Option>
+                  <Option value="Admin">ผู้ดูแลระบบ</Option>
+                  <Option value="Accounting">บัญชี</Option>
                   {userRole === "SuperAdmin" && (
-                    <Option value="SuperAdmin">SuperAdmin</Option>
+                    <Option value="SuperAdmin">ผู้ดูแลระบบสูงสุด</Option>
                   )}
                 </Select>
               </Form.Item>
-              <Form.Item name="referrer_id" label="Referrer ID">
+              <Form.Item name="referrer_id" label="รหัสผู้แนะนำ">
                 <Input disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="total_classes"
-                label="Total Classes"
+                label="จำนวนคลาสทั้งหมด"
                 rules={[
-                  { required: false, message: "Please enter total classes" },
+                  { required: false, message: "กรุณาระบุจำนวนคลาสทั้งหมด" },
                 ]}
               >
                 <Input type="number" disabled={userRole === "Accounting"} />
               </Form.Item>
               <Form.Item
                 name="remaining_session"
-                label="Remaining Session"
+                label="จำนวนครั้งคงเหลือ"
                 rules={[
                   {
                     required: false,
-                    message: "Please enter remaining classes",
+                    message: "กรุณาระบุจำนวนครั้งคงเหลือ",
                   },
                 ]}
               >
@@ -887,11 +888,11 @@ const UserPage = () => {
               {/* Changed to Days Until Expiration field */}
               <Form.Item
                 name="expiry_days"
-                label="Days Until Expiration"
+                label="จำนวนวันก่อนหมดอายุ"
                 rules={[
                   {
                     required: false,
-                    message: "Please enter number of days until expiration",
+                    message: "กรุณาระบุจำนวนวันก่อนหมดอายุ",
                   },
                 ]}
                 extra={
@@ -899,13 +900,13 @@ const UserPage = () => {
                     ? `Current expiry date: ${moment(
                       editingUser.sessions_expiry_date
                     ).format("YYYY-MM-DD")}`
-                    : "Enter number of days until sessions expire"
+                    : "ระบุจำนวนวันก่อนแพ็กเกจหมดอายุ"
                 }
               >
                 <InputNumber
                   style={{ width: "100%" }}
                   min={0}
-                  placeholder="Enter days (e.g., 30)"
+                  placeholder="ระบุจำนวนวัน เช่น 30"
                   onChange={(value) => setExpiryDays(value)}
                   disabled={userRole === "Accounting"}
                 />
@@ -913,9 +914,9 @@ const UserPage = () => {
 
               <Form.Item
                 name="special_rights"
-                label="Special Rights"
+                label="สิทธิพิเศษ"
                 rules={[
-                  { required: false, message: "Please enter special rights" },
+                  { required: false, message: "กรุณาระบุสิทธิพิเศษ" },
                 ]}
               >
                 <Input.TextArea rows={2} disabled={userRole === "Accounting"} />
@@ -931,7 +932,7 @@ const UserPage = () => {
                 <span>
                   {selectedUserHistory
                     ? `${selectedUserHistory}'s Reservation History`
-                    : "Reservation History"}
+                    : "ประวัติการจอง"}
                 </span>
               </Space>
             }
@@ -944,20 +945,20 @@ const UserPage = () => {
                 type="primary"
                 onClick={() => setHistoryDrawerVisible(false)}
               >
-                Close
+                ปิด
               </Button>
             }
           >
             <div>
               <div className="user-history-summary">
-                <h3>Reservation Summary</h3>
+                <h3>สรุปรายการจอง</h3>
                 <div style={{ marginBottom: 16 }}>
                   <p>
-                    <strong>Total Reservations: </strong>
+                    <strong>การจองทั้งหมด: </strong>
                     {userReservations.length}
                   </p>
                   {/* <p>
-                    <strong>Active Reservations: </strong>
+                    <strong>การจองที่ใช้งาน: </strong>
                     {
                       userReservations.filter(
                         (item) => item.status === "Reserved"
@@ -965,7 +966,7 @@ const UserPage = () => {
                     }
                   </p>
                   <p>
-                    <strong>Cancelled Reservations: </strong>
+                    <strong>การจองที่ยกเลิก: </strong>
                     {
                       userReservations.filter(
                         (item) => item.status === "Cancelled"
@@ -978,7 +979,7 @@ const UserPage = () => {
               <Divider />
 
               <div className="user-history-list">
-                <h3>Reservation Details</h3>
+                <h3>รายละเอียดการจอง</h3>
                 {renderReservationList()}
               </div>
             </div>
@@ -992,7 +993,7 @@ const UserPage = () => {
                 <span>
                   {selectedUserOrders
                     ? `${selectedUserOrders}'s Order History`
-                    : "Order History"}
+                    : "ประวัติคำสั่งซื้อ"}
                 </span>
               </Space>
             }
@@ -1005,28 +1006,28 @@ const UserPage = () => {
                 type="primary"
                 onClick={() => setOrderDrawerVisible(false)}
               >
-                Close
+                ปิด
               </Button>
             }
           >
             <div>
               <div className="user-order-summary">
-                <h3>Order Summary</h3>
+                <h3>สรุปคำสั่งซื้อ</h3>
                 <div style={{ marginBottom: 16 }}>
                   <p>
-                    <strong>Total Orders: </strong>
+                    <strong>คำสั่งซื้อทั้งหมด: </strong>
                     {userOrders.length}
                   </p>
                   <p>
-                    <strong>Product Orders: </strong>
+                    <strong>คำสั่งซื้อคอร์ส: </strong>
                     {userOrders.filter((item) => item.order_type === "product").length}
                   </p>
                   <p>
-                    <strong>Goods Orders: </strong>
+                    <strong>คำสั่งซื้อสินค้า: </strong>
                     {userOrders.filter((item) => item.order_type === "goods").length}
                   </p>
                   <p>
-                    <strong>Total Amount: </strong>
+                    <strong>ยอดรวม: </strong>
                     {userOrders.reduce((sum, order) => sum + (order.total_price || 0), 0).toLocaleString()} ฿
                   </p>
                 </div>
@@ -1035,7 +1036,7 @@ const UserPage = () => {
               <Divider />
 
               <div className="user-order-list">
-                <h3>Order Details</h3>
+                <h3>รายละเอียดคำสั่งซื้อ</h3>
                 {renderOrderList()}
               </div>
             </div>

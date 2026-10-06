@@ -960,7 +960,7 @@ const Finance = () => {
       </Sider>
 
       <Layout>
-        <Header title="Finance Management" />
+        <Header title="จัดการการเงิน" />
 
         <Content className="p-6">
           {userRole === "Accounting" && (

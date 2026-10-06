@@ -29,7 +29,7 @@ const CourseDetail = () => {
             <div className=" h-auto flex items-center justify-center">
               <img
                 src={image}
-                alt="Yoga Hero"
+                alt="ภาพหลักโยคะ"
                 className="rounded-lg shadow-lg"
               />
             </div>
@@ -55,19 +55,19 @@ const CourseDetail = () => {
             {/* Instructor Information */}
             <div className="flex items-center mt-4">
               {/* <div className="bg-border w-12 h-12 rounded-full flex items-center justify-center">
-                <span className="text-secondary text-xs">Avatar</span>
+                <span className="text-secondary text-xs">รูปโปรไฟล์</span>
               </div> */}
               <div className="ml-4">
-                {/* <Text className="block font-bold">Instructor Name</Text>
+                {/* <Text className="block font-bold">ชื่อครูผู้สอน</Text>
                 <Text className="text-secondary text-sm">
-                  Instructor Role and Organization
+                  ตำแหน่งและองค์กรของครูผู้สอน
                 </Text> */}
               </div>
             </div>
 
             {/* Session Selector with Radio Buttons */}
             {/* <div className="mt-6">
-              <Text className="text-text font-medium">Choose Session:</Text>
+              <Text className="text-text font-medium">เลือกจำนวนครั้ง:</Text>
               <div className="mt-2">
                 <Radio.Group
                   onChange={handleSessionChange}
@@ -88,7 +88,7 @@ const CourseDetail = () => {
                   type="primary"
                   className="bg-primary text-white px-6 rounded-lg hover:bg-warning"
                 >
-                  Add to cart
+                  เพิ่มลงตะกร้า
                 </Button>
               </Link>
             </div>

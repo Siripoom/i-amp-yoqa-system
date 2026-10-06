@@ -689,13 +689,21 @@ const Booking = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               {events.map((event) => {
                 const bookingProps = getBookingButtonProps(event);
+                const cardStyle = eventStyle(event.color);
 
                 return (
                   <Card
                     key={event.id}
-                    className="p-4 rounded-lg shadow-md"
+                    className="rounded-lg shadow-md"
                     title={event.title}
-                    styles={{ header: eventStyle(event.color) }}
+                    style={cardStyle}
+                    styles={{
+                      header: {
+                        color: cardStyle.color,
+                        borderBottomColor: `${cardStyle.color}66`,
+                      },
+                      body: { color: cardStyle.color },
+                    }}
                   >
                     <p>
                       <strong>ครูผู้สอน:</strong> {event.instructor}
@@ -711,9 +719,12 @@ const Booking = () => {
                       </Tag>
                     </p>
                     <div className="mb-4 mt-4">
-                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                      <div
+                        className="p-4 rounded-lg border"
+                        style={{ borderColor: `${cardStyle.color}66` }}
+                      >
                         {/* แสดงเวลาในรูปแบบ เวลาเริ่ม - เวลาจบ */}
-                        <p className="text-xl font-bold text-primary flex items-center justify-center mb-2">
+                        <p className="text-xl font-bold flex items-center justify-center mb-2">
                           <span className="text-2xl mr-2">🕒</span>
                           <span>
                             {moment(event.date).format("HH:mm")} -{" "}
@@ -722,7 +733,7 @@ const Booking = () => {
                         </p>
 
                         {/* แสดงวันที่ในรูปแบบไทย */}
-                        <p className="text-center text-primary font-medium">
+                        <p className="text-center font-medium">
                           วันที่{" "}
                           {moment(event.date).locale("th").format("D MMMM ") +
                             (parseInt(moment(event.date).format("YYYY")) + 543)}
@@ -740,13 +751,13 @@ const Booking = () => {
                     </p>
                     <p>
                       <strong>จำนวนคนเข้าร่วม:</strong>{" "}
-                      <span className="text-primary text-lg">
+                      <span className="text-lg">
                         {event.amount}
                       </span>
                     </p>
                     <p>
                       <strong>รายชื่อคนเข้าร่วม:</strong>{" "}
-                      <span className="text-primary text-sm">
+                      <span className="text-sm">
                         {event.participants && event.participants.length > 0
                           ? event.participants.join(", ")
                           : "ยังไม่มีผู้เข้าร่วม"}
@@ -758,13 +769,13 @@ const Booking = () => {
                       <>
                         <p>
                           <strong>📌 ห้องเรียน:</strong>{" "}
-                          <span className="text-primary">
+                          <span>
                             {event.roomNumber}
                           </span>
                         </p>
                         <p>
                           <strong>🔑 รหัสผ่าน:</strong>{" "}
-                          <span className="text-primary">
+                          <span>
                             {event.passcode}
                           </span>
                         </p>
@@ -774,7 +785,8 @@ const Booking = () => {
                             href={event.zoomLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary underline"
+                            className="underline"
+                            style={{ color: cardStyle.color }}
                           >
                             เข้าร่วมคลาสผ่าน Zoom
                           </a>
@@ -785,7 +797,7 @@ const Booking = () => {
                     <div className="mt-4 text-center">
                       {event.reserved && currentUser ? (
                         <div>
-                          <span className="text-success font-semibold block mb-2">
+                          <span className="font-semibold block mb-2">
                             จองแล้ว ✅
                           </span>
                           {canCancelReservation(event.date) ? (
@@ -798,7 +810,7 @@ const Booking = () => {
                               ยกเลิกการจอง
                             </Button>
                           ) : (
-                            <span className="text-error text-sm block">
+                            <span className="text-sm block">
                               ไม่สามารถยกเลิกได้ (เหลือน้อยกว่า 5
                               นาทีก่อนเริ่มคลาส)
                             </span>
