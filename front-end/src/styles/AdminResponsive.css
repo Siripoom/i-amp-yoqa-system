@@ -1,0 +1,121 @@
+/* Shared layout rules for the admin and instructor screens. */
+body.admin-responsive-page .ant-layout {
+  min-width: 0;
+}
+
+.dashboard-header + .ant-layout-content {
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-header + .ant-layout-content {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    padding-bottom: 88px;
+  }
+
+  .dashboard-header + .ant-layout-content .ant-table-wrapper,
+  .dashboard-header + .ant-layout-content .ant-card,
+  .dashboard-header + .ant-layout-content .ant-tabs {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard-header + .ant-layout-content .ant-table-content {
+    overflow-x: auto;
+  }
+
+  .dashboard-header + .ant-layout-content .ant-table-content table {
+    min-width: 700px;
+  }
+
+  .dashboard-header + .ant-layout-content .ant-pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .dashboard-header + .ant-layout-content .ant-tabs-nav-wrap {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-header + .ant-layout-content.product-container,
+  .dashboard-header + .ant-layout-content.course-container,
+  .dashboard-header + .ant-layout-content.dashboard-container,
+  .dashboard-header + .ant-layout-content.user-container,
+  .dashboard-header + .ant-layout-content.goods-container,
+  .dashboard-header + .ant-layout-content.order-container {
+    padding: 14px;
+  }
+
+  .dashboard-header + .ant-layout-content .course-header,
+  .dashboard-header + .ant-layout-content .course-filters,
+  .dashboard-header + .ant-layout-content .sales-summary-header,
+  .dashboard-header + .ant-layout-content .product-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dashboard-header + .ant-layout-content .course-filters > * {
+    width: 100% !important;
+    margin-right: 0 !important;
+  }
+
+  .dashboard-header + .ant-layout-content .reservation-toolbar,
+  .dashboard-header + .ant-layout-content .user-container .flex.justify-between {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dashboard-header + .ant-layout-content .reservation-toolbar .ant-input-affix-wrapper,
+  .dashboard-header + .ant-layout-content .history-filters,
+  .dashboard-header + .ant-layout-content .history-filters .ant-picker,
+  .dashboard-header + .ant-layout-content .history-filters .ant-input-affix-wrapper {
+    width: 100% !important;
+  }
+
+  .dashboard-header + .ant-layout-content .history-filters .ant-space-item {
+    width: 100%;
+  }
+
+  .dashboard-header + .ant-layout-content .ant-card-body {
+    padding: 16px;
+  }
+
+  body.admin-responsive-page .ant-modal-root .ant-modal {
+    max-width: calc(100vw - 24px);
+  }
+
+  body.admin-responsive-page .ant-modal-root .ant-modal-body .ant-col-12,
+  body.admin-responsive-page .ant-modal-root .ant-modal-body .ant-col-8,
+  body.admin-responsive-page .ant-modal-root .ant-modal-body .ant-col-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  body.admin-responsive-page .ant-modal-root .ant-modal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  body.admin-responsive-page .ant-modal-root .ant-modal-footer .ant-btn {
+    margin-inline-start: 0;
+  }
+
+  .schedule-calendar-scroll {
+    overflow-x: auto;
+  }
+
+  .schedule-calendar-scroll .rbc-calendar {
+    min-width: 560px;
+  }
+
+  .schedule-calendar-scroll .rbc-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

@@ -769,9 +769,10 @@ const Schedule = () => {
               </div>
             )}
           </div>
-          <div style={{ padding: "16px" }}>
+          <div className="schedule-calendar-scroll" style={{ padding: "16px" }}>
             <DragAndDropCalendar
               localizer={localizer}
+              defaultView={window.innerWidth < 768 ? "day" : "month"}
               messages={{ today: "วันนี้", previous: "ก่อนหน้า", next: "ถัดไป", month: "เดือน", week: "สัปดาห์", day: "วัน", agenda: "กำหนดการ", date: "วันที่", time: "เวลา", event: "คลาส", noEventsInRange: "ไม่มีคลาสในช่วงเวลานี้", showMore: (total) => `อีก ${total} คลาส` }}
               events={events}
               startAccessor="start"
@@ -832,6 +833,7 @@ const Schedule = () => {
                   children: (
                     <div>
                       <div
+                        className="reservation-toolbar"
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
@@ -889,7 +891,7 @@ const Schedule = () => {
                               gap: "12px",
                             }}
                           >
-                            <Space wrap>
+                            <Space wrap className="history-filters">
                               <RangePicker
                                 value={dateRange}
                                 onChange={setDateRange}

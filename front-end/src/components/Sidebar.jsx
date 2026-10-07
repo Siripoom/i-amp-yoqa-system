@@ -12,8 +12,9 @@ import {
 } from "@ant-design/icons";
 import "./Sidebar.css";
 import { brand } from "../config/brand.js";
+import PropTypes from "prop-types";
 
-const Sidebar = () => {
+const Sidebar = ({ onNavigate }) => {
   // Get user role from localStorage
   const userRole = localStorage.getItem("role");
 
@@ -30,7 +31,13 @@ const Sidebar = () => {
           className="logo-icon"
         />
       </div>
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" onClick={onNavigate}>
+        {userRole === "Instructor" ? (
+          <NavLink to="/teacher/schedule" className="nav-item">
+            <CalendarOutlined /> <span>ตารางเรียน</span>
+          </NavLink>
+        ) : (
+          <>
         <NavLink
           to="/admin/dashboard"
           activeClassName="active"
@@ -119,12 +126,18 @@ const Sidebar = () => {
             <FileTextOutlined /> <span>รายงานรวม</span>
           </NavLink>
         )}
+          </>
+        )}
         {/* <NavLink to="/" activeClassName="active" className="nav-item">
           <LogoutOutlined /> <span>ออกจากระบบ</span>
         </NavLink> */}
       </nav>
     </div>
   );
+};
+
+Sidebar.propTypes = {
+  onNavigate: PropTypes.func,
 };
 
 export default Sidebar;

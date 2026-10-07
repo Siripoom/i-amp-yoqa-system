@@ -1,12 +1,22 @@
-import { Avatar, Dropdown, Menu } from "antd";
+import { Button, Drawer, Dropdown, Menu } from "antd";
+import { MenuOutlined } from "@ant-design/icons";
 import "./Header.css";
+import "../styles/AdminResponsive.css";
+import Sidebar from "./Sidebar";
 
 import PropTypes from "prop-types";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 const Header = ({ title }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    document.body.classList.add("admin-responsive-page");
+    return () => document.body.classList.remove("admin-responsive-page");
+  }, []);
+  useEffect(() => setMenuOpen(false), [location.pathname]);
   useEffect(() => {
     // ตรวจสอบ token หรือข้อมูลผู้ใช้จาก localStorage
     const token = localStorage.getItem("token");
@@ -40,19 +50,39 @@ const Header = ({ title }) => {
   );
 
   return (
-    <div className="dashboard-header">
-      <h2 className="title">{title}</h2>
-      <div className="header-user">
-        <Dropdown overlay={menu} trigger={["click"]}>
-          <div className="user-info">
-            {/* <Avatar src={person} alt="รูปโปรไฟล์ผู้ใช้" /> */}
-            <div className="user-details">
-              <span className="user-name">{user}</span>
+    <>
+      <div className="dashboard-header">
+        <div className="dashboard-header-leading">
+          <Button
+            className="dashboard-menu-button"
+            icon={<MenuOutlined />}
+            aria-label="เปิดเมนูแอดมิน"
+            onClick={() => setMenuOpen(true)}
+          />
+          <h2 className="title">{title}</h2>
+        </div>
+        <div className="header-user">
+          <Dropdown overlay={menu} trigger={["click"]}>
+            <div className="user-info">
+              <div className="user-details">
+                <span className="user-name">{user}</span>
+              </div>
             </div>
-          </div>
-        </Dropdown>
+          </Dropdown>
+        </div>
       </div>
-    </div>
+      <Drawer
+        title="เมนู"
+        placement="left"
+        width={260}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        styles={{ body: { padding: 0 } }}
+        className="dashboard-mobile-drawer"
+      >
+        <Sidebar onNavigate={() => setMenuOpen(false)} />
+      </Drawer>
+    </>
   );
 };
 Header.propTypes = {
