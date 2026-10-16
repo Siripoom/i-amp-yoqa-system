@@ -1,7 +1,5 @@
-import { eventStyle } from "../theme/tokens.js";
 import {
   Button,
-  Card,
   Typography,
   message,
   Modal,
@@ -12,7 +10,8 @@ import {
 import { useState, useEffect } from "react";
 import moment from "moment";
 import "moment/locale/th";
-import "../styles/Home.css";
+import "../styles/Booking.css";
+import BookingSchedule from "../components/BookingSchedule";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import reservationService from "../services/reservationService";
@@ -25,7 +24,7 @@ import {
   isUserInParticipants,
 } from "../utils/tokenUtils";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const Booking = () => {
   useEffect(() => {
@@ -37,6 +36,8 @@ const Booking = () => {
   const [showDetails, setShowDetails] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [detailId, setDetailId] = useState(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     // ตรวจสอบ token และดึงข้อมูลผู้ใช้
@@ -53,6 +54,7 @@ const Booking = () => {
   const fetchData = async (userId) => {
     try {
       setLoading(true);
+      setLoadError(false);
 
       // ดึงข้อมูลคลาสและข้อมูลผู้ใช้พร้อมกัน
       const [classResponse, userResponse] = await Promise.all([
@@ -71,6 +73,7 @@ const Booking = () => {
       ) {
         console.error("❌ API ไม่ส่งข้อมูลที่ถูกต้อง:", classResponse);
         message.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส ❌");
+        setLoadError(true);
         setLoading(false);
         return;
       }
@@ -109,6 +112,7 @@ const Booking = () => {
         })
       );
     } catch (error) {
+      setLoadError(true);
       console.error("❌ Error fetching classes:", error);
       message.error("ไม่สามารถโหลดข้อมูลคอร์สได้ ❌");
     } finally {
@@ -301,6 +305,7 @@ const Booking = () => {
         }
 
         handleShowDetails(classId);
+        setDetailId(classId);
         message.success("✅ จองคอร์สสำเร็จ!");
         showGuidelinesPopup();
 
@@ -569,32 +574,51 @@ const Booking = () => {
     };
   };
 
-  return (
-    <div
-      className="min-h-screen flex flex-col bg-gradient-to-b"
-      style={{
-        background:
-          "var(--color-background)",
-      }}
-    >
-      <Navbar />
-      <div className="flex-grow flex items-center justify-center mt-4 mb-4">
-        <div className="w-full max-w-5xl p-8 rounded-2xl shadow-md bg-white">
-          <div className="flex justify-between items-center mb-4">
-            <Title level={3} className="text-primary mb-0">
-              จองคลาสเรียน
-            </Title>
-            {currentUser && (
-              <Button
-                type="default"
-                onClick={() => fetchData(currentUser.userId)}
-                loading={loading}
-              >
-                รีเฟรชข้อมูล
-              </Button>
-            )}
-          </div>
+  const detailEvent = events.find((event) => event.id === detailId);
 
+  const renderBookingAction = (event) => {
+    if (event.reserved && currentUser) {
+      return (
+        <Button className="booking-reserved-button" onClick={() => setDetailId(event.id)}>
+          จองแล้ว ✓
+        </Button>
+      );
+    }
+    if (!currentUser) {
+      return <Link className="booking-reserve-link" to="/auth/signin">จองคลาส</Link>;
+    }
+    const bookingProps = getBookingButtonProps(event);
+    return (
+      <Tooltip title={bookingProps.tooltip}>
+        <Button
+          className="booking-reserve-button"
+          onClick={() => handleReserveCourse(event.id)}
+          disabled={bookingProps.disabled}
+        >
+          จองคลาส
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  return (
+    <div className="booking-page">
+      <Navbar />
+      <main className="booking-main">
+        <header className="booking-heading">
+          <h1>จองคลาสเรียน</h1>
+          <span className="booking-heading-script" aria-hidden="true">Book a Class</span>
+          <div className="booking-sprig" aria-hidden="true"><i /><i /><i /><i /></div>
+        </header>
+        <BookingSchedule
+          events={events}
+          loading={loading}
+          loadError={loadError}
+          onRetry={() => fetchData(currentUser?.userId)}
+          onShowDetails={setDetailId}
+          renderBookingAction={renderBookingAction}
+        />
+        <aside className="booking-member-info" aria-label="ข้อมูลการจองและสมาชิก">
           {/* แบนเนอร์แสดงสถานะการหมดอายุ - เฉพาะเมื่อล็อกอินแล้ว */}
           {userInfo && currentUser && (
             <div className="mb-6">
@@ -674,170 +698,57 @@ const Booking = () => {
             />
           )}
 
-          <Text>
-            จองคลาสได้ตลอด สามารถยกเลิกการจองได้ก่อนเริ่มคลาส 5 นาที
-            &quot;โซนเวลาเริ่มคลาสคำนวณจากประเทศไทยปรับเปลี่ยนไปตามโซนเวลาท้องถิ่นในแต่ละประเทศให้อัตโนมัติแล้วนะคะ&quot;
-          </Text>
 
-          {loading ? (
-            <p className="text-center text-secondary">กำลังโหลดข้อมูลคอร์ส...</p>
-          ) : events.length === 0 ? (
-            <p className="text-center text-secondary">
-              ไม่มีคอร์สที่สามารถจองได้
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              {events.map((event) => {
-                const bookingProps = getBookingButtonProps(event);
-                const cardStyle = eventStyle(event.color);
-
-                return (
-                  <Card
-                    key={event.id}
-                    className="rounded-lg shadow-md"
-                    title={event.title}
-                    style={cardStyle}
-                    styles={{
-                      header: {
-                        color: cardStyle.color,
-                        borderBottomColor: `${cardStyle.color}66`,
-                      },
-                      body: { color: cardStyle.color },
-                    }}
-                  >
-                    <p>
-                      <strong>ครูผู้สอน:</strong> {event.instructor}
-                    </p>
-                    <p>
-                      <strong>ผู้เข้าร่วม:</strong>{" "}
-                      <Tag color={event.allowedGender === "all" ? "blue" : "purple"}>
-                        {event.allowedGender === "male"
-                          ? "เฉพาะชาย"
-                          : event.allowedGender === "female"
-                            ? "เฉพาะหญิง"
-                            : "ทุกเพศ"}
-                      </Tag>
-                    </p>
-                    <div className="mb-4 mt-4">
-                      <div
-                        className="p-4 rounded-lg border"
-                        style={{ borderColor: `${cardStyle.color}66` }}
-                      >
-                        {/* แสดงเวลาในรูปแบบ เวลาเริ่ม - เวลาจบ */}
-                        <p className="text-xl font-bold flex items-center justify-center mb-2">
-                          <span className="text-2xl mr-2">🕒</span>
-                          <span>
-                            {moment(event.date).format("HH:mm")} -{" "}
-                            {moment(event.endDate).format("HH:mm")} น.
-                          </span>
-                        </p>
-
-                        {/* แสดงวันที่ในรูปแบบไทย */}
-                        <p className="text-center font-medium">
-                          วันที่{" "}
-                          {moment(event.date).locale("th").format("D MMMM ") +
-                            (parseInt(moment(event.date).format("YYYY")) + 543)}
-                        </p>
-                      </div>
-                    </div>
-                    <p>
-                      <strong>รายละเอียด:</strong> {event.description}
-                    </p>
-                    <p>
-                      <strong>ระดับความยาก:</strong>{" "}
-                      <span className="text-error text-lg">
-                        {"❤️".repeat(event.difficulty)}
-                      </span>
-                    </p>
-                    <p>
-                      <strong>จำนวนคนเข้าร่วม:</strong>{" "}
-                      <span className="text-lg">
-                        {event.amount}
-                      </span>
-                    </p>
-                    <p>
-                      <strong>รายชื่อคนเข้าร่วม:</strong>{" "}
-                      <span className="text-sm">
-                        {event.participants && event.participants.length > 0
-                          ? event.participants.join(", ")
-                          : "ยังไม่มีผู้เข้าร่วม"}
-                      </span>
-                    </p>
-
-                    {/* แสดงรายละเอียดเมื่อจองแล้วหรือหลังจากคลิก "จองคลาสนี้" - เฉพาะเมื่อล็อกอินแล้ว */}
-                    {currentUser && shouldShowDetails(event) && (
-                      <>
-                        <p>
-                          <strong>📌 ห้องเรียน:</strong>{" "}
-                          <span>
-                            {event.roomNumber}
-                          </span>
-                        </p>
-                        <p>
-                          <strong>🔑 รหัสผ่าน:</strong>{" "}
-                          <span>
-                            {event.passcode}
-                          </span>
-                        </p>
-                        <p>
-                          <strong>🔗 ลิงก์ Zoom:</strong>{" "}
-                          <a
-                            href={event.zoomLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline"
-                            style={{ color: cardStyle.color }}
-                          >
-                            เข้าร่วมคลาสผ่าน Zoom
-                          </a>
-                        </p>
-                      </>
-                    )}
-
-                    <div className="mt-4 text-center">
-                      {event.reserved && currentUser ? (
-                        <div>
-                          <span className="font-semibold block mb-2">
-                            จองแล้ว ✅
-                          </span>
-                          {canCancelReservation(event.date) ? (
-                            <Button
-                              danger
-                              onClick={() =>
-                                handleCancelReservation(event.date, event.id)
-                              }
-                            >
-                              ยกเลิกการจอง
-                            </Button>
-                          ) : (
-                            <span className="text-sm block">
-                              ไม่สามารถยกเลิกได้ (เหลือน้อยกว่า 5
-                              นาทีก่อนเริ่มคลาส)
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <Tooltip title={bookingProps.tooltip}>
-                          <Button
-                            type="primary"
-                            className="bg-primary text-white"
-                            onClick={() => handleReserveCourse(event.id)}
-                            disabled={bookingProps.disabled}
-                          >
-                            {!currentUser
-                              ? "เข้าสู่ระบบเพื่อจอง"
-                              : "จองคลาสนี้"}
-                          </Button>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
+          {currentUser && (
+            <Button onClick={() => fetchData(currentUser.userId)} loading={loading}>
+              รีเฟรชข้อมูล
+            </Button>
           )}
-        </div>
-      </div>
+          <p className="booking-guidance">
+            สามารถยกเลิกการจองได้ก่อนเริ่มคลาส 5 นาที
+            <br />เวลาเรียนจะแสดงตามโซนเวลาท้องถิ่นของคุณโดยอัตโนมัติ
+          </p>
+        </aside>
+      </main>
+      <Modal
+        open={Boolean(detailEvent)}
+        title={detailEvent?.title}
+        onCancel={() => setDetailId(null)}
+        footer={null}
+        className="booking-detail-modal"
+      >
+        {detailEvent && (
+          <div className="booking-detail-content">
+            <p>{detailEvent.date.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+            <p>{moment(detailEvent.date).format("HH:mm")} – {moment(detailEvent.endDate).format("HH:mm")} น.</p>
+            <p><strong>ครูผู้สอน:</strong> {detailEvent.instructor || "รอยืนยันครูผู้สอน"}</p>
+            <p><strong>รายละเอียด:</strong> {detailEvent.description || "ไม่มีรายละเอียดเพิ่มเติม"}</p>
+            <p><strong>ระดับความยาก:</strong> {detailEvent.difficulty || "ไม่ระบุ"}</p>
+            <p><strong>ผู้เข้าร่วม:</strong> {detailEvent.allowedGender === "male" ? "เฉพาะชาย" : detailEvent.allowedGender === "female" ? "เฉพาะหญิง" : "ทุกเพศ"}</p>
+            <p><strong>จำนวนคนเข้าร่วม:</strong> {detailEvent.amount}</p>
+            <p><strong>รายชื่อคนเข้าร่วม:</strong> {detailEvent.participants.length ? detailEvent.participants.join(", ") : "ยังไม่มีผู้เข้าร่วม"}</p>
+            {currentUser && shouldShowDetails(detailEvent) && (
+              <div className="booking-join-details">
+                <p><strong>ห้องเรียน:</strong> {detailEvent.roomNumber}</p>
+                <p><strong>รหัสผ่าน:</strong> {detailEvent.passcode}</p>
+                {detailEvent.zoomLink && <a href={detailEvent.zoomLink} target="_blank" rel="noopener noreferrer">เข้าร่วมคลาสผ่าน Zoom ↗</a>}
+              </div>
+            )}
+            <div className="booking-detail-actions">
+              {detailEvent.reserved && currentUser ? (
+                <>
+                  <span className="booking-reserved-label">จองแล้ว ✓</span>
+                  {canCancelReservation(detailEvent.date) ? (
+                    <Button danger onClick={() => handleCancelReservation(detailEvent.date, detailEvent.id)}>ยกเลิกการจอง</Button>
+                  ) : (
+                    <p>ไม่สามารถยกเลิกได้ (เหลือน้อยกว่า 5 นาทีก่อนเริ่มคลาส)</p>
+                  )}
+                </>
+              ) : renderBookingAction(detailEvent)}
+            </div>
+          </div>
+        )}
+      </Modal>
       <Footer />
     </div>
   );
