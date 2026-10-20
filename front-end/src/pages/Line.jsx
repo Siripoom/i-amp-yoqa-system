@@ -74,9 +74,7 @@ const Line = () => {
         if (liff.isLoggedIn()) {
           await handleLiffLogin();
         } else {
-          liff.login({
-            redirectUri: `${window.location.origin}/auth/line`,
-          });
+          liff.login();
         }
       } catch {
         console.error("LIFF initialization or login failed");

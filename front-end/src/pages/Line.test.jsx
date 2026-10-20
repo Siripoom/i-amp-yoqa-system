@@ -69,9 +69,7 @@ test("a browser without a LINE session waits for initialization then starts LINE
   expect(lineLogin).not.toHaveBeenCalled();
 
   finishInit();
-  await waitFor(() => expect(liff.login).toHaveBeenCalledWith({
-    redirectUri: `${window.location.origin}/auth/line`,
-  }));
+  await waitFor(() => expect(liff.login).toHaveBeenCalledWith());
   expect(lineLogin).not.toHaveBeenCalled();
   expect(localStorage.getItem("token")).toBeNull();
   expect(screen.queryByText("ยังไม่ได้เข้าสู่ระบบผ่าน LINE")).toBeNull();

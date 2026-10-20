@@ -7,7 +7,14 @@ const { Title, Text } = Typography;
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const handleLiffLogin = () => navigate("/auth/line");
+  const handleLiffLogin = () => {
+    const liffId = import.meta.env.VITE_LINE_LIFF;
+    if (!liffId) {
+      message.error("ระบบเข้าสู่ระบบ LINE ยังไม่พร้อมใช้งาน กรุณาติดต่อสตูดิโอ");
+      return;
+    }
+    window.location.assign(`https://liff.line.me/${encodeURIComponent(liffId)}`);
+  };
 
   const onFinish = async (values) => {
     try {
