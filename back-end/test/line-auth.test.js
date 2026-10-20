@@ -305,3 +305,48 @@ test("ordinary membership cannot use the legacy LINE migration path", async () =
   );
   assert.equal(MemberModel.records()[0].line_user_id, undefined);
 });
+
+test("reviewed legacy migration preserves membership and enables subsequent LINE login", async (t) => {
+  const lineUserId = `U${"c".repeat(32)}`;
+  const MemberModel = createMemberModel([{
+    _id: memberId,
+    username: lineUserId,
+    first_name: "Original member",
+    role_id: "Member",
+    remaining_session: 12,
+    userTerms: true,
+  }]);
+  await approveLegacyLineMember({ MemberModel, memberId });
+  const app = await startAuthApp({
+    MemberModel,
+    verifyLineIdToken: async () => ({
+      subject: lineUserId,
+      displayName: "New LINE name",
+    }),
+  });
+  t.after(app.close);
+  const response = await app.postLine({ idToken: "valid-id-token" });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.data._id, memberId);
+  assert.equal(response.body.data.remaining_session, 12);
+  assert.equal(response.body.data.first_name, "Original member");
+  assert.equal(response.body.data.userTerms, true);
+  assert.equal(MemberModel.records().length, 1);
+});
+
+test("migration endpoint preserves the actionable LINE error status", async (t) => {
+  const User = require("../models/user");
+  const { migrateLegacyLineMember } = require("../controllers/authController");
+  t.mock.method(User, "findById", async () => null);
+  let status;
+  let body;
+  await migrateLegacyLineMember(
+    { user: { role: "Admin" }, params: { member_id: memberId } },
+    {
+      status(value) { status = value; return this; },
+      json(value) { body = value; },
+    }
+  );
+  assert.equal(status, 404);
+  assert.equal(body.code, "LINE_LEGACY_ACCOUNT_NOT_FOUND");
+});

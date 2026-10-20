@@ -70,8 +70,8 @@ exports.migrateLegacyLineMember = async (req, res) => {
     });
     return res.status(200).json({ member: safeUser(member) });
   } catch (error) {
-    if (error?.statusCode) {
-      return res.status(error.statusCode).json({ code: error.code, message: error.message });
+    if (Number.isInteger(error?.status) && error.code) {
+      return res.status(error.status).json({ code: error.code, message: error.message });
     }
     return res.status(500).json({ message: "Server error" });
   }

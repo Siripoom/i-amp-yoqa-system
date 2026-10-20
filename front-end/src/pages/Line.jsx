@@ -4,6 +4,19 @@ import { lineLogin } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 
+const loginErrors = {
+  LINE_LEGACY_ACCOUNT_REVIEW_REQUIRED:
+    "บัญชี LINE เดิมของคุณต้องให้ผู้ดูแลตรวจสอบและเชื่อมต่อข้อมูลสมาชิกก่อน กรุณาติดต่อสตูดิโอ ไม่ต้องสมัครบัญชีใหม่",
+  LINE_IDENTITY_CONFLICT:
+    "บัญชี LINE นี้มีข้อมูลสมาชิกซ้ำ กรุณาติดต่อสตูดิโอเพื่อตรวจสอบ",
+  LINE_ID_TOKEN_INVALID:
+    "การเข้าสู่ระบบ LINE หมดอายุหรือไม่ถูกต้อง กรุณาปิดหน้านี้แล้วเข้าสู่ระบบผ่าน LINE อีกครั้ง",
+  LINE_IDENTITY_NOT_CONFIGURED:
+    "ระบบเข้าสู่ระบบ LINE ยังไม่พร้อมใช้งาน กรุณาติดต่อสตูดิโอ",
+  LINE_IDENTITY_UNAVAILABLE:
+    "ไม่สามารถเชื่อมต่อ LINE ได้ชั่วคราว กรุณาลองใหม่อีกครั้ง",
+};
+
 const Line = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -43,15 +56,13 @@ const Line = () => {
       }
 
       setLoading(false);
-    } catch {
+    } catch (error) {
       console.error("LINE login request failed");
-      setError("Login failed. Please try again.");
+      setError(
+        loginErrors[error?.response?.data?.code] ||
+          "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง หากยังเข้าไม่ได้ กรุณาติดต่อสตูดิโอ"
+      );
       setLoading(false);
-
-      // Redirect to regular login on error
-      setTimeout(() => {
-        navigate("/auth/signin");
-      }, 3000);
     }
   }, [navigate]);
 

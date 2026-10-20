@@ -69,12 +69,25 @@ test("rejected LINE login exposes no token in logs or application state", async 
 
   render(<Line />);
 
-  expect(await screen.findByText("Login failed. Please try again.")).toBeTruthy();
+  expect(await screen.findByText(/เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง/)).toBeTruthy();
   expect(localStorage.getItem("token")).toBeNull();
   expect(liff.getProfile).not.toHaveBeenCalled();
   expect(JSON.stringify(consoleError.mock.calls)).not.toContain(
     "verified-id-token"
   );
 
+  consoleError.mockRestore();
+});
+
+test("legacy account explains review without redirecting or storing a session", async () => {
+  const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+  lineLogin.mockRejectedValue({
+    response: { data: { code: "LINE_LEGACY_ACCOUNT_REVIEW_REQUIRED" } },
+  });
+  render(<Line />);
+
+  expect(await screen.findByText(/บัญชี LINE เดิมของคุณต้องให้ผู้ดูแลตรวจสอบ/)).toBeTruthy();
+  expect(localStorage.getItem("token")).toBeNull();
+  expect(navigate).not.toHaveBeenCalled();
   consoleError.mockRestore();
 });
