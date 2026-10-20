@@ -3,25 +3,11 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { login } from "../services/authService";
-import { useEffect } from "react";
-import liff from "@line/liff";
 const { Title, Text } = Typography;
 
 const SignIn = () => {
-  useEffect(() => {
-    liff.init({ liffId: import.meta.env.VITE_LINE_LIFF });
-  }, []);
-
-  const handleLiffLogin = async () => {
-    try {
-      liff.login();
-    } catch (error) {
-      console.error("LIFF login failed:", error);
-      message.error("เข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองอีกครั้ง");
-    }
-  };
-
   const navigate = useNavigate();
+  const handleLiffLogin = () => navigate("/auth/line");
 
   const onFinish = async (values) => {
     try {

@@ -74,12 +74,13 @@ const Line = () => {
         if (liff.isLoggedIn()) {
           await handleLiffLogin();
         } else {
-          setError("ยังไม่ได้เข้าสู่ระบบผ่าน LINE");
-          setLoading(false);
+          liff.login({
+            redirectUri: `${window.location.origin}/auth/line`,
+          });
         }
-      } catch (error) {
-        console.error("LIFF initialization failed:", error);
-        setError("LIFF initialization failed");
+      } catch {
+        console.error("LIFF initialization or login failed");
+        setError("ไม่สามารถเริ่มเข้าสู่ระบบ LINE ได้ กรุณาลองใหม่อีกครั้ง");
         setLoading(false);
       }
     };
