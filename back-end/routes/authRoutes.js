@@ -1,11 +1,14 @@
 const express = require("express");
 const authController = require("../controllers/authController");
 const { authenticate } = require("../middlewares/auth");
+const legacyLineAdmin = require("../controllers/legacyLineAdminController");
 
 const createAuthRouter = ({ lineLogin = authController.loginLine } = {}) => {
   const router = express.Router();
 
   router.post("/line", lineLogin);
+  router.get("/line/legacy-members", authenticate, legacyLineAdmin.list);
+  router.post("/line/legacy-members/:memberId/approve", authenticate, legacyLineAdmin.approve);
   router.post("/line/migrate/:member_id", authenticate, authController.migrateLegacyLineMember);
   // Route สำหรับเข้าสู่ระบบ
   router.post("/login", authController.login);

@@ -15,6 +15,13 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
+  line_identity_reviews: [{
+    _id: false,
+    actor_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    reviewed_at: { type: Date, required: true },
+    note: { type: String, required: true, maxlength: 500 },
+    line_user_id: { type: String, required: true },
+  }],
   email: {
     type: String,
   },

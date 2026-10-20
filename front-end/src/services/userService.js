@@ -6,6 +6,20 @@ const authConfig = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
 });
 
+export const getLegacyLineMembers = async (params) => {
+  const response = await axios.get(`${API_URL}/api/auth/line/legacy-members`, {
+    ...authConfig(), params,
+  });
+  return response.data;
+};
+
+export const approveLegacyLineMember = async (memberId, review) => {
+  const response = await axios.post(
+    `${API_URL}/api/auth/line/legacy-members/${memberId}/approve`, review, authConfig()
+  );
+  return response.data;
+};
+
 export const getUsers = async () => {
   try {
     const response = await axios.get(API_URL + "/api/users", authConfig());

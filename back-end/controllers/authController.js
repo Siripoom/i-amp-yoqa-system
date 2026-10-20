@@ -15,6 +15,7 @@ const safeUser = (user) => {
   delete data.password;
   delete data.resetPasswordToken;
   delete data.resetPasswordExpiry;
+  delete data.line_identity_reviews;
   return data;
 };
 

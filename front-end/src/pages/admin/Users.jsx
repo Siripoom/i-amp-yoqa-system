@@ -19,6 +19,7 @@ import {
   Empty,
   Spin,
   Divider,
+  Tabs,
 } from "antd";
 import {
   SearchOutlined,
@@ -32,6 +33,7 @@ import {
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
+import LegacyLineMembers from "../../components/LegacyLineMembers";
 import "../../styles/User.css";
 import {
   getUsers,
@@ -46,6 +48,7 @@ const { Sider, Content } = Layout;
 const { Option } = Select;
 
 const UserPage = () => {
+  const [activeTab, setActiveTab] = useState("users");
   const [searchText, setSearchText] = useState("");
   const [users, setUsers] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -656,6 +659,11 @@ const UserPage = () => {
         <Header title="ผู้ใช้" />
 
         <Content className="user-container">
+          {canEdit && <Tabs activeKey={activeTab} onChange={setActiveTab} items={[
+            { key: "users", label: "ผู้ใช้ทั้งหมด" },
+            { key: "line", label: "จัดการบัญชี LINE" },
+          ]} />}
+          {canEdit && activeTab === "line" ? <LegacyLineMembers /> : <>
           {userRole === "Accounting" && (
             <div style={{
               background: "var(--color-warning-soft)",
@@ -1041,6 +1049,7 @@ const UserPage = () => {
               </div>
             </div>
           </Drawer>
+          </>}
         </Content>
       </Layout>
     </Layout>

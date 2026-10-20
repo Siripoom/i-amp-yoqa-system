@@ -16,6 +16,7 @@ const serializeUser = (user, includeMedical = false) => {
   delete data.password;
   delete data.resetPasswordToken;
   delete data.resetPasswordExpiry;
+  delete data.line_identity_reviews;
   if (!includeMedical) {
     delete data.has_medical_condition;
     delete data.medical_condition_details;
@@ -183,6 +184,7 @@ exports.updateUser = async (req, res) => {
     }
     // ตรวจสอบว่ามีการส่ง password มาหรือไม่
     let updatedData = normalizeMedicalProfile(req.body);
+    delete updatedData.line_identity_reviews;
     if (req.body.role_name || req.body.role_id) {
       updatedData.role_id = req.body.role_name || req.body.role_id;
     } else {
