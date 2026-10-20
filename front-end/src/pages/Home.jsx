@@ -168,7 +168,7 @@ const Home = () => {
           >
             <img
               src={courseShow}
-              alt="courseShow"
+              alt="ฝึกโยคะท่ามกลางบรรยากาศสงบริมทะเลสาบยามพระอาทิตย์ขึ้น"
               className="rounded-lg shadow-lg w-full h-auto"
               loading="lazy"
             />
