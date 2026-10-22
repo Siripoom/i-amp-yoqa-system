@@ -21,6 +21,19 @@ const runReservationMutation = async (operation) => {
   return operation(undefined);
 };
 
+const refreshClassParticipants = async (yogaClass, reservationId, session) => {
+  const reservations = await Reservation.find({
+    class_id: yogaClass._id,
+    status: "Reserved",
+    _id: { $ne: reservationId },
+  }).session(session || null).populate("user_id", "first_name nickname");
+  yogaClass.participants = reservations.filter((entry) => entry.user_id).map(({ user_id: user }) =>
+    user.nickname ? `${user.nickname} ${user.first_name}` : user.first_name
+  );
+  yogaClass.amount = reservations.length;
+  await yogaClass.save({ session });
+};
+
 const validateBookingProfile = (user, yogaClass, res, requireCompleteProfile = true) => {
   const missingFields = requireCompleteProfile ? getMissingMemberProfileFields(user) : [];
   if (missingFields.length > 0) {
@@ -165,25 +178,17 @@ exports.cancelReservation = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
+    if (reservation.status === "Cancelled") {
+      return res.status(200).json({ message: "Reservation cancelled successfully" });
+    }
+
     // 🔍 ดึงข้อมูลคลาส
     const yogaClass = await Class.findById(reservation.class_id);
     if (!yogaClass) return res.status(404).json({ message: "Class not found" });
 
-    // ✅ ป้องกัน amount ติดลบ
-    yogaClass.amount = Math.max(0, (yogaClass.amount || 0) - 1);
-
-    // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
-    const displayName = reservation.user_id.nickname
-      ? `${reservation.user_id.nickname} ${reservation.user_id.first_name}`
-      : reservation.user_id.first_name;
-
-    yogaClass.participants = yogaClass.participants.filter(
-      (participant) => participant !== displayName
-    );
-
     const user = await User.findById(token.userId);
     await runReservationMutation(async (session) => {
-      await yogaClass.save({ session });
+      await refreshClassParticipants(yogaClass, reservation._id, session);
       if (user) {
         user.remaining_session += 1;
         await user.save({ session });
@@ -344,34 +349,19 @@ exports.cancelReservationById = async (req, res) => {
       return res.status(404).json({ message: "Reservation not found" });
     }
 
+    if (reservation.status === "Cancelled") {
+      return res.status(200).json({ message: "Reservation cancelled successfully" });
+    }
+
     // 🔍 ตรวจสอบว่าคลาสยังมีอยู่หรือไม่
     const yogaClass = await Class.findById(reservation.class_id._id);
     if (!yogaClass) {
       return res.status(404).json({ message: "Class not found" });
     }
 
-    // ✅ ลดจำนวนผู้เข้าร่วมในคลาส
-    // ป้องกันการเกิด NaN โดยใช้การตรวจสอบค่า
-    let currentAmount = yogaClass.amount || 0;
-    yogaClass.amount = Math.max(0, currentAmount - 1);
-
-    // ✅ ลบชื่อผู้ใช้ที่ยกเลิกออกจาก participants
-    const displayName = reservation.user_id.nickname
-      ? `${reservation.user_id.nickname} ${reservation.user_id.first_name}`
-      : reservation.user_id.first_name;
-
-    // ป้องกันกรณี participants ไม่ใช่ array
-    if (!Array.isArray(yogaClass.participants)) {
-      yogaClass.participants = [];
-    } else {
-      yogaClass.participants = yogaClass.participants.filter(
-        (participant) => participant !== displayName
-      );
-    }
-
     const user = await User.findById(reservation.user_id._id);
     await runReservationMutation(async (session) => {
-      await yogaClass.save({ session });
+      await refreshClassParticipants(yogaClass, reservation._id, session);
       if (user) {
         const currentRemaining = user.remaining_session || 0;
         user.remaining_session = currentRemaining + 1;

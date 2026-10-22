@@ -21,7 +21,6 @@ import { Link } from "react-router-dom";
 import {
   validateAndGetUserFromToken,
   getUserFullName,
-  isUserInParticipants,
 } from "../utils/tokenUtils";
 
 const { Text } = Typography;
@@ -57,9 +56,10 @@ const Booking = () => {
       setLoadError(false);
 
       // ดึงข้อมูลคลาสและข้อมูลผู้ใช้พร้อมกัน
-      const [classResponse, userResponse] = await Promise.all([
+      const [classResponse, userResponse, reservationResponse] = await Promise.all([
         classService.getAllClasses(),
         userId ? getMyProfile() : Promise.resolve(null),
+        userId ? reservationService.getUserReservations(userId) : Promise.resolve(null),
       ]);
 
       if (userResponse && userResponse.user) {
@@ -79,7 +79,11 @@ const Booking = () => {
       }
 
       // สร้างข้อมูลคลาสที่พร้อมแสดงผล
-      const userFullName = getUserFullName();
+      const reservedClassIds = new Set(
+        (reservationResponse?.reservations || []).map((reservation) =>
+          String(reservation.class_id?._id || reservation.class_id)
+        )
+      );
 
       setEvents(
         classResponse.data.map((event) => {
@@ -87,10 +91,7 @@ const Booking = () => {
             ? event.participants
             : [];
 
-          // ใช้ฟังก์ชันใหม่ในการตรวจสอบ (เฉพาะเมื่อมี user)
-          const isReserved = userFullName
-            ? isUserInParticipants(participants, userFullName)
-            : false;
+          const isReserved = reservedClassIds.has(String(event._id));
 
           return {
             id: event._id,
@@ -433,34 +434,7 @@ const Booking = () => {
         // ส่งคำขอยกเลิกการจองไปยัง API
         await reservationService.cancelReservation(reservation._id);
 
-        // อัปเดตสถานะคลาสทันทีในหน้าเว็บ
-        setEvents((prevEvents) =>
-          prevEvents.map((event) =>
-            event.id === classId
-              ? {
-                  ...event,
-                  reserved: false,
-                  amount: Math.max(0, event.amount - 1),
-                  participants: (event.participants || []).filter((name) => {
-                    const normalizedName = name.toLowerCase().trim();
-                    const normalizedFullName = fullName.toLowerCase().trim();
-                    return (
-                      !normalizedName.includes(normalizedFullName) &&
-                      !normalizedFullName.includes(normalizedName)
-                    );
-                  }),
-                }
-              : event
-          )
-        );
-
-        // อัปเดตข้อมูลผู้ใช้
-        if (userInfo) {
-          setUserInfo((prev) => ({
-            ...prev,
-            remaining_session: (prev.remaining_session || 0) + 1,
-          }));
-        }
+        await fetchData(userFromToken.userId);
 
         // ปิดรายละเอียดคลาสที่ถูกยกเลิก
         setShowDetails((prev) => prev.filter((id) => id !== classId));

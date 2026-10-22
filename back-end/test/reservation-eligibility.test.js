@@ -34,10 +34,36 @@ function fixture({ userOverrides = {}, classOverrides = {} } = {}) {
     async save() { events.push("class-save"); },
     ...classOverrides,
   };
+  const reservations = [];
   class Reservation {
-    constructor(data) { Object.assign(this, data); }
+    constructor(data) { Object.assign(this, { _id: `reservation-${reservations.length}`, status: "Reserved" }, data); reservations.push(this); }
     async save() { events.push("reservation-save"); }
     static async findOne() { return null; }
+    static findById(id) {
+      const reservation = reservations.find((entry) => entry._id === id);
+      const query = {
+        populate() { return query; },
+        then(resolve, reject) {
+          if (reservation) {
+            reservation.user_id = user;
+            reservation.class_id = yogaClass;
+          }
+          return Promise.resolve(reservation).then(resolve, reject);
+        },
+      };
+      return query;
+    }
+    static find(filter) {
+      assert.equal(filter.status, "Reserved");
+      assert.equal(filter.class_id, classId);
+      return {
+        session() { return this; },
+        async populate() {
+          return reservations.filter((entry) => entry.status === "Reserved" && entry._id !== filter._id.$ne)
+            .map((entry) => ({ ...entry, user_id: typeof entry.user_id === "object" ? entry.user_id : user }));
+        },
+      };
+    }
   }
 
   const filename = path.resolve(
@@ -72,7 +98,7 @@ function fixture({ userOverrides = {}, classOverrides = {} } = {}) {
     status(code) { this.statusCode = code; return this; },
     json(body) { this.body = body; return this; },
   };
-  return { controller: mod.exports, req, res, events, user, yogaClass };
+  return { controller: mod.exports, req, res, events, user, yogaClass, reservations };
 }
 
 test("incomplete member profile is rejected before booking mutations", async () => {
@@ -125,3 +151,27 @@ test("eligible first booking consumes a session and starts product duration", as
   assert.equal(duration, 14);
   assert.deepEqual(f.events, ["user-save", "class-save", "reservation-save"]);
 });
+
+for (const method of ["cancelReservation", "cancelReservationById"]) {
+  test(`${method} removes a booked name after profile changes and preserves namesakes`, async () => {
+    const f = fixture({ userOverrides: { nickname: "Old" } });
+    await f.controller.createReservation(f.req, f.res);
+    assert.equal(f.res.statusCode, 201);
+    f.reservations.push({ _id: "other", status: "Reserved", user_id: { first_name: "Member", nickname: "Old" } });
+    f.yogaClass.participants.push("Old Member");
+    f.yogaClass.amount++;
+    f.user.nickname = "New";
+    f.req.params = { reservation_id: f.reservations[0]._id };
+    f.req.user.role = method === "cancelReservationById" ? "Admin" : "Member";
+    await f.controller[method](f.req, f.res);
+    assert.equal(f.res.statusCode, 200);
+    assert.deepEqual(Array.from(f.yogaClass.participants), ["Old Member"]);
+    assert.equal(f.yogaClass.amount, 1);
+    assert.equal(f.user.remaining_session, 2);
+    assert.equal(f.reservations[0].status, "Cancelled");
+    await f.controller[method](f.req, f.res);
+    assert.equal(f.res.statusCode, 200);
+    assert.equal(f.user.remaining_session, 2);
+    assert.equal(f.yogaClass.amount, 1);
+  });
+}
