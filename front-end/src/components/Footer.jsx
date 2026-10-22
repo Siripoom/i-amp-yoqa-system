@@ -134,7 +134,7 @@ const Footer = () => {
                   to="/course"
                   className="text-surface hover:text-surface transition-colors duration-300 block"
                 >
-                  โปรโมชัน
+                  โปรโมชั่น
                 </Link>
               </li>
               <li>
@@ -205,7 +205,7 @@ const Footer = () => {
               to="/course"
               className="hover:text-accent transition-colors duration-300 ml-1"
             >
-              โปรโมชัน
+              โปรโมชั่น
             </Link>
           </p>
         </div>

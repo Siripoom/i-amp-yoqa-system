@@ -4,8 +4,8 @@ const Product = require("../models/product");
 
 const productData = { sessions: 1, price: 1000, duration: 30 };
 
-test("products accept the two promotion categories", async () => {
-  for (const category of ["private_yoga", "extend_your_days"]) {
+test("products accept all three promotion categories", async () => {
+  for (const category of ["regular_promotion", "private_yoga", "extend_your_days"]) {
     const product = new Product({ ...productData, category });
     await product.validate();
     assert.equal(product.toObject().category, category);

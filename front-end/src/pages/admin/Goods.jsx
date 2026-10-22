@@ -893,7 +893,7 @@ const GoodsPage = () => {
             <Col xs={12} sm={6}>
               <Card>
                 <div style={{ textAlign: "center" }}>
-                  <Text type="secondary" className="text-xs sm:text-sm">อยู่ในโปรโมชัน</Text>
+                  <Text type="secondary" className="text-xs sm:text-sm">อยู่ในโปรโมชั่น</Text>
                   <div
                     style={{
                       fontSize: "18px",
@@ -1124,7 +1124,7 @@ const GoodsPage = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="hasPromotion"
-                    label="มีโปรโมชัน"
+                    label="มีโปรโมชั่น"
                     valuePropName="checked"
                   >
                     <Switch disabled={userRole === "Accounting"} />
@@ -1145,11 +1145,11 @@ const GoodsPage = () => {
                         <Col xs={24} sm={8}>
                           <Form.Item
                             name="promotionPrice"
-                            label="ราคาโปรโมชัน (บาท)"
+                            label="ราคาโปรโมชั่น (บาท)"
                             rules={[
                               {
                                 required: true,
-                                message: "กรุณาระบุราคาโปรโมชัน",
+                                message: "กรุณาระบุราคาโปรโมชั่น",
                               },
                             ]}
                           >
@@ -1301,7 +1301,7 @@ const GoodsPage = () => {
                         {viewingGoods.promotion &&
                           isPromotionActive(viewingGoods.promotion) && (
                             <Tag color="warning" icon={<PercentageOutlined />}>
-                              โปรโมชันกำลังใช้งาน
+                              โปรโมชั่นกำลังใช้งาน
                             </Tag>
                           )}
                       </div>
@@ -1330,7 +1330,7 @@ const GoodsPage = () => {
 
                       {getDisplayPrice(viewingGoods) !== viewingGoods.price && (
                         <div>
-                          <Text>ราคาโปรโมชัน: </Text>
+                          <Text>ราคาโปรโมชั่น: </Text>
                           <Text
                             strong
                             style={{ color: colors["error"], fontSize: "18px" }}
@@ -1375,11 +1375,11 @@ const GoodsPage = () => {
                   <>
                     <Divider />
                     <div>
-                      <Text strong>ข้อมูลโปรโมชัน:</Text>
+                      <Text strong>ข้อมูลโปรโมชั่น:</Text>
                       <div style={{ marginTop: 8 }}>
                         <Space direction="vertical" size="small">
                           <div>
-                            <Text>ราคาโปรโมชัน: </Text>
+                            <Text>ราคาโปรโมชั่น: </Text>
                             <Text strong style={{ color: colors["error"] }}>
                               {viewingGoods.promotion.price?.toLocaleString()}{" "}
                               THB

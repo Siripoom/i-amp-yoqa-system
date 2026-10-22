@@ -421,7 +421,7 @@ const ProductPage = () => {
             )}
             {record.isPromotionActive && (
               <Tag color="error" icon={<PercentageOutlined />}>
-                อยู่ในโปรโมชัน
+                อยู่ในโปรโมชั่น
               </Tag>
             )}
           </div>
@@ -774,7 +774,7 @@ const ProductPage = () => {
               </Row>
 
               <div className="flex justify-between items-center mb-4">
-                <h4>ตั้งค่าโปรโมชัน</h4>
+                <h4>ตั้งค่าโปรโมชั่น</h4>
                 {userRole !== "Accounting" && (
                   <Button
                     danger
@@ -784,10 +784,10 @@ const ProductPage = () => {
                         promotionPrice: null,
                         promotionDateRange: null,
                       });
-                      message.success("ล้างโปรโมชันแล้ว");
+                      message.success("ล้างโปรโมชั่นแล้ว");
                     }}
                   >
-                    ล้างโปรโมชัน
+                    ล้างโปรโมชั่น
                   </Button>
                 )}
               </div>
@@ -796,7 +796,7 @@ const ProductPage = () => {
                 <Col span={12}>
                   <Form.Item
                     name="promotionPrice"
-                    label="ราคาโปรโมชัน (฿)"
+                    label="ราคาโปรโมชั่น (฿)"
                     rules={[
                       ({ getFieldValue }) => ({
                         validator(_, value) {
@@ -824,7 +824,7 @@ const ProductPage = () => {
                     ]}
                   >
                     <InputNumber
-                      placeholder="ระบุราคาโปรโมชัน"
+                      placeholder="ระบุราคาโปรโมชั่น"
                       style={{ width: "100%" }}
                       min={0}
                       formatter={(value) =>
@@ -839,7 +839,7 @@ const ProductPage = () => {
                 <Col span={12}>
                   <Form.Item
                     name="promotionDateRange"
-                    label="ช่วงโปรโมชัน"
+                    label="ช่วงโปรโมชั่น"
                     rules={[
                       ({ getFieldValue }) => ({
                         validator(_, value) {

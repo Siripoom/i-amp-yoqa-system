@@ -1155,7 +1155,7 @@ const OrderPage = () => {
                                   {selectedOrder.product_id.price.toLocaleString()}
                                 </span>
                                 <Tag color="error" size="small" className="ml-2">
-                                  ใช้โปรโมชันแล้ว
+                                  ใช้โปรโมชั่นแล้ว
                                 </Tag>
                               </div>
                             )}
@@ -1169,7 +1169,7 @@ const OrderPage = () => {
                                   {selectedOrder.goods_id.price.toLocaleString()}
                                 </span>
                                 <Tag color="error" size="small" className="ml-2">
-                                  ใช้โปรโมชันแล้ว
+                                  ใช้โปรโมชั่นแล้ว
                                 </Tag>
                               </div>
                             )}

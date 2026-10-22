@@ -8,7 +8,7 @@ dotenv.config();
 // Use Multer for file uploads (memory storage)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-const PRODUCT_CATEGORIES = ["private_yoga", "extend_your_days"];
+const PRODUCT_CATEGORIES = ["regular_promotion", "private_yoga", "extend_your_days"];
 
 // Helper function to validate promotion data
 const validatePromotion = (promotion) => {

@@ -135,7 +135,7 @@
 .booking-class-summary > span { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #766c5e; }
 .booking-class-summary > span svg { flex-shrink: 0; }
 .booking-class-badges { display: flex; flex-wrap: wrap; gap: 5px; max-width: 150px; }
-.booking-level, .booking-gender { padding: 4px 9px; border-radius: 999px; background: #ffebbe; font-size: 10px; color: #71592d; white-space: nowrap; }
+.booking-count, .booking-gender { padding: 4px 9px; border-radius: 999px; background: #ffebbe; font-size: 10px; color: #71592d; white-space: nowrap; }
 .booking-gender { background: #f2e3ed; color: #774866; }
 .booking-class-action { display: flex; justify-content: flex-end; }
 .booking-page .booking-reserve-button, .booking-detail-modal .booking-reserve-button, .booking-reserve-link { display: inline-flex; align-items: center; justify-content: center; min-width: 108px; height: 38px; padding: 0 17px; border: 0; border-radius: 999px; background: #ffcc5e; box-shadow: none; font-size: 12px; color: #382514; font-weight: 600; text-decoration: none; }
@@ -187,7 +187,7 @@
   .booking-class-summary h3 { font-size: 13px; margin-bottom: 2px; }
   .booking-class-summary > span { font-size: 10px; gap: 4px; }
   .booking-class-badges { max-width: 68px; }
-  .booking-level, .booking-gender { padding: 3px 6px; font-size: 9px; }
+  .booking-count, .booking-gender { padding: 3px 6px; font-size: 9px; }
   .booking-page .booking-reserve-button, .booking-reserve-link { min-width: 77px; height: 30px; padding: 0 10px; font-size: 10px; }
   .booking-page .booking-reserved-button { padding: 0 9px; height: 30px; font-size: 10px; }
 }

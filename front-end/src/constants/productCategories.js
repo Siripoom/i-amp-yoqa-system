@@ -1,4 +1,5 @@
 export const PRODUCT_CATEGORIES = [
+  { value: "regular_promotion", label: "โปรโมชั่นปกติ" },
   { value: "private_yoga", label: "Private Yoga คลาสไพรเวท" },
   { value: "extend_your_days", label: "Extend Your Days โปรเติมวัน" },
 ];

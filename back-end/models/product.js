@@ -16,7 +16,7 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["private_yoga", "extend_your_days"],
+      enum: ["regular_promotion", "private_yoga", "extend_your_days"],
       default: null,
     },
     promotion: {

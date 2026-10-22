@@ -82,7 +82,7 @@ export default function BookingSchedule({ events, loading, loadError, onRetry, o
               <span><UserRound size={14} strokeWidth={1.5} aria-hidden="true" />{event.instructor || "รอยืนยันครูผู้สอน"}</span>
             </button>
             <div className="booking-class-badges">
-              {event.difficulty > 0 && <span className="booking-level">ระดับ {event.difficulty}</span>}
+              <span className="booking-count">จองแล้ว {event.participants?.length ?? 0} คน</span>
               {event.allowedGender !== "all" && <span className="booking-gender">{event.allowedGender === "female" ? "เฉพาะหญิง" : "เฉพาะชาย"}</span>}
             </div>
             <div className="booking-class-action">{renderBookingAction(event)}</div>
@@ -128,7 +128,7 @@ BookingSchedule.propTypes = {
     date: PropTypes.instanceOf(Date).isRequired,
     endDate: PropTypes.instanceOf(Date).isRequired,
     instructor: PropTypes.string,
-    difficulty: PropTypes.number,
+    participants: PropTypes.arrayOf(PropTypes.string),
     allowedGender: PropTypes.string,
   })).isRequired,
   loading: PropTypes.bool.isRequired,

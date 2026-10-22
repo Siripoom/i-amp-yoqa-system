@@ -52,6 +52,21 @@ const Course = () => {
     ? products
     : products.filter((product) => product.category === selectedCategory);
 
+  const productSections = selectedCategory === "all"
+    ? [
+        ...PRODUCT_CATEGORIES.map((category) => ({
+          ...category,
+          products: products.filter((product) => product.category === category.value),
+        })),
+        {
+          value: "uncategorized",
+          label: "ยังไม่ระบุหมวดหมู่",
+          products: products.filter((product) =>
+            !PRODUCT_CATEGORIES.some((category) => category.value === product.category)),
+        },
+      ].filter((section) => section.products.length > 0)
+    : [{ value: selectedCategory, label: getProductCategoryLabel(selectedCategory), products: visibleProducts }];
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -611,7 +626,7 @@ const Course = () => {
           <div className="mb-8">
             <div className="text-center mb-4">
               <h2 className="text-3xl font-bold text-primary mb-2">
-                โปรโมชันคอร์ส
+                โปรโมชั่นคอร์ส
               </h2>
               <p className="text-secondary">
                 เลือกแพ็คเกจที่เหมาะกับคุณ พร้อมโปรโมชั่นพิเศษ
@@ -677,10 +692,19 @@ const Course = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
+            <div className="mb-16 space-y-10">
               {visibleProducts.length > 0 ? (
-                visibleProducts.map((product) => (
-                  <ProductCard key={product._id} product={product} />
+                productSections.map((section) => (
+                  <section key={section.value} aria-labelledby={`course-category-${section.value}`}>
+                    <h3 id={`course-category-${section.value}`} className="text-2xl font-bold text-primary mb-5">
+                      {section.label}
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {section.products.map((product) => (
+                        <ProductCard key={product._id} product={product} />
+                      ))}
+                    </div>
+                  </section>
                 ))
               ) : (
                 <div className="col-span-full text-center py-20">
@@ -690,7 +714,7 @@ const Course = () => {
                       : `ยังไม่มีคอร์สในหมวดหมู่ ${getProductCategoryLabel(selectedCategory)}`}
                   </div>
                   <div className="text-secondary">
-                    โปรดกลับมาตรวจสอบโปรโมชันใหม่ภายหลัง
+                    โปรดกลับมาตรวจสอบโปรโมชั่นใหม่ภายหลัง
                   </div>
                 </div>
               )}
